@@ -1,7 +1,15 @@
 // Mythos.cpp : Defines the entry point for the application.
 //
 
-#include "framework.h"
+#include "targetver.h"
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+// Windows Header Files
+#include <windows.h>
+// C RunTime Header Files
+#include <stdlib.h>
+#include <malloc.h>
+#include <memory.h>
+#include <tchar.h>
 #include "Mythos.h"
 
 #define MAX_LOADSTRING 100
