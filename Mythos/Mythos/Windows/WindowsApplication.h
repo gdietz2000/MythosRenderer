@@ -4,13 +4,16 @@
 class WindowsApplication 
 {
 public:
-	WindowsApplication(WindowsApplication&) = delete;
-	WindowsApplication(const WindowsApplication&) = delete;
+	//Removing the assignment operator
+	WindowsApplication& operator=(const WindowsApplication&) = delete;
 
 	//Default Constructor of the WindowsApplication Class
 	WindowsApplication(HINSTANCE& hInstance, const wchar_t* title, const wchar_t* windowClass, int nCmdShow);
 	//Static function that refers to the private window proc
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+	HWND& GetWindow();
+	HINSTANCE& GetInstance();
 private:
 	//Registers the window class
 	ATOM Register(HINSTANCE& hInstance);

@@ -11,6 +11,7 @@ WindowsApplication::WindowsApplication(HINSTANCE& hInstance, const wchar_t* titl
     SetWindowLongPtr(window, GWLP_USERDATA, -21);
 	this->title = title;
 	this->windowClass = windowClass;
+    this->instance = hInstance;
 	Register(hInstance);
 	Init(hInstance, nCmdShow);
 }
@@ -41,9 +42,7 @@ BOOL WindowsApplication::Init(HINSTANCE& hInstance, int nCmdShow)
         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
     if (!window)
-    {
         return FALSE;
-    }
 
     ShowWindow(window, nCmdShow);
     UpdateWindow(window);
@@ -56,6 +55,9 @@ LRESULT CALLBACK WindowsApplication::WndProc(HWND hWnd, UINT message, WPARAM wPa
     if (winApp) return winApp->WindowProc(hWnd, message, wParam, lParam);
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
+
+HWND& WindowsApplication::GetWindow() { return window; }
+HINSTANCE& WindowsApplication::GetInstance() { return instance; }
 
 LRESULT CALLBACK WindowsApplication::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
