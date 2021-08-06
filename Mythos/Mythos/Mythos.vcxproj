@@ -147,14 +147,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h" />
     <ClInclude Include="Mythos.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Windows\WindowsApplication.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Mythos.cpp" />
+    <ClCompile Include="Windows\WindowsApplication.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Mythos.rc" />
