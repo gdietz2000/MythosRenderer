@@ -23,14 +23,13 @@ ATOM WindowsApplication::Register(HINSTANCE& hInstance)
     ZeroMemory(&wcex, sizeof(wcex));
     wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.style = CS_VREDRAW | CS_HREDRAW;
     wcex.lpfnWndProc = this->WndProc;
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInstance;
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_MYTHOS);
     wcex.lpszClassName = windowClass;
 
     return RegisterClassExW(&wcex);
@@ -38,12 +37,15 @@ ATOM WindowsApplication::Register(HINSTANCE& hInstance)
 
 BOOL WindowsApplication::Init(HINSTANCE& hInstance, int nCmdShow)
 {
-    window = CreateWindowW(windowClass, title, WS_OVERLAPPEDWINDOW,
+    DWORD dwstyle = WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME;
+
+    window = CreateWindowW(windowClass, title, dwstyle,
         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
     if (!window)
         return FALSE;
 
+    SetMenu(window, NULL);
     ShowWindow(window, nCmdShow);
     UpdateWindow(window);
 
@@ -68,6 +70,7 @@ LRESULT CALLBACK WindowsApplication::WindowProc(HWND hWnd, UINT message, WPARAM 
             PostQuitMessage(0x78);
             break;
         }
+        default: return DefWindowProc(hWnd, message, wParam, lParam);
     }
-    return DefWindowProc(hWnd, message, wParam, lParam);
+    return 0;
 }
