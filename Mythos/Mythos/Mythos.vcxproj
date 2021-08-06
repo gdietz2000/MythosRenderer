@@ -157,9 +157,6 @@
     <ClCompile Include="Windows\WindowsApplication.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Mythos.rc" />
-  </ItemGroup>
-  <ItemGroup>
     <Image Include="Mythos.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
