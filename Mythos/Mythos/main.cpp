@@ -2,29 +2,32 @@
 #include "Resource.h"
 #include <windows.h>
 
+#include "Vector3.h"
+#include "Vector4.h"
+#include "Matrix4.h"
+using namespace Math;
+
 #include "Windows/WindowsApplication.h"
 
 #include "d3d11.h"
 #pragma comment(lib, "d3d11.lib")
-#include <DirectXMath.h>
 #include "d3dcompiler.h"
 #pragma comment(lib, "d3dcompiler.lib")
-using namespace DirectX;
 
 //Temporary Vertex
 struct TempVertex {
-	XMVECTOR position;
-	XMVECTOR color;
+	Vector4 position;
+	Vector4 color;
 };
 
 struct WVP {
-	XMFLOAT4X4 World;
-	XMFLOAT4X4 View;
-	XMFLOAT4X4 Projection;
+	Matrix4 World;
+	Matrix4 View;
+	Matrix4 Projection;
 }MyMatrices;
 
-XMMATRIX Camera;
-XMVECTOR CameraPosition;
+Matrix4 Camera;
+Vector4 CameraPosition;
 float PitchClamp = 0.0f;
 float YawClamp = 0.0f;
 
@@ -95,30 +98,27 @@ void CameraInput()
 		YawClamp += 0.005f;
 	}
 
-	Camera = XMMatrixInverse(nullptr, Camera);
+	Camera = Camera.Inverse();
 
-	XMMATRIX temp = XMMatrixTranslation(LocalX, 0, LocalZ);
-	Camera = XMMatrixMultiply(temp, Camera);
-	temp = XMMatrixTranslation(0, GlobalY, 0);
-	Camera = XMMatrixMultiply(Camera, temp);
+	Matrix4 temp = Matrix4::Translate(LocalX, 0, LocalZ);
+	Camera = temp * Camera;
+	temp = Matrix4::Translate(0, GlobalY, 0);
+	Camera = Camera * temp;
 
-	XMVECTOR tempVec = Camera.r[3];
+	Vector4 tempPosition = Camera.row3;
 
-	Camera.r[3] = { 0,0,0,1 };
-	temp = XMMatrixRotationY(camYaw);
-	Camera = XMMatrixMultiply(Camera, temp);
-	Camera.r[3] = tempVec;
-	Camera = XMMatrixMultiply(XMMatrixRotationX(camPitch), Camera);
+	Camera.row3 = { 0,0,0,1 };
 
-	CameraPosition = Camera.r[3];
+	temp = Matrix4::RotateY(camYaw);
+	Camera = Camera * temp;
+	Camera.row3 = tempPosition;
+	Camera = Matrix4::RotateX(camPitch) * Camera;
 
-	Camera = XMMatrixInverse(nullptr, Camera);
+	CameraPosition = Camera.row3;
 
-	XMStoreFloat4x4(&MyMatrices.View, Camera);
+	Camera = Camera.Inverse();
 
-	//---Perspective
-	XMMATRIX PER = XMMatrixPerspectiveFovLH(3.14f / 3.0f, 2.03428578, 0.1, 1000);
-	XMStoreFloat4x4(&MyMatrices.Projection, PER);
+	MyMatrices.View = Camera;
 }
 
 
@@ -349,17 +349,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	UINT strides[] = { sizeof(TempVertex) };
 	UINT offset[] = { 0 };
 
-	XMVECTOR Eye = { 0,0,-10,1 };
-	XMVECTOR Target = { 0,0,1,1 };
-	XMVECTOR Up = { 0,1,0,1 };
+	Vector3 Eye = { 0,0,-10};
+	Vector3 Target = { 0,0,1};
+	Vector3 Up = { 0,1,0};
 
-	XMMATRIX World = XMMatrixIdentity();
-	Camera = XMMatrixLookAtLH(Eye, Target, Up);
-	XMMATRIX Projection = XMMatrixPerspectiveFovLH(3.14f / 3.0f, 2.03428578, 0.1f, 1000.0f);
+	Matrix4 World = Matrix4::Identity;
+	Camera = Matrix4::LookAtLH(Eye, Target, Up);
+	Matrix4 Projection = Matrix4::PerspectiveFovLH(PI / 3.0f, 2.03428578, 0.1f, 1000.0f);
 
-	XMStoreFloat4x4(&MyMatrices.World, World);
-	XMStoreFloat4x4(&MyMatrices.View, Camera);
-	XMStoreFloat4x4(&MyMatrices.Projection, Projection);
+	MyMatrices.World = World;
+	MyMatrices.View = Camera;
+	MyMatrices.Projection = Projection;
 
     // Main message loop:
 	while (true)
