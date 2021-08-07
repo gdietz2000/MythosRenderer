@@ -11,6 +11,6 @@ struct OutputVertex
 OutputVertex main( TempVertex temp )
 {
     OutputVertex output = (OutputVertex) 0;
-    output.position = float4(0, 0, 0, 1);
+    output.position = temp.position;
 	return output;
 }

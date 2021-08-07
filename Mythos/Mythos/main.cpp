@@ -41,9 +41,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	//Rendering the Triangle
 	ID3D11Buffer* vertexBuffer;
-	ID3D11InputLayout* inputLayout;
-	ID3D11VertexShader* vertexShader;
-	ID3D11PixelShader* pixelShader;
+	ID3D11InputLayout* inputLayout = nullptr;
+	ID3D11VertexShader* vertexShader = nullptr;
+	ID3D11PixelShader* pixelShader = nullptr;
 
 	if (windowsWindow.GetWindow())
 	{
@@ -169,9 +169,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		float color[] = { 1.0, 0.0, 0.0, 0.0 };
 		m_Context->ClearRenderTargetView(m_RTV, color);
 		m_Context->OMSetRenderTargets(1, &m_RTV, nullptr);
+		m_Context->RSSetViewports(1, &m_Viewport);
 
 		m_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		m_Context->IASetInputLayout(inputLayout);
 		m_Context->IASetVertexBuffers(0, 1, &vertexBuffer, strides, offset);
+		m_Context->VSSetShader(vertexShader, nullptr, NULL);
+		m_Context->PSSetShader(pixelShader, nullptr, NULL);
+
+		m_Context->Draw(3, 0);
 
 
 		m_Swap->Present(0, 0);
