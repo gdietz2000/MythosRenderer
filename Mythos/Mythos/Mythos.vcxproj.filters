@@ -44,4 +44,8 @@
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Assets\Shaders\VertexShader.hlsl" />
+    <FxCompile Include="Assets\Shaders\PixelShader.hlsl" />
+  </ItemGroup>
 </Project>

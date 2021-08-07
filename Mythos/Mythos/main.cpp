@@ -5,9 +5,10 @@
 #include "Windows/WindowsApplication.h"
 
 #include "d3d11.h"
-#include "d3dcompiler.h"
 #pragma comment(lib, "d3d11.lib")
 #include <DirectXMath.h>
+#include "d3dcompiler.h"
+#pragma comment(lib, "d3dcompiler.lib")
 using namespace DirectX;
 
 //Temporary Vertex
@@ -40,6 +41,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	//Rendering the Triangle
 	ID3D11Buffer* vertexBuffer;
+	ID3D11InputLayout* inputLayout;
+	ID3D11VertexShader* vertexShader;
+	ID3D11PixelShader* pixelShader;
 
 	if (windowsWindow.GetWindow())
 	{
@@ -109,9 +113,47 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		hr = m_Device->CreateBuffer(&vertexDesc, &subData, &vertexBuffer);
 		if (FAILED(hr))
 			return -1;
+
+		const wchar_t* vertexShaderFilePath = L"Assets/Shaders/VertexShader.hlsl";
+		const wchar_t* pixelShaderFilePath = L"Assets/Shaders/PixelShader.hlsl";
+		const char* entryPoint = "main";
+		const char* vertexShaderModel = "vs_4_0";
+		const char* pixelShaderModel = "ps_4_0";
+
+		ID3D10Blob* errorBlob;
+		ID3D10Blob* vertexBlob;
+		ID3D10Blob* pixelBlob;
+
+		hr = D3DCompileFromFile(vertexShaderFilePath, NULL, NULL, entryPoint, vertexShaderModel, NULL, NULL, &vertexBlob, &errorBlob);
+
+		if (FAILED(hr))
+			return -1;
+
+		hr = D3DCompileFromFile(pixelShaderFilePath, NULL, NULL, entryPoint, pixelShaderModel, NULL, NULL, &pixelBlob, &errorBlob);
+
+		if (FAILED(hr))
+			return -1;
+
+		D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
+			{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA}
+		};
+
+		hr = m_Device->CreateInputLayout(layoutDesc, 1, vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), &inputLayout);
+		if (FAILED(hr))
+			return -1;
+
+		hr = m_Device->CreateVertexShader(vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), NULL, &vertexShader);
+		if (FAILED(hr))
+			return -1;
+
+		hr = m_Device->CreatePixelShader(pixelBlob->GetBufferPointer(), pixelBlob->GetBufferSize(), NULL, &pixelShader);
+		if (FAILED(hr))
+			return -1;
 	}
 
     // Main message loop:
+	UINT strides[] = { sizeof(TempVertex) };
+	UINT offset[] = { 0 };
 	while (true)
 	{
 		PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE);
@@ -127,6 +169,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		float color[] = { 1.0, 0.0, 0.0, 0.0 };
 		m_Context->ClearRenderTargetView(m_RTV, color);
 		m_Context->OMSetRenderTargets(1, &m_RTV, nullptr);
+
+		m_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		m_Context->IASetVertexBuffers(0, 1, &vertexBuffer, strides, offset);
+
+
 		m_Swap->Present(0, 0);
 	}
 
