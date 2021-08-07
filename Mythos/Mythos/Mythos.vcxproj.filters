@@ -27,12 +27,63 @@
     <ClInclude Include="Windows\WindowsApplication.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Mathematics\include\Mathematics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mathematics\include\Matrix2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mathematics\include\Matrix3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mathematics\include\Matrix4.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mathematics\include\Quaternion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mathematics\include\Rng.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mathematics\include\Vector2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mathematics\include\Vector3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mathematics\include\Vector4.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Windows\WindowsApplication.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mathematics\src\Matrix2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mathematics\src\Matrix3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mathematics\src\Matrix4.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mathematics\src\Quaternion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mathematics\src\Rng.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mathematics\src\Vector2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mathematics\src\Vector3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mathematics\src\Vector4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -47,5 +98,8 @@
   <ItemGroup>
     <FxCompile Include="Assets\Shaders\VertexShader.hlsl" />
     <FxCompile Include="Assets\Shaders\PixelShader.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Mathematics\README.md" />
   </ItemGroup>
 </Project>

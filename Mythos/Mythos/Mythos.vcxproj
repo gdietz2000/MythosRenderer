@@ -90,6 +90,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)Mythos\Mathematics\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -104,6 +105,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)Mythos\Mathematics\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -120,6 +122,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)Mythos\Mathematics\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -138,6 +141,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)Mythos\Mathematics\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -147,6 +151,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Mathematics\include\Mathematics.h" />
+    <ClInclude Include="Mathematics\include\Matrix2.h" />
+    <ClInclude Include="Mathematics\include\Matrix3.h" />
+    <ClInclude Include="Mathematics\include\Matrix4.h" />
+    <ClInclude Include="Mathematics\include\Quaternion.h" />
+    <ClInclude Include="Mathematics\include\Rng.h" />
+    <ClInclude Include="Mathematics\include\Vector2.h" />
+    <ClInclude Include="Mathematics\include\Vector3.h" />
+    <ClInclude Include="Mathematics\include\Vector4.h" />
     <ClInclude Include="Mythos.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
@@ -154,6 +167,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Mathematics\src\Matrix2.cpp" />
+    <ClCompile Include="Mathematics\src\Matrix3.cpp" />
+    <ClCompile Include="Mathematics\src\Matrix4.cpp" />
+    <ClCompile Include="Mathematics\src\Quaternion.cpp" />
+    <ClCompile Include="Mathematics\src\Rng.cpp" />
+    <ClCompile Include="Mathematics\src\Vector2.cpp" />
+    <ClCompile Include="Mathematics\src\Vector3.cpp" />
+    <ClCompile Include="Mathematics\src\Vector4.cpp" />
     <ClCompile Include="Windows\WindowsApplication.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -177,6 +198,9 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Mathematics\README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
