@@ -5,9 +5,15 @@
 #include "Windows/WindowsApplication.h"
 
 #include "d3d11.h"
+#include "d3dcompiler.h"
 #pragma comment(lib, "d3d11.lib")
 #include <DirectXMath.h>
 using namespace DirectX;
+
+//Temporary Vertex
+struct TempVertex {
+	XMVECTOR position;
+};
 
 #ifdef _WIN32
 
@@ -25,11 +31,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 
+	//Default DirectX Rendering Necessities
 	ID3D11Device* m_Device = nullptr;
 	ID3D11DeviceContext* m_Context = nullptr;
 	IDXGISwapChain* m_Swap = nullptr;
 	ID3D11RenderTargetView* m_RTV = nullptr;
 	D3D11_VIEWPORT m_Viewport;
+
+	//Rendering the Triangle
+	ID3D11Buffer* vertexBuffer;
 
 	if (windowsWindow.GetWindow())
 	{
@@ -76,6 +86,29 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		backbuffer->Release();
 
+		TempVertex triangle[] = {
+			{{0.5, -0.5, 1, 1}},
+			{{-0.5, -0.5, 1, 1}},
+			{{0, 0.5, 1, 1}}
+		};
+
+		D3D11_BUFFER_DESC vertexDesc;
+		ZeroMemory(&vertexDesc, sizeof(vertexDesc));
+		vertexDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		vertexDesc.ByteWidth = sizeof(TempVertex) * ARRAYSIZE(triangle);
+		vertexDesc.CPUAccessFlags = 0;
+		vertexDesc.MiscFlags = 0;
+		vertexDesc.StructureByteStride = 0;
+		vertexDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		D3D11_SUBRESOURCE_DATA subData;
+		ZeroMemory(&subData, sizeof(subData));
+
+		subData.pSysMem = triangle;
+
+		hr = m_Device->CreateBuffer(&vertexDesc, &subData, &vertexBuffer);
+		if (FAILED(hr))
+			return -1;
 	}
 
     // Main message loop:
