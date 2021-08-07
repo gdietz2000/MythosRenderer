@@ -160,9 +160,7 @@
     <ClInclude Include="Mathematics\include\Vector2.h" />
     <ClInclude Include="Mathematics\include\Vector3.h" />
     <ClInclude Include="Mathematics\include\Vector4.h" />
-    <ClInclude Include="Mythos.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="targetver.h" />
     <ClInclude Include="Windows\WindowsApplication.h" />
   </ItemGroup>
   <ItemGroup>
