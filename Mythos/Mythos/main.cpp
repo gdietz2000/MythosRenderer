@@ -40,7 +40,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	D3D11_VIEWPORT m_Viewport;
 
 	//Rendering the Triangle
-	ID3D11Buffer* vertexBuffer;
+	ID3D11Buffer* vertexBuffer = nullptr;
+	ID3D11Buffer* indexBuffer = nullptr;
 	ID3D11InputLayout* inputLayout = nullptr;
 	ID3D11VertexShader* vertexShader = nullptr;
 	ID3D11PixelShader* pixelShader = nullptr;
@@ -91,8 +92,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		backbuffer->Release();
 
 		TempVertex triangle[] = {
-			{{0.5, -0.5, 1, 1}},
 			{{-0.5, -0.5, 1, 1}},
+			{{0.5, -0.5, 1, 1}},
 			{{0, 0.5, 1, 1}}
 		};
 
@@ -111,6 +112,25 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		subData.pSysMem = triangle;
 
 		hr = m_Device->CreateBuffer(&vertexDesc, &subData, &vertexBuffer);
+		if (FAILED(hr))
+			return -1;
+
+		int triangleIndices[] = {
+			1,0,2
+		};
+
+		D3D11_BUFFER_DESC indexDesc;
+		ZeroMemory(&indexDesc, sizeof(indexDesc));
+		indexDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		indexDesc.ByteWidth = sizeof(int) * ARRAYSIZE(triangleIndices);
+		indexDesc.CPUAccessFlags = 0;
+		indexDesc.MiscFlags = 0;
+		indexDesc.StructureByteStride = 0;
+		indexDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		subData.pSysMem = triangleIndices;
+
+		hr = m_Device->CreateBuffer(&indexDesc, &subData, &indexBuffer);
 		if (FAILED(hr))
 			return -1;
 
@@ -149,6 +169,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		hr = m_Device->CreatePixelShader(pixelBlob->GetBufferPointer(), pixelBlob->GetBufferSize(), NULL, &pixelShader);
 		if (FAILED(hr))
 			return -1;
+
+		if (errorBlob) errorBlob->Release();
+		if (vertexBlob) vertexBlob->Release();
+		if (pixelBlob) pixelBlob->Release();
 	}
 
     // Main message loop:
@@ -174,10 +198,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		m_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_Context->IASetInputLayout(inputLayout);
 		m_Context->IASetVertexBuffers(0, 1, &vertexBuffer, strides, offset);
+		m_Context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 		m_Context->VSSetShader(vertexShader, nullptr, NULL);
 		m_Context->PSSetShader(pixelShader, nullptr, NULL);
 
-		m_Context->Draw(3, 0);
+		m_Context->DrawIndexed(3, 0, 0);
 
 
 		m_Swap->Present(0, 0);
@@ -187,6 +212,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (m_Context) m_Context->Release();
 	if (m_RTV) m_RTV->Release();
 	if (m_Swap) m_Swap->Release();
+
+	if (vertexBuffer) vertexBuffer->Release();
+	if (indexBuffer) indexBuffer->Release();
+	if (inputLayout) inputLayout->Release();
+	if (vertexShader) vertexShader->Release();
+	if (pixelShader) pixelShader->Release();
+
 
     return (int)msg.wParam;
 }
