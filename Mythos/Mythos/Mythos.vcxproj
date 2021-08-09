@@ -151,7 +151,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Graphics\DirectX\Buffer.h" />
     <ClInclude Include="Mathematics\include\Mathematics.h" />
     <ClInclude Include="Mathematics\include\Matrix2.h" />
     <ClInclude Include="Mathematics\include\Matrix3.h" />
@@ -165,7 +164,6 @@
     <ClInclude Include="Windows\WindowsApplication.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Graphics\DirectX\Buffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mathematics\src\Matrix2.cpp" />
     <ClCompile Include="Mathematics\src\Matrix3.cpp" />

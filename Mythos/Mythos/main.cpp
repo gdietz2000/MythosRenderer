@@ -8,7 +8,6 @@
 using namespace Math;
 
 #include "Windows/WindowsApplication.h"
-#include "Graphics/DirectX/Buffer.h"
 
 #include "d3d11.h"
 #pragma comment(lib, "d3d11.lib")
@@ -152,13 +151,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	ID3D11DepthStencilView* depthBuffer = nullptr;
 
 	//Rendering the Triangle
-	//ID3D11Buffer* vertexBuffer = nullptr;
-	//ID3D11Buffer* indexBuffer = nullptr;
-	//ID3D11Buffer* constantBuffer = nullptr;
-
-	Buffer vertexBuffer;
-	Buffer indexBuffer;
-	Buffer constantBuffer;
+	ID3D11Buffer* vertexBuffer = nullptr;
+	ID3D11Buffer* indexBuffer = nullptr;
+	ID3D11Buffer* constantBuffer = nullptr;
 
 	ID3D11InputLayout* inputLayout = nullptr;
 	ID3D11VertexShader* vertexShader = nullptr;
@@ -219,12 +214,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			{{1,   1, 1,1}, {0.23,0.23,0.23,1}},
 		};
 
-		vertexBuffer = Buffer(BufferType::VertexBuffer, UsageType::UsageDefault, triangle, sizeof(TempVertex) * ARRAYSIZE(triangle), m_Device);
+		
 
-		D3D11_SUBRESOURCE_DATA subData;
-		ZeroMemory(&subData, sizeof(subData));
-
-		/*D3D11_BUFFER_DESC vertexDesc;
+		D3D11_BUFFER_DESC vertexDesc;
 		ZeroMemory(&vertexDesc, sizeof(vertexDesc));
 		vertexDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 		vertexDesc.ByteWidth = sizeof(TempVertex) * ARRAYSIZE(triangle);
@@ -233,11 +225,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		vertexDesc.StructureByteStride = 0;
 		vertexDesc.Usage = D3D11_USAGE_DEFAULT;
 
+		D3D11_SUBRESOURCE_DATA subData;
+		ZeroMemory(&subData, sizeof(subData));
 		subData.pSysMem = triangle;
 
 		hr = m_Device->CreateBuffer(&vertexDesc, &subData, &vertexBuffer);
 		if (FAILED(hr))
-			return -1;*/
+			return -1;
 
 		int triangleIndices[] = {
 			0,1,2,
@@ -254,9 +248,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			0,4,5
 		};
 
-		indexBuffer = Buffer(BufferType::IndexBuffer, UsageType::UsageDefault, triangleIndices, sizeof(int) * ARRAYSIZE(triangleIndices), m_Device);
-
-		/*D3D11_BUFFER_DESC indexDesc;
+		D3D11_BUFFER_DESC indexDesc;
 		ZeroMemory(&indexDesc, sizeof(indexDesc));
 		indexDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 		indexDesc.ByteWidth = sizeof(int) * ARRAYSIZE(triangleIndices);
@@ -269,11 +261,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		hr = m_Device->CreateBuffer(&indexDesc, &subData, &indexBuffer);
 		if (FAILED(hr))
-			return -1;*/
+			return -1;
 
-		constantBuffer = Buffer(BufferType::ConstantBuffer, UsageType::UsageDynamic, nullptr, sizeof(WVP), m_Device);
-
-		/*D3D11_BUFFER_DESC constantDesc;
+		D3D11_BUFFER_DESC constantDesc;
 		ZeroMemory(&constantDesc, sizeof(constantDesc));
 		constantDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		constantDesc.ByteWidth = sizeof(WVP);
@@ -284,7 +274,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		hr = m_Device->CreateBuffer(&constantDesc, NULL, &constantBuffer);
 		if (FAILED(hr))
-			return -1;*/
+			return -1;
 
 		const wchar_t* vertexShaderFilePath = L"Assets/Shaders/VertexShader.hlsl";
 		const wchar_t* pixelShaderFilePath = L"Assets/Shaders/PixelShader.hlsl";
@@ -394,16 +384,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		m_Context->OMSetRenderTargets(1, &m_RTV, depthBuffer);
 		m_Context->RSSetViewports(1, &m_Viewport);
 
-		constantBuffer.SetData(&MyMatrices, sizeof(WVP));
-		constantBuffer.Update(m_Context);
+		D3D11_MAPPED_SUBRESOURCE gpuBuffer;
+		m_Context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &gpuBuffer);
+		memcpy(gpuBuffer.pData, &MyMatrices, sizeof(WVP));
+		m_Context->Unmap(constantBuffer, 0);
 
-		ID3D11Buffer* buffers = { vertexBuffer.GetBufferPointer() };
-		ID3D11Buffer* constBuffers{ constantBuffer.GetBufferPointer() };
+		ID3D11Buffer* buffers = { vertexBuffer };
+		ID3D11Buffer* constBuffers{ constantBuffer };
 
 		m_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_Context->IASetInputLayout(inputLayout);
 		m_Context->IASetVertexBuffers(0, 1, &buffers, strides, offset);
-		m_Context->IASetIndexBuffer(indexBuffer.GetBufferPointer(), DXGI_FORMAT_R32_UINT, 0);
+		m_Context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 		m_Context->VSSetShader(vertexShader, nullptr, NULL);
 		m_Context->VSSetConstantBuffers(0, 1, &constBuffers);
 		m_Context->RSSetState(rasterState);
@@ -425,9 +417,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (zBufferTexture) zBufferTexture->Release();
 	if (depthBuffer) depthBuffer->Release();
 
-	vertexBuffer.SafeRelease();
-	indexBuffer.SafeRelease();
-	constantBuffer.SafeRelease();
+	if (vertexBuffer) vertexBuffer->Release();
+	if (indexBuffer) indexBuffer->Release();
+	if (constantBuffer) constantBuffer->Release();
 	if (inputLayout) inputLayout->Release();
 	if (vertexShader) vertexShader->Release();
 	if (pixelShader) pixelShader->Release();
