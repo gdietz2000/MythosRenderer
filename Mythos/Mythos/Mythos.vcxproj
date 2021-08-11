@@ -151,6 +151,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Graphics\IRenderBuffer.h" />
+    <ClInclude Include="Graphics\IRenderVertexBuffer.h" />
     <ClInclude Include="Mathematics\include\Mathematics.h" />
     <ClInclude Include="Mathematics\include\Matrix2.h" />
     <ClInclude Include="Mathematics\include\Matrix3.h" />
