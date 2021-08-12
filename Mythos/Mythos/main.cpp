@@ -137,8 +137,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MYTHOS));
 
     MSG msg;
-
-	//Default DirectX Rendering Necessities
+	//Basic DirectX Rendering stuff
 	ID3D11Device* m_Device = nullptr;
 	ID3D11DeviceContext* m_Context = nullptr;
 	IDXGISwapChain* m_Swap = nullptr;
@@ -161,44 +160,40 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	if (windowsWindow.GetWindow())
 	{
+
+		HRESULT hr;
+
 		RECT rect;
 		GetClientRect(windowsWindow.GetWindow(), &rect);
-		m_Viewport.Width = rect.right - rect.left;
-		m_Viewport.Height = rect.bottom - rect.top;
+
+		
+		D3D_FEATURE_LEVEL dx11 = D3D_FEATURE_LEVEL_11_0;
+
+		DXGI_SWAP_CHAIN_DESC scDesc;
+		ZeroMemory(&scDesc, sizeof(scDesc));
+
+		scDesc.BufferCount = 1;
+		scDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		scDesc.BufferDesc.Width = rect.right - rect.left;
+		scDesc.BufferDesc.Height = rect.bottom - rect.top;
+		scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		scDesc.OutputWindow = windowsWindow.GetWindow();
+		scDesc.SampleDesc.Count = 1;
+		scDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+		scDesc.Windowed = true;
+
+		hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_DEBUG,
+			&dx11, 1, D3D11_SDK_VERSION, &scDesc, &m_Swap, &m_Device, nullptr, &m_Context);
+
+		m_Viewport.Width = (FLOAT)scDesc.BufferDesc.Width;
+		m_Viewport.Height = (FLOAT)scDesc.BufferDesc.Height;
 		m_Viewport.TopLeftX = m_Viewport.TopLeftY = 0;
 		m_Viewport.MinDepth = 0; m_Viewport.MaxDepth = 1;
 
-		D3D_FEATURE_LEVEL dx11 = D3D_FEATURE_LEVEL_11_0;
-		DXGI_SWAP_CHAIN_DESC swapDesc;
-		ZeroMemory(&swapDesc, sizeof(swapDesc));
-		swapDesc.BufferCount = 1;
-		swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		swapDesc.BufferDesc.Width = m_Viewport.Width;
-		swapDesc.BufferDesc.Height = m_Viewport.Height;
-		swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		swapDesc.OutputWindow = windowsWindow.GetWindow();
-		swapDesc.SampleDesc.Count = 1;
-		swapDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-		swapDesc.Windowed = true;
-
-		HRESULT hr;
-		hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_DEBUG,
-			&dx11, 1, D3D11_SDK_VERSION, &swapDesc, &m_Swap, &m_Device, 0, &m_Context);
-
-		if (FAILED(hr)) {
-			return -1;
-		}
-
 		ID3D11Resource* backbuffer;
-		hr = m_Swap->GetBuffer(0, __uuidof(backbuffer), (void**)&backbuffer);
-		if (FAILED(hr)) {
-			return -1;
-		}
 
+		hr = m_Swap->GetBuffer(0, __uuidof(backbuffer), (void**)&backbuffer);
 		hr = m_Device->CreateRenderTargetView(backbuffer, nullptr, &m_RTV);
-		if (FAILED(hr)) {
-			return -1;
-		}
 
 		backbuffer->Release();
 
@@ -327,12 +322,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (FAILED(hr))
 			return -1;
 
+		D3D11_VIEWPORT view = m_Viewport;
+
 		D3D11_TEXTURE2D_DESC zBufferDesc;
 		ZeroMemory(&zBufferDesc, sizeof(zBufferDesc));
 		zBufferDesc.ArraySize = 1;
 		zBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-		zBufferDesc.Width = m_Viewport.Width;
-		zBufferDesc.Height = m_Viewport.Height;
+		zBufferDesc.Width = view.Width;
+		zBufferDesc.Height = view.Height;
 		zBufferDesc.Format = DXGI_FORMAT_D32_FLOAT;
 		zBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		zBufferDesc.SampleDesc.Count = 1;
@@ -379,9 +376,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		CameraInput();
 
 		float color[] = { 0.0, 0.0, 0.0, 0.0 };
+		ID3D11RenderTargetView* targets = { m_RTV };
 		m_Context->ClearRenderTargetView(m_RTV, color);
 		m_Context->ClearDepthStencilView(depthBuffer, D3D11_CLEAR_DEPTH, 1.0f, 0);
-		m_Context->OMSetRenderTargets(1, &m_RTV, depthBuffer);
+		m_Context->OMSetRenderTargets(1, &targets, depthBuffer);
 		m_Context->RSSetViewports(1, &m_Viewport);
 
 		D3D11_MAPPED_SUBRESOURCE gpuBuffer;
@@ -410,8 +408,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	if (m_Device) m_Device->Release();
 	if (m_Context) m_Context->Release();
-	if (m_RTV) m_RTV->Release();
 	if (m_Swap) m_Swap->Release();
+	if (m_RTV) m_RTV->Release();
 
 	if (rasterState) rasterState->Release();
 	if (zBufferTexture) zBufferTexture->Release();
@@ -423,7 +421,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (inputLayout) inputLayout->Release();
 	if (vertexShader) vertexShader->Release();
 	if (pixelShader) pixelShader->Release();
-
 
     return (int)msg.wParam;
 }
