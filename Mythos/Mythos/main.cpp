@@ -8,6 +8,7 @@
 using namespace Math;
 
 #include "Windows/WindowsApplication.h"
+#include "Graphics/Mythos.h"
 
 #include "d3d11.h"
 #pragma comment(lib, "d3d11.lib")
@@ -138,11 +139,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 	//Basic DirectX Rendering stuff
-	ID3D11Device* m_Device = nullptr;
-	ID3D11DeviceContext* m_Context = nullptr;
-	IDXGISwapChain* m_Swap = nullptr;
-	ID3D11RenderTargetView* m_RTV = nullptr;
-	D3D11_VIEWPORT m_Viewport;
+	//ID3D11Device* m_Device = nullptr;
+	//ID3D11DeviceContext* m_Context = nullptr;
+	//IDXGISwapChain* m_Swap = nullptr;
+	//ID3D11RenderTargetView* m_RTV = nullptr;
+	//D3D11_VIEWPORT m_Viewport;
+
+	Mythos::Mythos* mythos = new Mythos::Mythos(&windowsWindow.GetWindow());
 
 	//Rasterization Stuff
 	ID3D11RasterizerState* rasterState = nullptr;
@@ -163,9 +166,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		HRESULT hr;
 
-		RECT rect;
+		/*RECT rect;
 		GetClientRect(windowsWindow.GetWindow(), &rect);
-
 		
 		D3D_FEATURE_LEVEL dx11 = D3D_FEATURE_LEVEL_11_0;
 
@@ -193,9 +195,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		ID3D11Resource* backbuffer;
 
 		hr = m_Swap->GetBuffer(0, __uuidof(backbuffer), (void**)&backbuffer);
-		hr = m_Device->CreateRenderTargetView(backbuffer, nullptr, &m_RTV);
+		hr = mythos->GetCreator()->CreateRenderTargetView(backbuffer, nullptr, &m_RTV);
 
-		backbuffer->Release();
+		backbuffer->Release();*/
 
 		TempVertex triangle[] = {
 			{{1,  -1, -1, 1}, {1,0,0,1}},
@@ -224,7 +226,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		ZeroMemory(&subData, sizeof(subData));
 		subData.pSysMem = triangle;
 
-		hr = m_Device->CreateBuffer(&vertexDesc, &subData, &vertexBuffer);
+		hr = mythos->GetCreator()->CreateBuffer(&vertexDesc, &subData, &vertexBuffer);
 		if (FAILED(hr))
 			return -1;
 
@@ -254,7 +256,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		subData.pSysMem = triangleIndices;
 
-		hr = m_Device->CreateBuffer(&indexDesc, &subData, &indexBuffer);
+		hr = mythos->GetCreator()->CreateBuffer(&indexDesc, &subData, &indexBuffer);
 		if (FAILED(hr))
 			return -1;
 
@@ -267,7 +269,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		constantDesc.StructureByteStride = 0;
 		constantDesc.Usage = D3D11_USAGE_DYNAMIC;
 
-		hr = m_Device->CreateBuffer(&constantDesc, NULL, &constantBuffer);
+		hr = mythos->GetCreator()->CreateBuffer(&constantDesc, NULL, &constantBuffer);
 		if (FAILED(hr))
 			return -1;
 
@@ -296,15 +298,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0}
 		};
 
-		hr = m_Device->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), &inputLayout);
+		hr = mythos->GetCreator()->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), &inputLayout);
 		if (FAILED(hr))
 			return -1;
 
-		hr = m_Device->CreateVertexShader(vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), NULL, &vertexShader);
+		hr = mythos->GetCreator()->CreateVertexShader(vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), NULL, &vertexShader);
 		if (FAILED(hr))
 			return -1;
 
-		hr = m_Device->CreatePixelShader(pixelBlob->GetBufferPointer(), pixelBlob->GetBufferSize(), NULL, &pixelShader);
+		hr = mythos->GetCreator()->CreatePixelShader(pixelBlob->GetBufferPointer(), pixelBlob->GetBufferSize(), NULL, &pixelShader);
 		if (FAILED(hr))
 			return -1;
 
@@ -317,12 +319,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		rasterDesc.FillMode = D3D11_FILL_SOLID;
 		rasterDesc.CullMode = D3D11_CULL_NONE;
 
-		hr = m_Device->CreateRasterizerState(&rasterDesc, &rasterState);
+		hr = mythos->GetCreator()->CreateRasterizerState(&rasterDesc, &rasterState);
 
 		if (FAILED(hr))
 			return -1;
 
-		D3D11_VIEWPORT view = m_Viewport;
+		D3D11_VIEWPORT view = mythos->GetViewport();
 
 		D3D11_TEXTURE2D_DESC zBufferDesc;
 		ZeroMemory(&zBufferDesc, sizeof(zBufferDesc));
@@ -335,11 +337,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		zBufferDesc.SampleDesc.Count = 1;
 		zBufferDesc.MipLevels = 1;
 
-		hr = m_Device->CreateTexture2D(&zBufferDesc, nullptr, &zBufferTexture);
+		hr = mythos->GetCreator()->CreateTexture2D(&zBufferDesc, nullptr, &zBufferTexture);
 		if (FAILED(hr))
 			return -1;
 
-		hr = m_Device->CreateDepthStencilView(zBufferTexture, nullptr, &depthBuffer);
+		hr = mythos->GetCreator()->CreateDepthStencilView(zBufferTexture, nullptr, &depthBuffer);
 		if (FAILED(hr))
 			return -1;
 	}
@@ -376,40 +378,40 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		CameraInput();
 
 		float color[] = { 0.0, 0.0, 0.0, 0.0 };
-		ID3D11RenderTargetView* targets = { m_RTV };
-		m_Context->ClearRenderTargetView(m_RTV, color);
-		m_Context->ClearDepthStencilView(depthBuffer, D3D11_CLEAR_DEPTH, 1.0f, 0);
-		m_Context->OMSetRenderTargets(1, &targets, depthBuffer);
-		m_Context->RSSetViewports(1, &m_Viewport);
+		ID3D11RenderTargetView* targets = { mythos->GetMainRenderTarget() };
+		mythos->GetContext()->ClearRenderTargetView(mythos->GetMainRenderTarget(), color);
+		mythos->GetContext()->ClearDepthStencilView(depthBuffer, D3D11_CLEAR_DEPTH, 1.0f, 0);
+		mythos->GetContext()->OMSetRenderTargets(1, &targets, depthBuffer);
+		mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
 
 		D3D11_MAPPED_SUBRESOURCE gpuBuffer;
-		m_Context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &gpuBuffer);
+		mythos->GetContext()->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &gpuBuffer);
 		memcpy(gpuBuffer.pData, &MyMatrices, sizeof(WVP));
-		m_Context->Unmap(constantBuffer, 0);
+		mythos->GetContext()->Unmap(constantBuffer, 0);
 
 		ID3D11Buffer* buffers = { vertexBuffer };
 		ID3D11Buffer* constBuffers{ constantBuffer };
 
-		m_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		m_Context->IASetInputLayout(inputLayout);
-		m_Context->IASetVertexBuffers(0, 1, &buffers, strides, offset);
-		m_Context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-		m_Context->VSSetShader(vertexShader, nullptr, NULL);
-		m_Context->VSSetConstantBuffers(0, 1, &constBuffers);
-		m_Context->RSSetState(rasterState);
+		mythos->GetContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		mythos->GetContext()->IASetInputLayout(inputLayout);
+		mythos->GetContext()->IASetVertexBuffers(0, 1, &buffers, strides, offset);
+		mythos->GetContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		mythos->GetContext()->VSSetShader(vertexShader, nullptr, NULL);
+		mythos->GetContext()->VSSetConstantBuffers(0, 1, &constBuffers);
+		mythos->GetContext()->RSSetState(rasterState);
 
 
-		m_Context->PSSetShader(pixelShader, nullptr, NULL);
+		mythos->GetContext()->PSSetShader(pixelShader, nullptr, NULL);
 
-		m_Context->DrawIndexed(36, 0, 0);
+		mythos->GetContext()->DrawIndexed(36, 0, 0);
 
-		m_Swap->Present(0, 0);
+		mythos->Present();
 	}
 
-	if (m_Device) m_Device->Release();
-	if (m_Context) m_Context->Release();
+	/*if (m_Device) mythos->GetCreator()->Release();
+	if (m_Context) mythos->GetContext()->Release();
 	if (m_Swap) m_Swap->Release();
-	if (m_RTV) m_RTV->Release();
+	if (m_RTV) m_RTV->Release();*/
 
 	if (rasterState) rasterState->Release();
 	if (zBufferTexture) zBufferTexture->Release();
@@ -421,6 +423,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (inputLayout) inputLayout->Release();
 	if (vertexShader) vertexShader->Release();
 	if (pixelShader) pixelShader->Release();
+
+	delete mythos;
 
     return (int)msg.wParam;
 }

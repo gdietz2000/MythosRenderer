@@ -151,7 +151,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Graphics\IRenderResource.h" />
+    <ClInclude Include="Graphics\IMythosResource.h" />
+    <ClInclude Include="Graphics\Mythos.h" />
+    <ClInclude Include="Graphics\MythosContext.h" />
+    <ClInclude Include="Graphics\MythosCreator.h" />
+    <ClInclude Include="Graphics\MythosSwapChain.h" />
     <ClInclude Include="Mathematics\include\Mathematics.h" />
     <ClInclude Include="Mathematics\include\Matrix2.h" />
     <ClInclude Include="Mathematics\include\Matrix3.h" />
@@ -165,6 +169,7 @@
     <ClInclude Include="Windows\WindowsApplication.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Graphics\Mythos.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mathematics\src\Matrix2.cpp" />
     <ClCompile Include="Mathematics\src\Matrix3.cpp" />
