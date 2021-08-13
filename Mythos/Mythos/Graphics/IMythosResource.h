@@ -5,8 +5,12 @@ namespace Mythos
 	struct IMythosResource
 	{
 	public:
+		IMythosResource() = default;
+		virtual void*& GetData() = 0;
+		inline unsigned int SetID(unsigned int id) { m_ID = id; }
 		inline unsigned int GetID() { return m_ID; }
-	private:
+		virtual void SafeRelease() = 0;
+	protected:
 		unsigned int m_ID = 0;
 	};
 }

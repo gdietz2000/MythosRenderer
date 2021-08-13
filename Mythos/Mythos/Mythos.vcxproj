@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="Graphics\IMythosResource.h" />
     <ClInclude Include="Graphics\Mythos.h" />
+    <ClInclude Include="Graphics\MythosBuffer.h" />
     <ClInclude Include="Graphics\MythosContext.h" />
     <ClInclude Include="Graphics\MythosCreator.h" />
     <ClInclude Include="Graphics\MythosSwapChain.h" />

@@ -153,8 +153,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	ID3D11DepthStencilView* depthBuffer = nullptr;
 
 	//Rendering the Triangle
-	ID3D11Buffer* vertexBuffer = nullptr;
-	ID3D11Buffer* indexBuffer = nullptr;
+	//ID3D11Buffer* vertexBuffer = nullptr;
+	//ID3D11Buffer* indexBuffer = nullptr;
 	ID3D11Buffer* constantBuffer = nullptr;
 
 	ID3D11InputLayout* inputLayout = nullptr;
@@ -213,7 +213,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		
 
-		D3D11_BUFFER_DESC vertexDesc;
+		/*D3D11_BUFFER_DESC vertexDesc;
 		ZeroMemory(&vertexDesc, sizeof(vertexDesc));
 		vertexDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 		vertexDesc.ByteWidth = sizeof(TempVertex) * ARRAYSIZE(triangle);
@@ -228,6 +228,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		hr = mythos->GetCreator()->CreateBuffer(&vertexDesc, &subData, &vertexBuffer);
 		if (FAILED(hr))
+			return -1;*/
+
+		BOOL success = mythos->CreateVertexBuffer(triangle, sizeof(TempVertex) * ARRAYSIZE(triangle));
+		if (!success)
 			return -1;
 
 		int triangleIndices[] = {
@@ -245,7 +249,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			0,4,5
 		};
 
-		D3D11_BUFFER_DESC indexDesc;
+		/*D3D11_BUFFER_DESC indexDesc;
 		ZeroMemory(&indexDesc, sizeof(indexDesc));
 		indexDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 		indexDesc.ByteWidth = sizeof(int) * ARRAYSIZE(triangleIndices);
@@ -254,13 +258,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		indexDesc.StructureByteStride = 0;
 		indexDesc.Usage = D3D11_USAGE_DEFAULT;
 
+		D3D11_SUBRESOURCE_DATA subData;
+		ZeroMemory(&subData, sizeof(subData));
 		subData.pSysMem = triangleIndices;
 
 		hr = mythos->GetCreator()->CreateBuffer(&indexDesc, &subData, &indexBuffer);
 		if (FAILED(hr))
+			return -1;*/
+
+		success = mythos->CreateIndexBuffer(triangleIndices, sizeof(int) * ARRAYSIZE(triangleIndices));
+		if (!success)
 			return -1;
 
-		D3D11_BUFFER_DESC constantDesc;
+		/*D3D11_BUFFER_DESC constantDesc;
 		ZeroMemory(&constantDesc, sizeof(constantDesc));
 		constantDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		constantDesc.ByteWidth = sizeof(WVP);
@@ -271,6 +281,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		hr = mythos->GetCreator()->CreateBuffer(&constantDesc, NULL, &constantBuffer);
 		if (FAILED(hr))
+			return -1;*/
+
+		success = mythos->CreateConstantBuffer(nullptr, sizeof(WVP));
+		if (!success)
 			return -1;
 
 		const wchar_t* vertexShaderFilePath = L"Assets/Shaders/VertexShader.hlsl";
@@ -384,18 +398,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->OMSetRenderTargets(1, &targets, depthBuffer);
 		mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
 
-		D3D11_MAPPED_SUBRESOURCE gpuBuffer;
-		mythos->GetContext()->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &gpuBuffer);
-		memcpy(gpuBuffer.pData, &MyMatrices, sizeof(WVP));
-		mythos->GetContext()->Unmap(constantBuffer, 0);
+		mythos->UpdateMythosResource(2, &MyMatrices, sizeof(WVP));
 
-		ID3D11Buffer* buffers = { vertexBuffer };
-		ID3D11Buffer* constBuffers{ constantBuffer };
+		ID3D11Buffer* buffers = { (ID3D11Buffer*)mythos->GetResource(0)->GetData() };
+		ID3D11Buffer* constBuffers{ (ID3D11Buffer*)mythos->GetResource(2)->GetData() };
 
 		mythos->GetContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		mythos->GetContext()->IASetInputLayout(inputLayout);
 		mythos->GetContext()->IASetVertexBuffers(0, 1, &buffers, strides, offset);
-		mythos->GetContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		mythos->GetContext()->IASetIndexBuffer((ID3D11Buffer*)mythos->GetResource(1)->GetData(), DXGI_FORMAT_R32_UINT, 0);
 		mythos->GetContext()->VSSetShader(vertexShader, nullptr, NULL);
 		mythos->GetContext()->VSSetConstantBuffers(0, 1, &constBuffers);
 		mythos->GetContext()->RSSetState(rasterState);
@@ -417,8 +428,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (zBufferTexture) zBufferTexture->Release();
 	if (depthBuffer) depthBuffer->Release();
 
-	if (vertexBuffer) vertexBuffer->Release();
-	if (indexBuffer) indexBuffer->Release();
+	//if (vertexBuffer) vertexBuffer->Release();
+	//if (indexBuffer) indexBuffer->Release();
 	if (constantBuffer) constantBuffer->Release();
 	if (inputLayout) inputLayout->Release();
 	if (vertexShader) vertexShader->Release();

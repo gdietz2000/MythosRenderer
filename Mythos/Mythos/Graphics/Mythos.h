@@ -21,6 +21,12 @@ namespace Mythos
 		inline ID3D11RenderTargetView* GetMainRenderTarget() { return m_RTV; }
 		inline D3D11_VIEWPORT GetViewport() { return m_Viewport; }
 
+		BOOL CreateVertexBuffer(void* data, unsigned int byteSize);
+		BOOL CreateIndexBuffer(void* data, unsigned int byteSize);
+		BOOL CreateConstantBuffer(void* data, unsigned int byteSize);
+
+		BOOL UpdateMythosResource(unsigned int id, void* data, unsigned int byteSize);
+
 		//GetResource will return a resource based off of the id given.
 		IMythosResource* GetResource(unsigned int id);
 	private:
@@ -30,6 +36,7 @@ namespace Mythos
 		D3D11_VIEWPORT m_Viewport;
 		ID3D11RenderTargetView* m_RTV;
 
+		static unsigned int m_NextID;
 		std::unordered_map<unsigned int, IMythosResource*> m_Resources;
 	};
 }
