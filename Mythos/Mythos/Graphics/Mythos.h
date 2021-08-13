@@ -15,6 +15,7 @@ namespace Mythos
 		//Mythos will be creating the resources that will be used for rendering.
 		Mythos(void* window);
 		~Mythos();
+		//All of these are temporary
 		inline ID3D11Device* GetCreator() { return m_Creator.GetCreator(); }
 		inline ID3D11DeviceContext* GetContext() { return m_Context.GetContext(); }
 		inline void Present() { m_SwapChain.GetSwapChain()->Present(0, 0); }
@@ -37,6 +38,22 @@ namespace Mythos
 		ID3D11RenderTargetView* m_RTV;
 
 		static unsigned int m_NextID;
+		/*Will eventually contain a map of maps for:
+		Vertex Buffers
+		Index Buffers
+		Constant Buffers
+		Texture2Ds
+		Depth Buffers
+		Render Target Views
+		Vertex Shaders
+		Pixel Shaders
+		Geometry Shaders
+		Compute Shaders
+		Tesselation Shaders
+		Shader Resource Views
+		Rasterizer States
+		Input Layouts
+		*/
 		std::unordered_map<unsigned int, IMythosResource*> m_Resources;
 	};
 }
