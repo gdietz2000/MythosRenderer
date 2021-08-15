@@ -8,6 +8,24 @@
 
 namespace Mythos
 {
+#define BIT(x) x << 1
+
+	enum MythosResourceTypes : unsigned long
+	{
+		NONE = 0,
+		MYTHOS_RESOURCE_VERTEX_BUFFER = 1,
+		MYTHOS_RESOURCE_INDEX_BUFFER = BIT(1),
+		MYTHOS_RESOURCE_CONSTANT_BUFFER = BIT(2),
+		MYTHOS_RESOURCE_VERTEX_SHADER = BIT(3),
+		MYTHOS_RESOURCE_HULL_SHADER = BIT(4),
+		MYTHOS_RESOURCE_TESSELLATION_SHADER = BIT(5),
+		MYTHOS_RESOURCE_DOMAIN_SHADER = BIT(6),
+		MYTHOS_RESOURCE_GEOMETRY_SHADER = BIT(7),
+		MYTHOS_RESOURCE_COMPUTE_SHADER = BIT(8),
+		MYTHOS_RESOURCE_PIXEL_SHADER = BIT(9),
+		MYTHOS_RESOURCE_INPUT_LAYOUT = BIT(10),
+	};
+
 	//This class will be the main accessor when it comes to rendering
 	class Mythos 
 	{
@@ -42,7 +60,7 @@ namespace Mythos
 		ID3D11RenderTargetView* m_RTV;
 
 		static unsigned int m_NextID;
-		/*Will eventually contain a map of maps for:
+		/*Create a system where resources are seperated based on resource type ie:
 		Vertex Buffers
 		Index Buffers
 		Constant Buffers
