@@ -59,6 +59,8 @@ namespace Mythos
 		D3D11_VIEWPORT m_Viewport;
 		ID3D11RenderTargetView* m_RTV;
 
+		BOOL NameAvailable(const char* name);
+
 		/*Create a system where resources are seperated based on resource type ie:
 		Vertex Buffers
 		Index Buffers

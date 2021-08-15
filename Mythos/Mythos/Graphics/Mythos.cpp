@@ -97,6 +97,9 @@ namespace Mythos
 
 	BOOL Mythos::CreateVertexBuffer(void* data, unsigned int byteSize, const char* name)
 	{
+		if (!NameAvailable(name))
+			return FALSE;
+
 		D3D11_BUFFER_DESC vertexDesc;
 		ZeroMemory(&vertexDesc, sizeof(vertexDesc));
 		vertexDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -128,6 +131,9 @@ namespace Mythos
 
 	BOOL Mythos::CreateIndexBuffer(void* data, unsigned int byteSize, const char* name)
 	{
+		if (!NameAvailable(name))
+			return FALSE;
+
 		D3D11_BUFFER_DESC indexDesc;
 		ZeroMemory(&indexDesc, sizeof(indexDesc));
 		indexDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -160,6 +166,9 @@ namespace Mythos
 
 	BOOL Mythos::CreateConstantBuffer(void* data, unsigned int byteSize, const char* name)
 	{
+		if (!NameAvailable(name))
+			return FALSE;
+
 		D3D11_BUFFER_DESC constantDesc;
 		ZeroMemory(&constantDesc, sizeof(constantDesc));
 		constantDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -192,6 +201,9 @@ namespace Mythos
 
 	BOOL Mythos::CreateVertexShader(const wchar_t* filePath, const char* entryPoint, const char* modelType, const char* name)
 	{
+		if (!NameAvailable(name))
+			return FALSE;
+
 		ID3D10Blob* errorBlob;
 		ID3D10Blob* vertexBlob;
 
@@ -206,6 +218,7 @@ namespace Mythos
 			return FALSE;
 		}
 
+		
 		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_VERTEX_SHADER));
 		m_Resources[MYTHOS_RESOURCE_VERTEX_SHADER].insert(std::make_pair(name, vertexShader));
 		m_ShaderBlobs.insert(std::make_pair(name, vertexBlob));
@@ -215,6 +228,9 @@ namespace Mythos
 
 	BOOL Mythos::CreatePixelShader(const wchar_t* filePath, const char* entryPoint, const char* modelType, const char* name)
 	{
+		if (!NameAvailable(name))
+			return FALSE;
+
 		ID3D10Blob* errorBlob;
 		ID3D10Blob* pixelBlob;
 		HRESULT hr = D3DCompileFromFile(filePath, NULL, NULL, entryPoint, modelType, NULL, NULL, &pixelBlob, &errorBlob);
@@ -237,7 +253,6 @@ namespace Mythos
 
 	BOOL Mythos::UpdateMythosResource(const char* name, void* data, unsigned int byteSize)
 	{
-
 		IMythosResource* resource = m_Resources[m_NamesToIndex.find(name)->second].find(name)->second;
 
 		if (!resource)
@@ -267,10 +282,18 @@ namespace Mythos
 	{
 		auto iter = m_ShaderBlobs.find(name);
 		if (iter != m_ShaderBlobs.end())
-		{
 			return iter->second;
-		}
+		
 
 		return nullptr;
+	}
+
+	BOOL Mythos::NameAvailable(const char* name)
+	{
+		auto iter = m_NamesToIndex.find(name);
+		if (iter == m_NamesToIndex.end()) 
+			return TRUE;
+		
+		return FALSE;
 	}
 }
