@@ -1,6 +1,10 @@
 #include "Mythos.h"
 
+#include "d3dcompiler.h"
+#pragma comment(lib, "d3dcompiler.lib")
+
 #include "MythosBuffer.h"
+#include "MythosVertexShader.h"
 
 unsigned int Mythos::Mythos::m_NextID = 0;
 
@@ -164,6 +168,26 @@ namespace Mythos
 			return FALSE;
 
 		m_Resources.insert(std::make_pair(m_NextID++, constantBuffer));
+
+		return TRUE;
+	}
+
+	BOOL Mythos::CreateVertexShader(const wchar_t* filePath, const char* entryPoint, const char* modelType, ID3D10Blob*& vertexBlob)
+	{
+		ID3D10Blob* errorBlob;
+
+		HRESULT hr = D3DCompileFromFile(filePath, NULL, NULL, entryPoint, modelType, NULL, NULL, &vertexBlob, &errorBlob);
+		if (FAILED(hr))
+			return FALSE;
+
+		IMythosResource* vertexShader = new MythosVertexShader(m_NextID, filePath, entryPoint, modelType);
+		hr = m_Creator.GetCreator()->CreateVertexShader(vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), nullptr, (ID3D11VertexShader**)&vertexShader->GetData());
+		if (FAILED(hr)) {
+			delete vertexShader;
+			return FALSE;
+		}
+
+		m_Resources.insert(std::make_pair(m_NextID++, vertexShader));
 
 		return TRUE;
 	}

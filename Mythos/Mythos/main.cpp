@@ -158,7 +158,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	//ID3D11Buffer* constantBuffer = nullptr;
 
 	ID3D11InputLayout* inputLayout = nullptr;
-	ID3D11VertexShader* vertexShader = nullptr;
+	//ID3D11VertexShader* vertexShader = nullptr;
 	ID3D11PixelShader* pixelShader = nullptr;
 
 	if (windowsWindow.GetWindow())
@@ -297,14 +297,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		ID3D10Blob* vertexBlob;
 		ID3D10Blob* pixelBlob;
 
-		hr = D3DCompileFromFile(vertexShaderFilePath, NULL, NULL, entryPoint, vertexShaderModel, NULL, NULL, &vertexBlob, &errorBlob);
+		/*hr = D3DCompileFromFile(vertexShaderFilePath, NULL, NULL, entryPoint, vertexShaderModel, NULL, NULL, &vertexBlob, &errorBlob);
 
 		if (FAILED(hr))
-			return -1;
+			return -1;*/
 
 		hr = D3DCompileFromFile(pixelShaderFilePath, NULL, NULL, entryPoint, pixelShaderModel, NULL, NULL, &pixelBlob, &errorBlob);
 
 		if (FAILED(hr))
+			return -1;
+
+		success = mythos->CreateVertexShader(vertexShaderFilePath, entryPoint, vertexShaderModel, vertexBlob);
+		if (!success)
 			return -1;
 
 		D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
@@ -316,9 +320,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (FAILED(hr))
 			return -1;
 
-		hr = mythos->GetCreator()->CreateVertexShader(vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), NULL, &vertexShader);
+		/*hr = mythos->GetCreator()->CreateVertexShader(vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), NULL, &vertexShader);
 		if (FAILED(hr))
-			return -1;
+			return -1;*/
 
 		hr = mythos->GetCreator()->CreatePixelShader(pixelBlob->GetBufferPointer(), pixelBlob->GetBufferSize(), NULL, &pixelShader);
 		if (FAILED(hr))
@@ -407,7 +411,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->IASetInputLayout(inputLayout);
 		mythos->GetContext()->IASetVertexBuffers(0, 1, &buffers, strides, offset);
 		mythos->GetContext()->IASetIndexBuffer((ID3D11Buffer*)mythos->GetResource(1)->GetData(), DXGI_FORMAT_R32_UINT, 0);
-		mythos->GetContext()->VSSetShader(vertexShader, nullptr, NULL);
+		mythos->GetContext()->VSSetShader((ID3D11VertexShader*)mythos->GetResource(3)->GetData(), nullptr, NULL);
 		mythos->GetContext()->VSSetConstantBuffers(0, 1, &constBuffers);
 		mythos->GetContext()->RSSetState(rasterState);
 
@@ -432,7 +436,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	//if (indexBuffer) indexBuffer->Release();
 	//if (constantBuffer) constantBuffer->Release();
 	if (inputLayout) inputLayout->Release();
-	if (vertexShader) vertexShader->Release();
+	//if (vertexShader) vertexShader->Release();
 	if (pixelShader) pixelShader->Release();
 
 	delete mythos;

@@ -26,6 +26,8 @@ namespace Mythos
 		BOOL CreateIndexBuffer(void* data, unsigned int byteSize);
 		BOOL CreateConstantBuffer(void* data, unsigned int byteSize);
 
+		BOOL CreateVertexShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, ID3D10Blob*& vertexBlob);
+
 		BOOL UpdateMythosResource(unsigned int id, void* data, unsigned int byteSize);
 
 		//GetResource will return a resource based off of the id given.
