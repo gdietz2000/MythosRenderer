@@ -235,7 +235,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (FAILED(hr))
 			return -1;*/
 
-		BOOL success = mythos->CreateVertexBuffer(triangle, sizeof(TempVertex) * ARRAYSIZE(triangle));
+		BOOL success = mythos->CreateVertexBuffer(triangle, sizeof(TempVertex) * ARRAYSIZE(triangle), "vertexBuffer");
 		if (!success)
 			return -1;
 
@@ -271,7 +271,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (FAILED(hr))
 			return -1;*/
 
-		success = mythos->CreateIndexBuffer(triangleIndices, sizeof(int) * ARRAYSIZE(triangleIndices));
+		success = mythos->CreateIndexBuffer(triangleIndices, sizeof(int) * ARRAYSIZE(triangleIndices), "indexBuffer");
 		if (!success)
 			return -1;
 
@@ -288,7 +288,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (FAILED(hr))
 			return -1;*/
 
-		success = mythos->CreateConstantBuffer(nullptr, sizeof(WVP));
+		success = mythos->CreateConstantBuffer(nullptr, sizeof(WVP), "constantBuffer");
 		if (!success)
 			return -1;
 
@@ -312,11 +312,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (FAILED(hr))
 			return -1;*/
 
-		success = mythos->CreateVertexShader(vertexShaderFilePath, entryPoint, vertexShaderModel);
+		success = mythos->CreateVertexShader(vertexShaderFilePath, entryPoint, vertexShaderModel, "vertexShader");
 		if (!success)
 			return -1;
 
-		success = mythos->CreatePixelShader(pixelShaderFilePath, entryPoint, pixelShaderModel);
+		success = mythos->CreatePixelShader(pixelShaderFilePath, entryPoint, pixelShaderModel, "pixelShader");
 		if (!success)
 			return -1;
 
@@ -325,7 +325,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0}
 		};
 
-		hr = mythos->GetCreator()->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), mythos->GetShaderBlob(3)->GetBufferPointer(), mythos->GetShaderBlob(3)->GetBufferSize(), &inputLayout);
+		hr = mythos->GetCreator()->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), mythos->GetShaderBlob("vertexShader")->GetBufferPointer(), mythos->GetShaderBlob("vertexShader")->GetBufferSize(), &inputLayout);
 		if (FAILED(hr)) {
 			return -1;
 		}
@@ -412,21 +412,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->OMSetRenderTargets(1, &targets, depthBuffer);
 		mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
 
-		mythos->UpdateMythosResource(2, &MyMatrices, sizeof(WVP));
+		mythos->UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
 
-		ID3D11Buffer* buffers = { (ID3D11Buffer*)mythos->GetResource(0)->GetData() };
-		ID3D11Buffer* constBuffers{ (ID3D11Buffer*)mythos->GetResource(2)->GetData() };
+		ID3D11Buffer* buffers = { (ID3D11Buffer*)mythos->GetResource("vertexBuffer")->GetData() };
+		ID3D11Buffer* constBuffers{ (ID3D11Buffer*)mythos->GetResource("constantBuffer")->GetData() };
 
 		mythos->GetContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		mythos->GetContext()->IASetInputLayout(inputLayout);
 		mythos->GetContext()->IASetVertexBuffers(0, 1, &buffers, strides, offset);
-		mythos->GetContext()->IASetIndexBuffer((ID3D11Buffer*)mythos->GetResource(1)->GetData(), DXGI_FORMAT_R32_UINT, 0);
-		mythos->GetContext()->VSSetShader((ID3D11VertexShader*)mythos->GetResource(3)->GetData(), nullptr, NULL);
+		mythos->GetContext()->IASetIndexBuffer((ID3D11Buffer*)mythos->GetResource("indexBuffer")->GetData(), DXGI_FORMAT_R32_UINT, 0);
+		mythos->GetContext()->VSSetShader((ID3D11VertexShader*)mythos->GetResource("vertexShader")->GetData(), nullptr, NULL);
 		mythos->GetContext()->VSSetConstantBuffers(0, 1, &constBuffers);
 		mythos->GetContext()->RSSetState(rasterState);
 
 
-		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource(4)->GetData(), nullptr, NULL);
+		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
 
 		mythos->GetContext()->DrawIndexed(36, 0, 0);
 

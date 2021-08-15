@@ -10,7 +10,7 @@ namespace Mythos
 	{
 	public:
 		MythosBuffer() = default;
-		MythosBuffer(unsigned int id, void* data, unsigned int byteSize, MythosContext* context) { m_ID = id;  m_Data = data; m_ByteSize = byteSize; m_Context = context; }
+		MythosBuffer(void* data, unsigned int byteSize, MythosContext* context) { m_Data = data; m_ByteSize = byteSize; m_Context = context; }
 		virtual void*& GetData() { return (void*&)m_Buffer; }
 		virtual void SafeRelease() { if (m_Buffer) m_Buffer->Release(); }
 	private:

@@ -10,20 +10,20 @@ namespace Mythos
 {
 #define BIT(x) 1 << x
 
-	enum MythosResourceTypes : unsigned long
+	enum MythosResourceTypes
 	{
-		NONE = 0,
-		MYTHOS_RESOURCE_VERTEX_BUFFER = BIT(0),
-		MYTHOS_RESOURCE_INDEX_BUFFER = BIT(1),
-		MYTHOS_RESOURCE_CONSTANT_BUFFER = BIT(2),
-		MYTHOS_RESOURCE_VERTEX_SHADER = BIT(3),
-		MYTHOS_RESOURCE_HULL_SHADER = BIT(4),
-		MYTHOS_RESOURCE_TESSELLATION_SHADER = BIT(5),
-		MYTHOS_RESOURCE_DOMAIN_SHADER = BIT(6),
-		MYTHOS_RESOURCE_GEOMETRY_SHADER = BIT(7),
-		MYTHOS_RESOURCE_COMPUTE_SHADER = BIT(8),
-		MYTHOS_RESOURCE_PIXEL_SHADER = BIT(9),
-		MYTHOS_RESOURCE_INPUT_LAYOUT = BIT(10),
+		MYTHOS_RESOURCE_VERTEX_BUFFER = 0,
+		MYTHOS_RESOURCE_INDEX_BUFFER,
+		MYTHOS_RESOURCE_CONSTANT_BUFFER,
+		MYTHOS_RESOURCE_VERTEX_SHADER,
+		MYTHOS_RESOURCE_HULL_SHADER,
+		MYTHOS_RESOURCE_TESSELLATION_SHADER,
+		MYTHOS_RESOURCE_DOMAIN_SHADER,
+		MYTHOS_RESOURCE_GEOMETRY_SHADER,
+		MYTHOS_RESOURCE_COMPUTE_SHADER,
+		MYTHOS_RESOURCE_PIXEL_SHADER,
+		MYTHOS_RESOURCE_INPUT_LAYOUT,
+		MYTHOS_RESOURCE_COUNT
 	};
 
 	//This class will be the main accessor when it comes to rendering
@@ -40,18 +40,18 @@ namespace Mythos
 		inline ID3D11RenderTargetView* GetMainRenderTarget() { return m_RTV; }
 		inline D3D11_VIEWPORT GetViewport() { return m_Viewport; }
 
-		BOOL CreateVertexBuffer(void* data, unsigned int byteSize);
-		BOOL CreateIndexBuffer(void* data, unsigned int byteSize);
-		BOOL CreateConstantBuffer(void* data, unsigned int byteSize);
+		BOOL CreateVertexBuffer(void* data, unsigned int byteSize, const char* name);
+		BOOL CreateIndexBuffer(void* data, unsigned int byteSize, const char* name);
+		BOOL CreateConstantBuffer(void* data, unsigned int byteSize, const char* name);
 
-		BOOL CreateVertexShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType);
-		BOOL CreatePixelShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType);
+		BOOL CreateVertexShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
+		BOOL CreatePixelShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
 
-		BOOL UpdateMythosResource(unsigned int id, void* data, unsigned int byteSize);
+		BOOL UpdateMythosResource(const char* name, void* data, unsigned int byteSize);
 
 		//GetResource will return a resource based off of the id given.
-		IMythosResource* GetResource(unsigned int id);
-		ID3D10Blob* GetShaderBlob(unsigned int id);
+		IMythosResource* GetResource(const char* name);
+		ID3D10Blob* GetShaderBlob(const char* name);
 	private:
 		MythosCreator m_Creator;
 		MythosContext m_Context;
@@ -59,7 +59,6 @@ namespace Mythos
 		D3D11_VIEWPORT m_Viewport;
 		ID3D11RenderTargetView* m_RTV;
 
-		static unsigned int m_NextID;
 		/*Create a system where resources are seperated based on resource type ie:
 		Vertex Buffers
 		Index Buffers
@@ -76,7 +75,11 @@ namespace Mythos
 		Rasterizer States
 		Input Layouts
 		*/
-		std::unordered_map<unsigned int, IMythosResource*> m_Resources;
-		std::unordered_map<unsigned int, ID3D10Blob*> m_ShaderBlobs;
+
+		//Assuming you need to find a vertex buffer with the name "VB" using the Get Resource function 
+		//m_NamesToIndex will find the index the Vertex Buffers will be, which again can find the Resource
+		std::unordered_map<const char*, unsigned int> m_NamesToIndex;
+		std::vector<std::unordered_map<const char*, IMythosResource*>> m_Resources;
+		std::unordered_map<const char*, ID3D10Blob*> m_ShaderBlobs;
 	};
 }

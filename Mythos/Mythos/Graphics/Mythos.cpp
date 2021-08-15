@@ -7,8 +7,6 @@
 #include "MythosVertexShader.h"
 #include "MythosPixelShader.h"
 
-unsigned int Mythos::Mythos::m_NextID = 0;
-
 namespace Mythos
 {
 
@@ -61,6 +59,11 @@ namespace Mythos
 			throw;
 
 		backbuffer->Release();
+
+		for (int i = 0; i < MYTHOS_RESOURCE_COUNT; ++i)
+		{
+			m_Resources.push_back(std::unordered_map<const char*, IMythosResource*>());
+		}
 	}
 
 	Mythos::~Mythos()
@@ -70,24 +73,29 @@ namespace Mythos
 		m_SwapChain.SafeRelease();
 		if (m_RTV) m_RTV->Release();
 
-		for (int i = 0; i < m_NextID; ++i) {
-
-			auto iter = m_Resources.find(i);
-			if (iter != m_Resources.end()) {
-				iter->second->SafeRelease();
-				delete iter->second;
-				m_Resources.erase(i);
-			}
-
-			auto blob = m_ShaderBlobs.find(i);
-			if (blob != m_ShaderBlobs.end()) {
-				blob->second->Release();
-				m_ShaderBlobs.erase(i);
-			}
+		
+		for (int i = 0; i < MYTHOS_RESOURCE_COUNT; ++i)
+		{
+				for (auto iter : m_Resources[i])
+				{
+					//Ensuring Memory is Deallocated Properly
+					iter.second->SafeRelease();
+					delete iter.second;
+				}
 		}
+
+		for (auto blob : m_ShaderBlobs)
+		{
+			blob.second->Release();
+		}
+
+		//Clearing these containers
+		m_NamesToIndex.clear();
+		m_Resources.clear();
+		m_ShaderBlobs.clear();
 	}
 
-	BOOL Mythos::CreateVertexBuffer(void* data, unsigned int byteSize)
+	BOOL Mythos::CreateVertexBuffer(void* data, unsigned int byteSize, const char* name)
 	{
 		D3D11_BUFFER_DESC vertexDesc;
 		ZeroMemory(&vertexDesc, sizeof(vertexDesc));
@@ -103,7 +111,7 @@ namespace Mythos
 		if (data != nullptr)
 			subData.pSysMem = data;
 		HRESULT hr;
-		IMythosResource* vertexBuffer = new MythosBuffer(m_NextID, data, byteSize, &m_Context);
+		IMythosResource* vertexBuffer = new MythosBuffer(data, byteSize, &m_Context);
 		if (data != nullptr)
 			hr = m_Creator.GetCreator()->CreateBuffer(&vertexDesc, &subData, (ID3D11Buffer**)&vertexBuffer->GetData());
 		else
@@ -112,12 +120,13 @@ namespace Mythos
 		if (FAILED(hr))
 			return FALSE;
 
-		m_Resources.insert(std::make_pair(m_NextID++, vertexBuffer));
+		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_VERTEX_BUFFER));
+		m_Resources[MYTHOS_RESOURCE_VERTEX_BUFFER].insert(std::make_pair(name, vertexBuffer));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateIndexBuffer(void* data, unsigned int byteSize)
+	BOOL Mythos::CreateIndexBuffer(void* data, unsigned int byteSize, const char* name)
 	{
 		D3D11_BUFFER_DESC indexDesc;
 		ZeroMemory(&indexDesc, sizeof(indexDesc));
@@ -134,7 +143,7 @@ namespace Mythos
 			subData.pSysMem = data;
 
 		HRESULT hr;
-		IMythosResource* indexBuffer = new MythosBuffer(m_NextID, data, byteSize, &m_Context);
+		IMythosResource* indexBuffer = new MythosBuffer(data, byteSize, &m_Context);
 		if (data != nullptr)
 			hr = m_Creator.GetCreator()->CreateBuffer(&indexDesc, &subData, (ID3D11Buffer**)&indexBuffer->GetData());
 		else
@@ -143,12 +152,13 @@ namespace Mythos
 		if (FAILED(hr))
 			return FALSE;
 
-		m_Resources.insert(std::make_pair(m_NextID++, &(*indexBuffer)));
+		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_INDEX_BUFFER));
+		m_Resources[MYTHOS_RESOURCE_INDEX_BUFFER].insert(std::make_pair(name, indexBuffer));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateConstantBuffer(void* data, unsigned int byteSize)
+	BOOL Mythos::CreateConstantBuffer(void* data, unsigned int byteSize, const char* name)
 	{
 		D3D11_BUFFER_DESC constantDesc;
 		ZeroMemory(&constantDesc, sizeof(constantDesc));
@@ -165,7 +175,7 @@ namespace Mythos
 			subData.pSysMem = data;
 
 		HRESULT hr;
-		IMythosResource* constantBuffer = new MythosBuffer(m_NextID, data, byteSize, &m_Context);
+		IMythosResource* constantBuffer = new MythosBuffer(data, byteSize, &m_Context);
 		if (data != nullptr)
 			hr = m_Creator.GetCreator()->CreateBuffer(&constantDesc, &subData, (ID3D11Buffer**)&constantBuffer->GetData());
 		else
@@ -174,12 +184,13 @@ namespace Mythos
 		if (FAILED(hr))
 			return FALSE;
 
-		m_Resources.insert(std::make_pair(m_NextID++, constantBuffer));
+		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_CONSTANT_BUFFER));
+		m_Resources[MYTHOS_RESOURCE_CONSTANT_BUFFER].insert(std::make_pair(name, constantBuffer));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateVertexShader(const wchar_t* filePath, const char* entryPoint, const char* modelType)
+	BOOL Mythos::CreateVertexShader(const wchar_t* filePath, const char* entryPoint, const char* modelType, const char* name)
 	{
 		ID3D10Blob* errorBlob;
 		ID3D10Blob* vertexBlob;
@@ -188,21 +199,21 @@ namespace Mythos
 		if (FAILED(hr))
 			return FALSE;
 
-		IMythosResource* vertexShader = new MythosVertexShader(m_NextID, filePath, entryPoint, modelType);
+		IMythosResource* vertexShader = new MythosVertexShader(filePath, entryPoint, modelType);
 		hr = m_Creator.GetCreator()->CreateVertexShader(vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), nullptr, (ID3D11VertexShader**)&vertexShader->GetData());
 		if (FAILED(hr)) {
 			delete vertexShader;
 			return FALSE;
 		}
 
-		m_Resources.insert(std::make_pair(m_NextID, vertexShader));
-
-		m_ShaderBlobs.insert(std::make_pair(m_NextID++, vertexBlob));
+		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_VERTEX_SHADER));
+		m_Resources[MYTHOS_RESOURCE_VERTEX_SHADER].insert(std::make_pair(name, vertexShader));
+		m_ShaderBlobs.insert(std::make_pair(name, vertexBlob));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreatePixelShader(const wchar_t* filePath, const char* entryPoint, const char* modelType)
+	BOOL Mythos::CreatePixelShader(const wchar_t* filePath, const char* entryPoint, const char* modelType, const char* name)
 	{
 		ID3D10Blob* errorBlob;
 		ID3D10Blob* pixelBlob;
@@ -210,23 +221,24 @@ namespace Mythos
 		if (FAILED(hr))
 			return FALSE;
 
-		IMythosResource* pixelShader = new MythosPixelShader(m_NextID, filePath, entryPoint, modelType);
+		IMythosResource* pixelShader = new MythosPixelShader(filePath, entryPoint, modelType);
 		hr = m_Creator.GetCreator()->CreatePixelShader(pixelBlob->GetBufferPointer(), pixelBlob->GetBufferSize(), nullptr, (ID3D11PixelShader**)&pixelShader->GetData());
 		if (FAILED(hr)) {
 			delete pixelShader;
 			return FALSE;
 		}
 
-		m_Resources.insert(std::make_pair(m_NextID, pixelShader));
-
-		m_ShaderBlobs.insert(std::make_pair(m_NextID++, pixelBlob));
+		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_PIXEL_SHADER));
+		m_Resources[MYTHOS_RESOURCE_PIXEL_SHADER].insert(std::make_pair(name, pixelShader));
+		m_ShaderBlobs.insert(std::make_pair(name, pixelBlob));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::UpdateMythosResource(unsigned int id, void* data, unsigned int byteSize)
+	BOOL Mythos::UpdateMythosResource(const char* name, void* data, unsigned int byteSize)
 	{
-		IMythosResource* resource = m_Resources.find(id)->second;
+
+		IMythosResource* resource = m_Resources[m_NamesToIndex.find(name)->second].find(name)->second;
 
 		if (!resource)
 			return FALSE;
@@ -239,10 +251,11 @@ namespace Mythos
 		return TRUE;
 	}
 
-	IMythosResource* Mythos::GetResource(unsigned int id)
+	IMythosResource* Mythos::GetResource(const char* name)
 	{
-		auto iter = m_Resources.find(id);
-		if (iter != m_Resources.end())
+		unsigned int arrayIndex = m_NamesToIndex.find(name)->second;
+		auto iter = m_Resources[arrayIndex].find(name);
+		if (iter != m_Resources[arrayIndex].end())
 		{
 			return iter->second;
 		}
@@ -250,9 +263,9 @@ namespace Mythos
 		return nullptr;
 	}
 
-	ID3D10Blob* Mythos::GetShaderBlob(unsigned int id)
+	ID3D10Blob* Mythos::GetShaderBlob(const char* name)
 	{
-		auto iter = m_ShaderBlobs.find(id);
+		auto iter = m_ShaderBlobs.find(name);
 		if (iter != m_ShaderBlobs.end())
 		{
 			return iter->second;
