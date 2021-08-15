@@ -27,6 +27,7 @@ namespace Mythos
 		BOOL CreateConstantBuffer(void* data, unsigned int byteSize);
 
 		BOOL CreateVertexShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType);
+		BOOL CreatePixelShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType);
 
 		BOOL UpdateMythosResource(unsigned int id, void* data, unsigned int byteSize);
 

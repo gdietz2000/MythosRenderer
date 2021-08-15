@@ -156,6 +156,7 @@
     <ClInclude Include="Graphics\MythosBuffer.h" />
     <ClInclude Include="Graphics\MythosContext.h" />
     <ClInclude Include="Graphics\MythosCreator.h" />
+    <ClInclude Include="Graphics\MythosPixelShader.h" />
     <ClInclude Include="Graphics\MythosSwapChain.h" />
     <ClInclude Include="Graphics\MythosVertexShader.h" />
     <ClInclude Include="Mathematics\include\Mathematics.h" />
