@@ -155,7 +155,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	//Rendering the Triangle
 	//ID3D11Buffer* vertexBuffer = nullptr;
 	//ID3D11Buffer* indexBuffer = nullptr;
-	ID3D11Buffer* constantBuffer = nullptr;
+	//ID3D11Buffer* constantBuffer = nullptr;
 
 	ID3D11InputLayout* inputLayout = nullptr;
 	ID3D11VertexShader* vertexShader = nullptr;
@@ -430,7 +430,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	//if (vertexBuffer) vertexBuffer->Release();
 	//if (indexBuffer) indexBuffer->Release();
-	if (constantBuffer) constantBuffer->Release();
+	//if (constantBuffer) constantBuffer->Release();
 	if (inputLayout) inputLayout->Release();
 	if (vertexShader) vertexShader->Release();
 	if (pixelShader) pixelShader->Release();
