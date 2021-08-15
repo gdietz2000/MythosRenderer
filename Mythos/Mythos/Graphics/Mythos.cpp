@@ -77,6 +77,12 @@ namespace Mythos
 				delete iter->second;
 				m_Resources.erase(i);
 			}
+
+			auto blob = m_ShaderBlobs.find(i);
+			if (blob != m_ShaderBlobs.end()) {
+				blob->second->Release();
+				m_ShaderBlobs.erase(i);
+			}
 		}
 	}
 
@@ -172,9 +178,10 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateVertexShader(const wchar_t* filePath, const char* entryPoint, const char* modelType, ID3D10Blob*& vertexBlob)
+	BOOL Mythos::CreateVertexShader(const wchar_t* filePath, const char* entryPoint, const char* modelType)
 	{
 		ID3D10Blob* errorBlob;
+		ID3D10Blob* vertexBlob;
 
 		HRESULT hr = D3DCompileFromFile(filePath, NULL, NULL, entryPoint, modelType, NULL, NULL, &vertexBlob, &errorBlob);
 		if (FAILED(hr))
@@ -187,7 +194,9 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_Resources.insert(std::make_pair(m_NextID++, vertexShader));
+		m_Resources.insert(std::make_pair(m_NextID, vertexShader));
+
+		m_ShaderBlobs.insert(std::make_pair(m_NextID++, vertexBlob));
 
 		return TRUE;
 	}
@@ -211,6 +220,17 @@ namespace Mythos
 	{
 		auto iter = m_Resources.find(id);
 		if (iter != m_Resources.end())
+		{
+			return iter->second;
+		}
+
+		return nullptr;
+	}
+
+	ID3D10Blob* Mythos::GetShaderBlob(unsigned int id)
+	{
+		auto iter = m_ShaderBlobs.find(id);
+		if (iter != m_ShaderBlobs.end())
 		{
 			return iter->second;
 		}

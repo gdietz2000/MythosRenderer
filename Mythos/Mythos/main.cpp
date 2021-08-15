@@ -15,6 +15,9 @@ using namespace Math;
 #include "d3dcompiler.h"
 #pragma comment(lib, "d3dcompiler.lib")
 
+#include <crtdbg.h>
+#define ENABLE_LEAK_DETECTION() _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF)
+
 //Temporary Vertex
 struct TempVertex {
 	Vector4 position;
@@ -126,18 +129,20 @@ void CameraInput()
 #ifdef _WIN32
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-    _In_opt_ HINSTANCE hPrevInstance,
-    _In_ LPWSTR    lpCmdLine,
-    _In_ int       nCmdShow)
+	_In_opt_ HINSTANCE hPrevInstance,
+	_In_ LPWSTR    lpCmdLine,
+	_In_ int       nCmdShow)
 {
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
+	UNREFERENCED_PARAMETER(hPrevInstance);
+	UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: Place code here.
-    auto windowsWindow = WindowsApplication(hInstance, L"Mythos", L"Mythos Class", nCmdShow);
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MYTHOS));
+	ENABLE_LEAK_DETECTION();
 
-    MSG msg;
+	// TODO: Place code here.
+	auto windowsWindow = WindowsApplication(hInstance, L"Mythos", L"Mythos Class", nCmdShow);
+	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MYTHOS));
+
+	MSG msg;
 	//Basic DirectX Rendering stuff
 	//ID3D11Device* m_Device = nullptr;
 	//ID3D11DeviceContext* m_Context = nullptr;
@@ -168,7 +173,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		/*RECT rect;
 		GetClientRect(windowsWindow.GetWindow(), &rect);
-		
+
 		D3D_FEATURE_LEVEL dx11 = D3D_FEATURE_LEVEL_11_0;
 
 		DXGI_SWAP_CHAIN_DESC scDesc;
@@ -211,7 +216,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			{{1,   1, 1,1}, {0.23,0.23,0.23,1}},
 		};
 
-		
+
 
 		/*D3D11_BUFFER_DESC vertexDesc;
 		ZeroMemory(&vertexDesc, sizeof(vertexDesc));
@@ -294,7 +299,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		const char* pixelShaderModel = "ps_4_0";
 
 		ID3D10Blob* errorBlob;
-		ID3D10Blob* vertexBlob;
+		//ID3D10Blob* vertexBlob;
 		ID3D10Blob* pixelBlob;
 
 		/*hr = D3DCompileFromFile(vertexShaderFilePath, NULL, NULL, entryPoint, vertexShaderModel, NULL, NULL, &vertexBlob, &errorBlob);
@@ -307,7 +312,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (FAILED(hr))
 			return -1;
 
-		success = mythos->CreateVertexShader(vertexShaderFilePath, entryPoint, vertexShaderModel, vertexBlob);
+		success = mythos->CreateVertexShader(vertexShaderFilePath, entryPoint, vertexShaderModel);
 		if (!success)
 			return -1;
 
@@ -316,9 +321,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0}
 		};
 
-		hr = mythos->GetCreator()->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), &inputLayout);
-		if (FAILED(hr))
+		hr = mythos->GetCreator()->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), mythos->GetShaderBlob(3)->GetBufferPointer(), mythos->GetShaderBlob(3)->GetBufferSize(), &inputLayout);
+		if (FAILED(hr)) {
 			return -1;
+		}
 
 		/*hr = mythos->GetCreator()->CreateVertexShader(vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), NULL, &vertexShader);
 		if (FAILED(hr))
@@ -329,7 +335,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			return -1;
 
 		if (errorBlob) errorBlob->Release();
-		if (vertexBlob) vertexBlob->Release();
+		//if (vertexBlob) vertexBlob->Release();
 		if (pixelBlob) pixelBlob->Release();
 
 		D3D11_RASTERIZER_DESC rasterDesc;
@@ -367,9 +373,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	UINT strides[] = { sizeof(TempVertex) };
 	UINT offset[] = { 0 };
 
-	Vector3 Eye = { 0,0,-10};
-	Vector3 Target = { 0,0,1};
-	Vector3 Up = { 0,1,0};
+	Vector3 Eye = { 0,0,-10 };
+	Vector3 Target = { 0,0,1 };
+	Vector3 Up = { 0,1,0 };
 
 	Matrix4 World = Matrix4::Identity;
 	Camera = Matrix4::LookAtLH(Eye, Target, Up);
@@ -379,7 +385,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	MyMatrices.View = Camera;
 	MyMatrices.Projection = Projection;
 
-    // Main message loop:
+	// Main message loop:
 	while (true)
 	{
 		PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE);
@@ -441,7 +447,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	delete mythos;
 
-    return (int)msg.wParam;
+	return (int)msg.wParam;
 }
 
 #endif // WINDOWS

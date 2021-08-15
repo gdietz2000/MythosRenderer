@@ -26,12 +26,13 @@ namespace Mythos
 		BOOL CreateIndexBuffer(void* data, unsigned int byteSize);
 		BOOL CreateConstantBuffer(void* data, unsigned int byteSize);
 
-		BOOL CreateVertexShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, ID3D10Blob*& vertexBlob);
+		BOOL CreateVertexShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType);
 
 		BOOL UpdateMythosResource(unsigned int id, void* data, unsigned int byteSize);
 
 		//GetResource will return a resource based off of the id given.
 		IMythosResource* GetResource(unsigned int id);
+		ID3D10Blob* GetShaderBlob(unsigned int id);
 	private:
 		MythosCreator m_Creator;
 		MythosContext m_Context;
@@ -57,5 +58,6 @@ namespace Mythos
 		Input Layouts
 		*/
 		std::unordered_map<unsigned int, IMythosResource*> m_Resources;
+		std::unordered_map<unsigned int, ID3D10Blob*> m_ShaderBlobs;
 	};
 }
