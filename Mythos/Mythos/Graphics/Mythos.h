@@ -8,12 +8,12 @@
 
 namespace Mythos
 {
-#define BIT(x) x << 1
+#define BIT(x) 1 << x
 
 	enum MythosResourceTypes : unsigned long
 	{
 		NONE = 0,
-		MYTHOS_RESOURCE_VERTEX_BUFFER = 1,
+		MYTHOS_RESOURCE_VERTEX_BUFFER = BIT(0),
 		MYTHOS_RESOURCE_INDEX_BUFFER = BIT(1),
 		MYTHOS_RESOURCE_CONSTANT_BUFFER = BIT(2),
 		MYTHOS_RESOURCE_VERTEX_SHADER = BIT(3),
