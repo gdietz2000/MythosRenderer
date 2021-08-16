@@ -23,6 +23,8 @@ namespace Mythos
 		MYTHOS_RESOURCE_COMPUTE_SHADER,
 		MYTHOS_RESOURCE_PIXEL_SHADER,
 		MYTHOS_RESOURCE_INPUT_LAYOUT,
+		MYTHOS_RESOURCE_RENDER_TARGET,
+		MYTHOS_RESOURCE_TEXTURE_2D,
 		MYTHOS_RESOURCE_COUNT
 	};
 
@@ -47,7 +49,11 @@ namespace Mythos
 		BOOL CreateVertexShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
 		BOOL CreatePixelShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
 
+		BOOL CreateRenderTarget();
+		BOOL CreateTexture2D(const char* filepath, const char* name);
+
 		BOOL UpdateMythosResource(const char* name, void* data, unsigned int byteSize);
+
 
 		//GetResource will return a resource based off of the id given.
 		IMythosResource* GetResource(const char* name);

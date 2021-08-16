@@ -251,6 +251,16 @@ namespace Mythos
 		return TRUE;
 	}
 
+	BOOL Mythos::CreateRenderTarget() 
+	{
+	
+	}
+
+	BOOL Mythos::CreateTexture2D(const char* filepath, const char* name)
+	{
+
+	}
+
 	BOOL Mythos::UpdateMythosResource(const char* name, void* data, unsigned int byteSize)
 	{
 		IMythosResource* resource = m_Resources[m_NamesToIndex.find(name)->second].find(name)->second;
