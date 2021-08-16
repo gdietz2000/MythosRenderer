@@ -15,6 +15,7 @@ namespace Mythos
 		MYTHOS_RESOURCE_VERTEX_BUFFER = 0,
 		MYTHOS_RESOURCE_INDEX_BUFFER,
 		MYTHOS_RESOURCE_CONSTANT_BUFFER,
+		MYTHOS_RESOURCE_DEPTH_BUFFER,
 		MYTHOS_RESOURCE_VERTEX_SHADER,
 		MYTHOS_RESOURCE_HULL_SHADER,
 		MYTHOS_RESOURCE_TESSELLATION_SHADER,
@@ -25,6 +26,8 @@ namespace Mythos
 		MYTHOS_RESOURCE_INPUT_LAYOUT,
 		MYTHOS_RESOURCE_RENDER_TARGET,
 		MYTHOS_RESOURCE_TEXTURE_2D,
+		MYTHOS_RESOURCE_SHADER_RESOURCE,
+		MYTHOS_RESOURCE_SHADER_SAMPLER,
 		MYTHOS_RESOURCE_COUNT
 	};
 
@@ -50,7 +53,7 @@ namespace Mythos
 		BOOL CreatePixelShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
 
 		BOOL CreateRenderTarget();
-		BOOL CreateTexture2D(const wchar_t* filepath, const char* name);
+		BOOL CreateTexture2D(const wchar_t* filepath, const char* textureName, const char* shaderResourceName);
 
 		BOOL UpdateMythosResource(const char* name, void* data, unsigned int byteSize);
 

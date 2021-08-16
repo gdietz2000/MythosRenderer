@@ -225,7 +225,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		success = mythos->CreateTexture2D(L"Assets/Textures/CastleFlag.dds", "CastleFlag");
+		success = mythos->CreateTexture2D(L"Assets/Textures/CastleFlag.dds", "CastleFlagTexture", "CastleFlag");
 		if (!success)
 			return -1;
 

@@ -14,6 +14,6 @@ namespace Mythos
 		virtual void*& GetData() override { return (void*&)m_Texture; }
 		virtual void SafeRelease() override { if (m_Texture) { m_Texture->Release(); m_Texture = nullptr; } }
 	private:
-		ID3D11ShaderResourceView* m_Texture = nullptr;
+		ID3D11Texture2D* m_Texture = nullptr;
 	};
 }

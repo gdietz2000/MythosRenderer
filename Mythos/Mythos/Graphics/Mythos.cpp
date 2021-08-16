@@ -7,6 +7,7 @@
 #include "MythosVertexShader.h"
 #include "MythosPixelShader.h"
 #include "MythosTexture2D.h"
+#include "MythosShaderResource.h"
 #include "DDSTextureLoader.h"
 
 namespace Mythos
@@ -257,13 +258,15 @@ namespace Mythos
 		return FALSE;
 	}
 
-	BOOL Mythos::CreateTexture2D(const wchar_t* filepath, const char* name)
+	BOOL Mythos::CreateTexture2D(const wchar_t* filepath, const char* textureName, const char* shaderResourceName)
 	{
 		IMythosResource* texture2D = new MythosTexture2D();
-		HRESULT hr = DirectX::CreateDDSTextureFromFile(m_Creator.GetCreator(), filepath, nullptr, (ID3D11ShaderResourceView**)&texture2D->GetData());
+		IMythosResource* shaderResource = new MythosShaderResource();
+		HRESULT hr = DirectX::CreateDDSTextureFromFile(m_Creator.GetCreator(), filepath, (ID3D11Resource**)&texture2D->GetData(), (ID3D11ShaderResourceView**)&shaderResource->GetData());
 		if (FAILED(hr))
 		{
 			delete texture2D;
+			delete shaderResource;
 			return FALSE;
 		}
 
@@ -289,8 +292,11 @@ namespace Mythos
 
 		m_Context.GetContext()->PSSetSamplers(0, 1, &m_DefaultState);
 
-		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(name, texture2D));
+		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture2D));
+
+		m_NamesToIndex.insert(std::make_pair(shaderResourceName, MYTHOS_RESOURCE_SHADER_RESOURCE));
+		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(shaderResourceName, shaderResource));
 
 		return TRUE;
 	}
