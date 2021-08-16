@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Graphics\DDSTextureLoader.h" />
     <ClInclude Include="Graphics\IMythosResource.h" />
     <ClInclude Include="Graphics\Mythos.h" />
     <ClInclude Include="Graphics\MythosBuffer.h" />
@@ -158,6 +159,7 @@
     <ClInclude Include="Graphics\MythosCreator.h" />
     <ClInclude Include="Graphics\MythosPixelShader.h" />
     <ClInclude Include="Graphics\MythosSwapChain.h" />
+    <ClInclude Include="Graphics\MythosTexture2D.h" />
     <ClInclude Include="Graphics\MythosVertexShader.h" />
     <ClInclude Include="Mathematics\include\Mathematics.h" />
     <ClInclude Include="Mathematics\include\Matrix2.h" />
@@ -172,6 +174,7 @@
     <ClInclude Include="Windows\WindowsApplication.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Graphics\DDSTextureLoader.cpp" />
     <ClCompile Include="Graphics\Mythos.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mathematics\src\Matrix2.cpp" />

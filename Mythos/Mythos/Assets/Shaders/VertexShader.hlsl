@@ -3,13 +3,13 @@
 struct TempVertex
 {
     float4 position : POSITION;
-    float4 color : COLOR;
+    float2 uv : UV;
 };
 
 struct OutputVertex
 {
     float4 position : SV_Position;
-    float4 color : COLOR;
+    float2 uv : UV;
 };
 
 cbuffer WVP : register(b0)
@@ -26,6 +26,6 @@ OutputVertex main( TempVertex temp )
     output.position = mul(output.position, World);
     output.position = mul(output.position, View);
     output.position = mul(output.position, Projection);
-    output.color = temp.color;
+    output.uv = temp.uv;
 	return output;
 }

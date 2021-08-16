@@ -50,7 +50,7 @@ namespace Mythos
 		BOOL CreatePixelShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
 
 		BOOL CreateRenderTarget();
-		BOOL CreateTexture2D(const char* filepath, const char* name);
+		BOOL CreateTexture2D(const wchar_t* filepath, const char* name);
 
 		BOOL UpdateMythosResource(const char* name, void* data, unsigned int byteSize);
 
@@ -64,6 +64,8 @@ namespace Mythos
 		MythosSwapChain m_SwapChain;
 		D3D11_VIEWPORT m_Viewport;
 		ID3D11RenderTargetView* m_RTV;
+
+		ID3D11SamplerState* m_DefaultState = nullptr;
 
 		BOOL NameAvailable(const char* name);
 

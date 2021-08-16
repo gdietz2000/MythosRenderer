@@ -2,6 +2,7 @@
 #include "Resource.h"
 #include <windows.h>
 
+#include "Vector2.h"
 #include "Vector3.h"
 #include "Vector4.h"
 #include "Matrix4.h"
@@ -21,7 +22,7 @@ using namespace Math;
 //Temporary Vertex
 struct TempVertex {
 	Vector4 position;
-	Vector4 color;
+	Vector2 uv;
 };
 
 struct WVP {
@@ -171,69 +172,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		HRESULT hr;
 
-		/*RECT rect;
-		GetClientRect(windowsWindow.GetWindow(), &rect);
-
-		D3D_FEATURE_LEVEL dx11 = D3D_FEATURE_LEVEL_11_0;
-
-		DXGI_SWAP_CHAIN_DESC scDesc;
-		ZeroMemory(&scDesc, sizeof(scDesc));
-
-		scDesc.BufferCount = 1;
-		scDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		scDesc.BufferDesc.Width = rect.right - rect.left;
-		scDesc.BufferDesc.Height = rect.bottom - rect.top;
-		scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		scDesc.OutputWindow = windowsWindow.GetWindow();
-		scDesc.SampleDesc.Count = 1;
-		scDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-		scDesc.Windowed = true;
-
-		hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_DEBUG,
-			&dx11, 1, D3D11_SDK_VERSION, &scDesc, &m_Swap, &m_Device, nullptr, &m_Context);
-
-		m_Viewport.Width = (FLOAT)scDesc.BufferDesc.Width;
-		m_Viewport.Height = (FLOAT)scDesc.BufferDesc.Height;
-		m_Viewport.TopLeftX = m_Viewport.TopLeftY = 0;
-		m_Viewport.MinDepth = 0; m_Viewport.MaxDepth = 1;
-
-		ID3D11Resource* backbuffer;
-
-		hr = m_Swap->GetBuffer(0, __uuidof(backbuffer), (void**)&backbuffer);
-		hr = mythos->GetCreator()->CreateRenderTargetView(backbuffer, nullptr, &m_RTV);
-
-		backbuffer->Release();*/
-
 		TempVertex triangle[] = {
-			{{1,  -1, -1, 1}, {1,0,0,1}},
-			{{-1, -1, -1, 1}, {0.77,0.77,0,1}},
-			{{-1,  1, -1, 1}, {0,1,0,1}},
-			{{1,   1, -1,1}, {0,0.77,0.77,1}},
+			{{1,  -1, -1, 1}, {1,1}},
+			{{-1, -1, -1, 1}, {0,1}},
+			{{-1,  1, -1, 1}, {0,0}},
+			{{1,   1, -1, 1}, {1,0}},
 
-			{{1,  -1, 1, 1}, {0,0,1,1}},
-			{{-1, -1, 1, 1}, {0.77,0,0.77,1}},
-			{{-1,  1, 1, 1}, {1,1,1,1}},
-			{{1,   1, 1,1}, {0.23,0.23,0.23,1}},
+			{{1,  -1, 1, 1}, {0,1}},
+			{{-1, -1, 1, 1}, {1,1}},
+			{{-1,  1, 1, 1}, {1,0}},
+			{{1,   1, 1, 1}, {0,0}},
 		};
-
-
-
-		/*D3D11_BUFFER_DESC vertexDesc;
-		ZeroMemory(&vertexDesc, sizeof(vertexDesc));
-		vertexDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		vertexDesc.ByteWidth = sizeof(TempVertex) * ARRAYSIZE(triangle);
-		vertexDesc.CPUAccessFlags = 0;
-		vertexDesc.MiscFlags = 0;
-		vertexDesc.StructureByteStride = 0;
-		vertexDesc.Usage = D3D11_USAGE_DEFAULT;
-
-		D3D11_SUBRESOURCE_DATA subData;
-		ZeroMemory(&subData, sizeof(subData));
-		subData.pSysMem = triangle;
-
-		hr = mythos->GetCreator()->CreateBuffer(&vertexDesc, &subData, &vertexBuffer);
-		if (FAILED(hr))
-			return -1;*/
 
 		BOOL success = mythos->CreateVertexBuffer(triangle, sizeof(TempVertex) * ARRAYSIZE(triangle), "vertexBuffer");
 		if (!success)
@@ -253,23 +202,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			0,5,1,
 			0,4,5
 		};
-
-		/*D3D11_BUFFER_DESC indexDesc;
-		ZeroMemory(&indexDesc, sizeof(indexDesc));
-		indexDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		indexDesc.ByteWidth = sizeof(int) * ARRAYSIZE(triangleIndices);
-		indexDesc.CPUAccessFlags = 0;
-		indexDesc.MiscFlags = 0;
-		indexDesc.StructureByteStride = 0;
-		indexDesc.Usage = D3D11_USAGE_DEFAULT;
-
-		D3D11_SUBRESOURCE_DATA subData;
-		ZeroMemory(&subData, sizeof(subData));
-		subData.pSysMem = triangleIndices;
-
-		hr = mythos->GetCreator()->CreateBuffer(&indexDesc, &subData, &indexBuffer);
-		if (FAILED(hr))
-			return -1;*/
 
 		success = mythos->CreateIndexBuffer(triangleIndices, sizeof(int) * ARRAYSIZE(triangleIndices), "indexBuffer");
 		if (!success)
@@ -320,9 +252,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
+		success = mythos->CreateTexture2D(L"Assets/Textures/CastleFlag.dds", "CastleFlag");
+		if (!success)
+			return -1;
+
 		D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
 			{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-			{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0}
+			{"UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0}
 		};
 
 		hr = mythos->GetCreator()->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), mythos->GetShaderBlob("vertexShader")->GetBufferPointer(), mythos->GetShaderBlob("vertexShader")->GetBufferSize(), &inputLayout);
@@ -426,7 +362,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->RSSetState(rasterState);
 
 
+		ID3D11ShaderResourceView* resources = { (ID3D11ShaderResourceView*)mythos->GetResource("CastleFlag")->GetData() };
 		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
+		mythos->GetContext()->PSSetShaderResources(0, 1, &resources);
 
 		mythos->GetContext()->DrawIndexed(36, 0, 0);
 
