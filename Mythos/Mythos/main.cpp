@@ -22,7 +22,7 @@ using namespace Math;
 //Temporary Vertex
 struct TempVertex {
 	Vector4 position;
-	Vector2 uv;
+	Vector4 color;
 };
 
 struct WVP {
@@ -173,15 +173,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		HRESULT hr;
 
 		TempVertex triangle[] = {
-			{{1,  -1, -1, 1}, {1,1}},
-			{{-1, -1, -1, 1}, {0,1}},
-			{{-1,  1, -1, 1}, {0,0}},
-			{{1,   1, -1, 1}, {1,0}},
+			{{1,  -1, -1, 1}, {1,1,1,1}},
+			{{-1, -1, -1, 1}, {1,1,1,1}},
+			{{-1,  1, -1, 1}, {1,1,1,1}},
+			{{1,   1, -1, 1}, {1,1,1,1}},
 
-			{{1,  -1, 1, 1}, {0,1}},
-			{{-1, -1, 1, 1}, {1,1}},
-			{{-1,  1, 1, 1}, {1,0}},
-			{{1,   1, 1, 1}, {0,0}},
+			{{1,  -1, 1, 1}, {1,1,1,1}},
+			{{-1, -1, 1, 1}, {1,1,1,1}},
+			{{-1,  1, 1, 1}, {1,1,1,1}},
+			{{1,   1, 1, 1}, {1,1,1,1}},
 		};
 
 		BOOL success = mythos->CreateVertexBuffer(triangle, sizeof(TempVertex) * ARRAYSIZE(triangle), "vertexBuffer");
@@ -207,19 +207,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		/*D3D11_BUFFER_DESC constantDesc;
-		ZeroMemory(&constantDesc, sizeof(constantDesc));
-		constantDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		constantDesc.ByteWidth = sizeof(WVP);
-		constantDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-		constantDesc.MiscFlags = 0;
-		constantDesc.StructureByteStride = 0;
-		constantDesc.Usage = D3D11_USAGE_DYNAMIC;
-
-		hr = mythos->GetCreator()->CreateBuffer(&constantDesc, NULL, &constantBuffer);
-		if (FAILED(hr))
-			return -1;*/
-
 		success = mythos->CreateConstantBuffer(nullptr, sizeof(WVP), "constantBuffer");
 		if (!success)
 			return -1;
@@ -229,20 +216,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		const char* entryPoint = "main";
 		const char* vertexShaderModel = "vs_4_0";
 		const char* pixelShaderModel = "ps_4_0";
-
-		//ID3D10Blob* errorBlob;
-		//ID3D10Blob* vertexBlob;
-		//ID3D10Blob* pixelBlob;
-
-		/*hr = D3DCompileFromFile(vertexShaderFilePath, NULL, NULL, entryPoint, vertexShaderModel, NULL, NULL, &vertexBlob, &errorBlob);
-
-		if (FAILED(hr))
-			return -1;*/
-
-		/*hr = D3DCompileFromFile(pixelShaderFilePath, NULL, NULL, entryPoint, pixelShaderModel, NULL, NULL, &pixelBlob, &errorBlob);
-
-		if (FAILED(hr))
-			return -1;*/
 
 		success = mythos->CreateVertexShader(vertexShaderFilePath, entryPoint, vertexShaderModel, "vertexShader");
 		if (!success)
@@ -258,25 +231,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
 			{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-			{"UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0}
+			{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0}
 		};
 
 		hr = mythos->GetCreator()->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), mythos->GetShaderBlob("vertexShader")->GetBufferPointer(), mythos->GetShaderBlob("vertexShader")->GetBufferSize(), &inputLayout);
 		if (FAILED(hr)) {
 			return -1;
 		}
-
-		/*hr = mythos->GetCreator()->CreateVertexShader(vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), NULL, &vertexShader);
-		if (FAILED(hr))
-			return -1;*/
-
-		/*hr = mythos->GetCreator()->CreatePixelShader(pixelBlob->GetBufferPointer(), pixelBlob->GetBufferSize(), NULL, &pixelShader);
-		if (FAILED(hr))
-			return -1;*/
-
-		//if (errorBlob) errorBlob->Release();
-		//if (vertexBlob) vertexBlob->Release();
-		//if (pixelBlob) pixelBlob->Release();
 
 		D3D11_RASTERIZER_DESC rasterDesc;
 		ZeroMemory(&rasterDesc, sizeof(rasterDesc));

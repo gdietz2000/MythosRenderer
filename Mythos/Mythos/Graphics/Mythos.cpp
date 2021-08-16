@@ -115,7 +115,7 @@ namespace Mythos
 		if (data != nullptr)
 			subData.pSysMem = data;
 		HRESULT hr;
-		IMythosResource* vertexBuffer = new MythosBuffer(data, byteSize, &m_Context);
+		IMythosResource* vertexBuffer = new MythosBuffer();
 		if (data != nullptr)
 			hr = m_Creator.GetCreator()->CreateBuffer(&vertexDesc, &subData, (ID3D11Buffer**)&vertexBuffer->GetData());
 		else
@@ -150,7 +150,7 @@ namespace Mythos
 			subData.pSysMem = data;
 
 		HRESULT hr;
-		IMythosResource* indexBuffer = new MythosBuffer(data, byteSize, &m_Context);
+		IMythosResource* indexBuffer = new MythosBuffer();
 		if (data != nullptr)
 			hr = m_Creator.GetCreator()->CreateBuffer(&indexDesc, &subData, (ID3D11Buffer**)&indexBuffer->GetData());
 		else
@@ -185,7 +185,7 @@ namespace Mythos
 			subData.pSysMem = data;
 
 		HRESULT hr;
-		IMythosResource* constantBuffer = new MythosBuffer(data, byteSize, &m_Context);
+		IMythosResource* constantBuffer = new MythosBuffer();
 		if (data != nullptr)
 			hr = m_Creator.GetCreator()->CreateBuffer(&constantDesc, &subData, (ID3D11Buffer**)&constantBuffer->GetData());
 		else
@@ -212,7 +212,7 @@ namespace Mythos
 		if (FAILED(hr))
 			return FALSE;
 
-		IMythosResource* vertexShader = new MythosVertexShader(filePath, entryPoint, modelType);
+		IMythosResource* vertexShader = new MythosVertexShader();
 		hr = m_Creator.GetCreator()->CreateVertexShader(vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(), nullptr, (ID3D11VertexShader**)&vertexShader->GetData());
 		if (FAILED(hr)) {
 			delete vertexShader;
@@ -238,7 +238,7 @@ namespace Mythos
 		if (FAILED(hr))
 			return FALSE;
 
-		IMythosResource* pixelShader = new MythosPixelShader(filePath, entryPoint, modelType);
+		IMythosResource* pixelShader = new MythosPixelShader();
 		hr = m_Creator.GetCreator()->CreatePixelShader(pixelBlob->GetBufferPointer(), pixelBlob->GetBufferSize(), nullptr, (ID3D11PixelShader**)&pixelShader->GetData());
 		if (FAILED(hr)) {
 			delete pixelShader;
