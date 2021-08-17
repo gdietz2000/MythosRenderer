@@ -260,6 +260,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreateDepthBuffer("depthTexture", "depthBuffer");
 		if (!success)
 			return -1;
+
+		success = mythos->CreateTextureSampler("samplerState");
+		if (!success)
+			return -1;
 	}
 
 	UINT strides[] = { sizeof(TempVertex) };
@@ -315,6 +319,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		//ID3D11ShaderResourceView* resources = { (ID3D11ShaderResourceView*)mythos->GetResource("CastleFlag")->GetData() };
 		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
+		ID3D11SamplerState* samplers = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
+		mythos->GetContext()->PSSetSamplers(0, 1, &samplers);
 		//mythos->GetContext()->PSSetShaderResources(0, 1, &resources);
 
 		mythos->GetContext()->DrawIndexed(36, 0, 0);

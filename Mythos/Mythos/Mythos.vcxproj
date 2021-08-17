@@ -163,6 +163,7 @@
     <ClInclude Include="Graphics\MythosShaderResource.h" />
     <ClInclude Include="Graphics\MythosSwapChain.h" />
     <ClInclude Include="Graphics\MythosTexture2D.h" />
+    <ClInclude Include="Graphics\MythosTextureSampler.h" />
     <ClInclude Include="Graphics\MythosVertexShader.h" />
     <ClInclude Include="Mathematics\include\Mathematics.h" />
     <ClInclude Include="Mathematics\include\Matrix2.h" />

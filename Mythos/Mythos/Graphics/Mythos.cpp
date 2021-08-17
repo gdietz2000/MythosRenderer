@@ -12,6 +12,7 @@
 #include "MythosShaderResource.h"
 #include "MythosRenderTarget.h"
 #include "MythosDepthBuffer.h"
+#include "MythosTextureSampler.h"
 #include "DDSTextureLoader.h"
 
 namespace Mythos
@@ -66,7 +67,6 @@ namespace Mythos
 		m_Creator.SafeRelease();
 		m_Context.SafeRelease();
 		m_SwapChain.SafeRelease();
-		if (m_DefaultState) m_DefaultState->Release();
 
 		for (int i = 0; i < MYTHOS_RESOURCE_COUNT; ++i)
 		{
@@ -407,28 +407,6 @@ namespace Mythos
 			return FALSE;
 		}
 
-		//Default Sampler
-		D3D11_SAMPLER_DESC samplerDesc;
-		ZeroMemory(&samplerDesc, sizeof(samplerDesc));
-
-		samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-		samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-		samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-		samplerDesc.BorderColor[0] = 1;
-		samplerDesc.BorderColor[1] = 1;
-		samplerDesc.BorderColor[2] = 1;
-		samplerDesc.BorderColor[3] = 1;
-		samplerDesc.MaxAnisotropy = 1;
-		samplerDesc.MaxLOD = 1;
-		samplerDesc.MinLOD = 0;
-		samplerDesc.MipLODBias = 0;
-
-		hr = m_Creator.GetCreator()->CreateSamplerState(&samplerDesc, &m_DefaultState);
-		if (FAILED(hr))
-			return FALSE;
-
-		m_Context.GetContext()->PSSetSamplers(0, 1, &m_DefaultState);
-
 		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
 		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture2D));
 
@@ -462,6 +440,39 @@ namespace Mythos
 
 		m_NamesToIndex.insert(std::make_pair(shaderResourceName, MYTHOS_RESOURCE_SHADER_RESOURCE));
 		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(shaderResourceName, shaderResource));
+
+		return TRUE;
+	}
+
+	BOOL Mythos::CreateTextureSampler(const char* samplerName)
+	{
+		if (!NameAvailable(samplerName))
+			return FALSE;
+
+		D3D11_SAMPLER_DESC samplerDesc;
+		ZeroMemory(&samplerDesc, sizeof(samplerDesc));
+
+		samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.BorderColor[0] = 1;
+		samplerDesc.BorderColor[1] = 1;
+		samplerDesc.BorderColor[2] = 1;
+		samplerDesc.BorderColor[3] = 1;
+		samplerDesc.MaxAnisotropy = 1;
+		samplerDesc.MaxLOD = 1;
+		samplerDesc.MinLOD = 0;
+		samplerDesc.MipLODBias = 0;
+
+		IMythosResource* samplerState = new MythosTextureSampler();
+		HRESULT hr = m_Creator.GetCreator()->CreateSamplerState(&samplerDesc, (ID3D11SamplerState**)&samplerState->GetData());
+		if (FAILED(hr)) {
+			delete samplerState;
+			return FALSE;
+		}
+
+		m_NamesToIndex.insert(std::make_pair(samplerName, MYTHOS_RESOURCE_TEXTURE_SAMPLER));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_SAMPLER].insert(std::make_pair(samplerName, samplerState));
 
 		return TRUE;
 	}

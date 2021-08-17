@@ -29,7 +29,7 @@ namespace Mythos
 		MYTHOS_RESOURCE_RENDER_TARGET,
 		MYTHOS_RESOURCE_TEXTURE_2D,
 		MYTHOS_RESOURCE_SHADER_RESOURCE,
-		MYTHOS_RESOURCE_SHADER_SAMPLER,
+		MYTHOS_RESOURCE_TEXTURE_SAMPLER,
 		MYTHOS_RESOURCE_COUNT
 	};
 
@@ -64,6 +64,7 @@ namespace Mythos
 
 		BOOL CreateTexture2D(const wchar_t* filepath, const char* textureName);
 		BOOL CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName);
+		BOOL CreateTextureSampler(const char* samplerName);
 
 		BOOL UpdateMythosResource(const char* name, void* data, unsigned int byteSize);
 
@@ -76,8 +77,6 @@ namespace Mythos
 		MythosContext m_Context;
 		MythosSwapChain m_SwapChain;
 		D3D11_VIEWPORT m_Viewport;
-
-		ID3D11SamplerState* m_DefaultState = nullptr;
 
 		//Helper Function
 		BOOL NameAvailable(const char* name);
