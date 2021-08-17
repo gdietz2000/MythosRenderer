@@ -11,6 +11,7 @@
 #include "MythosTexture2D.h"
 #include "MythosShaderResource.h"
 #include "MythosRenderTarget.h"
+#include "MythosDepthBuffer.h"
 #include "DDSTextureLoader.h"
 
 namespace Mythos
@@ -57,6 +58,7 @@ namespace Mythos
 		}
 
 		m_RenderTargetClearColor = Math::Vector4(0);
+		m_DepthBufferClearValue = 1.0f;
 	}
 
 	Mythos::~Mythos()
@@ -191,6 +193,62 @@ namespace Mythos
 		return TRUE;
 	}
 
+	BOOL Mythos::CreateDepthBuffer(const char* depthTextureName, const char* depthBufferName)
+	{
+		if (!NameAvailable(depthTextureName) || !NameAvailable(depthBufferName))
+			return FALSE;
+
+		D3D11_TEXTURE2D_DESC zBufferDesc;
+		ZeroMemory(&zBufferDesc, sizeof(zBufferDesc));
+		zBufferDesc.ArraySize = 1;
+		zBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+		zBufferDesc.Width = m_Viewport.Width;
+		zBufferDesc.Height = m_Viewport.Height;
+		zBufferDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		zBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		zBufferDesc.SampleDesc.Count = 1;
+		zBufferDesc.MipLevels = 1;
+
+		IMythosResource* depthTexture = new MythosTexture2D();
+		IMythosResource* depthBuffer = new MythosDepthBuffer();
+		HRESULT hr = m_Creator.GetCreator()->CreateTexture2D(&zBufferDesc, nullptr, (ID3D11Texture2D**)&depthTexture->GetData());
+
+		if (FAILED(hr)) {
+			delete depthTexture;
+			delete depthBuffer;
+			return FALSE;
+		}
+
+		hr = m_Creator.GetCreator()->CreateDepthStencilView((ID3D11Resource*)depthTexture->GetData(), nullptr, (ID3D11DepthStencilView**)&depthBuffer->GetData());
+
+		if (FAILED(hr))
+		{
+			delete depthTexture;
+			delete depthBuffer;
+			return FALSE;
+		}
+
+		m_NamesToIndex.insert(std::make_pair(depthTextureName, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(depthTextureName, depthTexture));
+
+		m_NamesToIndex.insert(std::make_pair(depthBufferName, MYTHOS_RESOURCE_DEPTH_BUFFER));
+		m_Resources[MYTHOS_RESOURCE_DEPTH_BUFFER].insert(std::make_pair(depthBufferName, depthBuffer));
+
+		return TRUE;
+	}
+
+	void Mythos::SetClearDepthBufferValue(float value)
+	{
+		m_DepthBufferClearValue = value;
+	}
+
+	void Mythos::ClearDepthBuffer(const char* depthBufferName)
+	{
+		IMythosResource* depthBuffer = GetResource(depthBufferName);
+		if (depthBuffer)
+			m_Context.GetContext()->ClearDepthStencilView((ID3D11DepthStencilView*)depthBuffer->GetData(), D3D11_CLEAR_DEPTH, m_DepthBufferClearValue, NULL);
+	}
+
 	BOOL Mythos::CreateVertexShader(const wchar_t* filePath, const char* entryPoint, const char* modelType, const char* name)
 	{
 		if (!NameAvailable(name))
@@ -245,6 +303,9 @@ namespace Mythos
 
 	BOOL Mythos::CreateRenderTargetFromSwapChain(const char* renderTargetName)
 	{
+		if (!NameAvailable(renderTargetName))
+			return FALSE;
+
 		ID3D11Resource* backbuffer;
 		HRESULT hr = m_SwapChain.GetSwapChain()->GetBuffer(0, __uuidof(backbuffer), (void**)&backbuffer);
 
@@ -270,6 +331,9 @@ namespace Mythos
 
 	BOOL Mythos::CreateRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName)
 	{
+		if (!NameAvailable(textureName) || !NameAvailable(renderTargetName))
+			return FALSE;
+
 		D3D11_TEXTURE2D_DESC textureDesc;
 		ZeroMemory(&textureDesc, sizeof(textureDesc));
 		D3D11_RENDER_TARGET_VIEW_DESC renderDesc;
@@ -326,11 +390,15 @@ namespace Mythos
 	void Mythos::ClearRenderTarget(const char* renderTargetName)
 	{
 		IMythosResource* renderTarget = GetResource(renderTargetName);
-		m_Context.GetContext()->ClearRenderTargetView((ID3D11RenderTargetView*)renderTarget->GetData(), m_RenderTargetClearColor.comp);
+		if (renderTarget != nullptr)
+			m_Context.GetContext()->ClearRenderTargetView((ID3D11RenderTargetView*)renderTarget->GetData(), m_RenderTargetClearColor.comp);
 	}
 
 	BOOL Mythos::CreateTexture2D(const wchar_t* filepath, const char* textureName)
 	{
+		if (!NameAvailable(textureName))
+			return FALSE;
+
 		IMythosResource* texture2D = new MythosTexture2D();
 		HRESULT hr = DirectX::CreateDDSTextureFromFile(m_Creator.GetCreator(), filepath, (ID3D11Resource**)&texture2D->GetData(), nullptr);
 		if (FAILED(hr))
@@ -369,6 +437,9 @@ namespace Mythos
 
 	BOOL Mythos::CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName)
 	{
+		if (!NameAvailable(shaderResourceName))
+			return FALSE;
+
 		D3D11_TEXTURE2D_DESC textureDesc;
 
 		IMythosResource* texture = GetResource(textureToBecomeResourceName);

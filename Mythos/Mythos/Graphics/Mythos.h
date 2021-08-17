@@ -50,6 +50,10 @@ namespace Mythos
 		BOOL CreateIndexBuffer(void* data, unsigned int byteSize, const char* name);
 		BOOL CreateConstantBuffer(void* data, unsigned int byteSize, const char* name);
 
+		BOOL CreateDepthBuffer(const char* depthTextureName, const char* depthBufferName);
+		void SetClearDepthBufferValue(float clearValue);
+		void ClearDepthBuffer(const char* depthBufferName);
+
 		BOOL CreateVertexShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
 		BOOL CreatePixelShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
 
@@ -96,6 +100,7 @@ namespace Mythos
 		*/
 
 		Math::Vector4 m_RenderTargetClearColor;
+		float m_DepthBufferClearValue;
 
 		//Assuming you need to find a vertex buffer with the name "VB" using the Get Resource function 
 		//m_NamesToIndex will find the index the Vertex Buffers will be, which again can find the Resource

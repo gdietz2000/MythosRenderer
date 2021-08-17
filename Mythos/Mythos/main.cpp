@@ -257,7 +257,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (FAILED(hr))
 			return -1;
 
-		D3D11_VIEWPORT view = mythos->GetViewport();
+		success = mythos->CreateDepthBuffer("depthTexture", "depthBuffer");
+		if (!success)
+			return -1;
+
+		/*D3D11_VIEWPORT view = mythos->GetViewport();
 
 		D3D11_TEXTURE2D_DESC zBufferDesc;
 		ZeroMemory(&zBufferDesc, sizeof(zBufferDesc));
@@ -276,7 +280,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		hr = mythos->GetCreator()->CreateDepthStencilView(zBufferTexture, nullptr, &depthBuffer);
 		if (FAILED(hr))
-			return -1;
+			return -1;*/
 	}
 
 	UINT strides[] = { sizeof(TempVertex) };
@@ -312,8 +316,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		ID3D11RenderTargetView* targets = { (ID3D11RenderTargetView*)mythos->GetResource("defaultRenderTarget")->GetData() };
 		mythos->ClearRenderTarget("defaultRenderTarget");
-		mythos->GetContext()->ClearDepthStencilView(depthBuffer, D3D11_CLEAR_DEPTH, 1.0f, 0);
-		mythos->GetContext()->OMSetRenderTargets(1, &targets, depthBuffer);
+		mythos->ClearDepthBuffer("depthBuffer");
+		mythos->GetContext()->OMSetRenderTargets(1, &targets, (ID3D11DepthStencilView*)mythos->GetResource("depthBuffer")->GetData());
 		mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
 
 		mythos->UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
