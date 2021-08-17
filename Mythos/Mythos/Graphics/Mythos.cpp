@@ -3,11 +3,14 @@
 #include "d3dcompiler.h"
 #pragma comment(lib, "d3dcompiler.lib")
 
+#include "Vector4.h"
+
 #include "MythosBuffer.h"
 #include "MythosVertexShader.h"
 #include "MythosPixelShader.h"
 #include "MythosTexture2D.h"
 #include "MythosShaderResource.h"
+#include "MythosRenderTarget.h"
 #include "DDSTextureLoader.h"
 
 namespace Mythos
@@ -48,24 +51,12 @@ namespace Mythos
 		m_Viewport.TopLeftX = m_Viewport.TopLeftY = 0;
 		m_Viewport.MinDepth = 0; m_Viewport.MaxDepth = 1;
 
-		ID3D11Resource* backbuffer;
-
-		hr = m_SwapChain.GetSwapChain()->GetBuffer(0, __uuidof(backbuffer), (void**)&backbuffer);
-
-		if (FAILED(hr))
-			throw;
-
-		hr = m_Creator.GetCreator()->CreateRenderTargetView(backbuffer, nullptr, &m_RTV);
-
-		if (FAILED(hr))
-			throw;
-
-		backbuffer->Release();
-
 		for (int i = 0; i < MYTHOS_RESOURCE_COUNT; ++i)
 		{
 			m_Resources.push_back(std::unordered_map<const char*, IMythosResource*>());
 		}
+
+		m_RenderTargetClearColor = Math::Vector4(0);
 	}
 
 	Mythos::~Mythos()
@@ -73,17 +64,16 @@ namespace Mythos
 		m_Creator.SafeRelease();
 		m_Context.SafeRelease();
 		m_SwapChain.SafeRelease();
-		if (m_RTV) m_RTV->Release();
 		if (m_DefaultState) m_DefaultState->Release();
-		
+
 		for (int i = 0; i < MYTHOS_RESOURCE_COUNT; ++i)
 		{
-				for (auto iter : m_Resources[i])
-				{
-					//Ensuring Memory is Deallocated Properly
-					iter.second->SafeRelease();
-					delete iter.second;
-				}
+			for (auto iter : m_Resources[i])
+			{
+				//Ensuring Memory is Deallocated Properly
+				iter.second->SafeRelease();
+				delete iter.second;
+			}
 		}
 
 		for (auto blob : m_ShaderBlobs)
@@ -220,7 +210,7 @@ namespace Mythos
 			return FALSE;
 		}
 
-		
+
 		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_VERTEX_SHADER));
 		m_Resources[MYTHOS_RESOURCE_VERTEX_SHADER].insert(std::make_pair(name, vertexShader));
 		m_ShaderBlobs.insert(std::make_pair(name, vertexBlob));
@@ -253,20 +243,99 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateRenderTarget() 
+	BOOL Mythos::CreateRenderTargetFromSwapChain(const char* renderTargetName)
 	{
-		return FALSE;
+		ID3D11Resource* backbuffer;
+		HRESULT hr = m_SwapChain.GetSwapChain()->GetBuffer(0, __uuidof(backbuffer), (void**)&backbuffer);
+
+		if (FAILED(hr))
+			return FALSE;
+
+		IMythosResource* renderTarget = new MythosRenderTarget();
+		hr = m_Creator.GetCreator()->CreateRenderTargetView(backbuffer, nullptr, (ID3D11RenderTargetView**)&renderTarget->GetData());
+		
+		backbuffer->Release();
+
+		if (FAILED(hr)) 
+		{
+			delete renderTarget;
+			return FALSE;
+		}
+		
+		m_NamesToIndex.insert(std::make_pair(renderTargetName, MYTHOS_RESOURCE_RENDER_TARGET));
+		m_Resources[MYTHOS_RESOURCE_RENDER_TARGET].insert(std::make_pair(renderTargetName, renderTarget));
+
+		return TRUE;
 	}
 
-	BOOL Mythos::CreateTexture2D(const wchar_t* filepath, const char* textureName, const char* shaderResourceName)
+	BOOL Mythos::CreateRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName)
+	{
+		D3D11_TEXTURE2D_DESC textureDesc;
+		ZeroMemory(&textureDesc, sizeof(textureDesc));
+		D3D11_RENDER_TARGET_VIEW_DESC renderDesc;
+		ZeroMemory(&renderDesc, sizeof(renderDesc));
+
+		textureDesc.ArraySize = 1;
+		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		textureDesc.Height = height;
+		textureDesc.Width = width;
+		textureDesc.MipLevels = 1;
+		textureDesc.MiscFlags = 0;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		IMythosResource* texture = new MythosTexture2D();
+		IMythosResource* renderTarget = new MythosRenderTarget();
+		HRESULT hr = m_Creator.GetCreator()->CreateTexture2D(&textureDesc, nullptr, (ID3D11Texture2D**)&texture->GetData());
+
+		if (FAILED(hr)) {
+			delete texture;
+			delete renderTarget;
+			return FALSE;
+		}
+
+		renderDesc.Format = textureDesc.Format;
+		renderDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		renderDesc.Texture2D.MipSlice = 1;
+
+		hr = m_Creator.GetCreator()->CreateRenderTargetView((ID3D11Resource*)texture->GetData(), &renderDesc, (ID3D11RenderTargetView**)&renderTarget->GetData());
+
+		if (FAILED(hr))
+		{
+			delete texture;
+			delete renderTarget;
+			return FALSE;
+		}
+
+		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture));
+
+		m_NamesToIndex.insert(std::make_pair(renderTargetName, MYTHOS_RESOURCE_RENDER_TARGET));
+		m_Resources[MYTHOS_RESOURCE_RENDER_TARGET].insert(std::make_pair(renderTargetName, renderTarget));
+
+		return TRUE;
+	}
+
+	void Mythos::SetClearRenderTargetColor(Math::Vector4 clearColor)
+	{
+		m_RenderTargetClearColor = clearColor;
+	}
+
+	void Mythos::ClearRenderTarget(const char* renderTargetName)
+	{
+		IMythosResource* renderTarget = GetResource(renderTargetName);
+		m_Context.GetContext()->ClearRenderTargetView((ID3D11RenderTargetView*)renderTarget->GetData(), m_RenderTargetClearColor.comp);
+	}
+
+	BOOL Mythos::CreateTexture2D(const wchar_t* filepath, const char* textureName)
 	{
 		IMythosResource* texture2D = new MythosTexture2D();
-		IMythosResource* shaderResource = new MythosShaderResource();
-		HRESULT hr = DirectX::CreateDDSTextureFromFile(m_Creator.GetCreator(), filepath, (ID3D11Resource**)&texture2D->GetData(), (ID3D11ShaderResourceView**)&shaderResource->GetData());
+		HRESULT hr = DirectX::CreateDDSTextureFromFile(m_Creator.GetCreator(), filepath, (ID3D11Resource**)&texture2D->GetData(), nullptr);
 		if (FAILED(hr))
 		{
 			delete texture2D;
-			delete shaderResource;
 			return FALSE;
 		}
 
@@ -295,6 +364,31 @@ namespace Mythos
 		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
 		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture2D));
 
+		return TRUE;
+	}
+
+	BOOL Mythos::CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName)
+	{
+		D3D11_TEXTURE2D_DESC textureDesc;
+
+		IMythosResource* texture = GetResource(textureToBecomeResourceName);
+		((ID3D11Texture2D*)texture->GetData())->GetDesc(&textureDesc);
+
+		D3D11_SHADER_RESOURCE_VIEW_DESC shaderDesc;
+		ZeroMemory(&shaderDesc, sizeof(shaderDesc));
+		shaderDesc.Format = textureDesc.Format;
+		shaderDesc.Texture2D.MostDetailedMip = 0;
+		shaderDesc.Texture2D.MipLevels = 1;
+		shaderDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
+
+		IMythosResource* shaderResource = new MythosShaderResource();
+		HRESULT hr = m_Creator.GetCreator()->CreateShaderResourceView((ID3D11Texture2D*)texture->GetData(), &shaderDesc, (ID3D11ShaderResourceView**)&shaderResource->GetData());
+
+		if (FAILED(hr)) {
+			delete shaderResource;
+			return FALSE;
+		}
+
 		m_NamesToIndex.insert(std::make_pair(shaderResourceName, MYTHOS_RESOURCE_SHADER_RESOURCE));
 		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(shaderResourceName, shaderResource));
 
@@ -318,11 +412,16 @@ namespace Mythos
 
 	IMythosResource* Mythos::GetResource(const char* name)
 	{
-		unsigned int arrayIndex = m_NamesToIndex.find(name)->second;
-		auto iter = m_Resources[arrayIndex].find(name);
-		if (iter != m_Resources[arrayIndex].end())
+	
+		auto num = m_NamesToIndex.find(name);
+		if (num != m_NamesToIndex.end())
 		{
-			return iter->second;
+			unsigned int arrayIndex = num->second;
+			auto iter = m_Resources[arrayIndex].find(name);
+			if (iter != m_Resources[arrayIndex].end())
+			{
+				return iter->second;
+			}
 		}
 
 		return nullptr;
@@ -333,7 +432,7 @@ namespace Mythos
 		auto iter = m_ShaderBlobs.find(name);
 		if (iter != m_ShaderBlobs.end())
 			return iter->second;
-		
+
 
 		return nullptr;
 	}
@@ -341,9 +440,9 @@ namespace Mythos
 	BOOL Mythos::NameAvailable(const char* name)
 	{
 		auto iter = m_NamesToIndex.find(name);
-		if (iter == m_NamesToIndex.end()) 
+		if (iter == m_NamesToIndex.end())
 			return TRUE;
-		
+
 		return FALSE;
 	}
 }

@@ -188,6 +188,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
+		success = mythos->CreateRenderTargetFromSwapChain("defaultRenderTarget");
+		if (!success)
+			return -1;
+
 		int triangleIndices[] = {
 			0,1,2,
 			0,2,3,
@@ -225,7 +229,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		success = mythos->CreateTexture2D(L"Assets/Textures/CastleFlag.dds", "CastleFlagTexture", "CastleFlag");
+		success = mythos->CreateTexture2D(L"Assets/Textures/CastleFlag.dds", "CastleFlagTexture");
+		if (!success)
+			return -1;
+
+		success = mythos->CreateShaderResource("CastleFlagTexture", "CastleFlag");
 		if (!success)
 			return -1;
 
@@ -302,9 +310,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		CameraInput();
 
-		float color[] = { 0.0, 0.0, 0.0, 0.0 };
-		ID3D11RenderTargetView* targets = { mythos->GetMainRenderTarget() };
-		mythos->GetContext()->ClearRenderTargetView(mythos->GetMainRenderTarget(), color);
+		ID3D11RenderTargetView* targets = { (ID3D11RenderTargetView*)mythos->GetResource("defaultRenderTarget")->GetData() };
+		mythos->ClearRenderTarget("defaultRenderTarget");
 		mythos->GetContext()->ClearDepthStencilView(depthBuffer, D3D11_CLEAR_DEPTH, 1.0f, 0);
 		mythos->GetContext()->OMSetRenderTargets(1, &targets, depthBuffer);
 		mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
@@ -323,9 +330,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->RSSetState(rasterState);
 
 
-		ID3D11ShaderResourceView* resources = { (ID3D11ShaderResourceView*)mythos->GetResource("CastleFlag")->GetData() };
+		//ID3D11ShaderResourceView* resources = { (ID3D11ShaderResourceView*)mythos->GetResource("CastleFlag")->GetData() };
 		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
-		mythos->GetContext()->PSSetShaderResources(0, 1, &resources);
+		//mythos->GetContext()->PSSetShaderResources(0, 1, &resources);
 
 		mythos->GetContext()->DrawIndexed(36, 0, 0);
 

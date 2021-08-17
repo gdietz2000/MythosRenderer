@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Vector4.h"
+
 #include <unordered_map>
 #include "IMythosResource.h"
 #include "MythosCreator.h"
@@ -42,7 +44,6 @@ namespace Mythos
 		inline ID3D11Device* GetCreator() { return m_Creator.GetCreator(); }
 		inline ID3D11DeviceContext* GetContext() { return m_Context.GetContext(); }
 		inline void Present() { m_SwapChain.GetSwapChain()->Present(0, 0); }
-		inline ID3D11RenderTargetView* GetMainRenderTarget() { return m_RTV; }
 		inline D3D11_VIEWPORT GetViewport() { return m_Viewport; }
 
 		BOOL CreateVertexBuffer(void* data, unsigned int byteSize, const char* name);
@@ -52,8 +53,13 @@ namespace Mythos
 		BOOL CreateVertexShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
 		BOOL CreatePixelShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
 
-		BOOL CreateRenderTarget();
-		BOOL CreateTexture2D(const wchar_t* filepath, const char* textureName, const char* shaderResourceName);
+		BOOL CreateRenderTargetFromSwapChain(const char* renderTargetName);
+		BOOL CreateRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName);
+		void SetClearRenderTargetColor(Math::Vector4 clearColor);
+		void ClearRenderTarget(const char* renderTargetName);
+
+		BOOL CreateTexture2D(const wchar_t* filepath, const char* textureName);
+		BOOL CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName);
 
 		BOOL UpdateMythosResource(const char* name, void* data, unsigned int byteSize);
 
@@ -66,10 +72,10 @@ namespace Mythos
 		MythosContext m_Context;
 		MythosSwapChain m_SwapChain;
 		D3D11_VIEWPORT m_Viewport;
-		ID3D11RenderTargetView* m_RTV;
 
 		ID3D11SamplerState* m_DefaultState = nullptr;
 
+		//Helper Function
 		BOOL NameAvailable(const char* name);
 
 		/*Create a system where resources are seperated based on resource type ie:
@@ -88,6 +94,8 @@ namespace Mythos
 		Rasterizer States
 		Input Layouts
 		*/
+
+		Math::Vector4 m_RenderTargetClearColor;
 
 		//Assuming you need to find a vertex buffer with the name "VB" using the Get Resource function 
 		//m_NamesToIndex will find the index the Vertex Buffers will be, which again can find the Resource
