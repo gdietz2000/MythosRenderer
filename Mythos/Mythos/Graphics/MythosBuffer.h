@@ -10,8 +10,8 @@ namespace Mythos
 	{
 	public:
 		MythosBuffer() = default;
-		virtual void*& GetData() { return (void*&)m_Buffer; }
-		virtual void SafeRelease() { if (m_Buffer) m_Buffer->Release(); }
+		inline virtual void*& GetData() { return (void*&)m_Buffer; }
+		inline virtual void SafeRelease() { if (m_Buffer) m_Buffer->Release(); }
 	private:
 		ID3D11Buffer* m_Buffer = nullptr;
 	};

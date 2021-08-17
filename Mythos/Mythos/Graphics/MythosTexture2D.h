@@ -11,8 +11,8 @@ namespace Mythos
 	{
 	public:
 		MythosTexture2D() = default;
-		virtual void*& GetData() override { return (void*&)m_Texture; }
-		virtual void SafeRelease() override { if (m_Texture) { m_Texture->Release(); m_Texture = nullptr; } }
+		inline virtual void*& GetData() override { return (void*&)m_Texture; }
+		inline virtual void SafeRelease() override { if (m_Texture) { m_Texture->Release(); m_Texture = nullptr; } }
 	private:
 		ID3D11Texture2D* m_Texture = nullptr;
 	};

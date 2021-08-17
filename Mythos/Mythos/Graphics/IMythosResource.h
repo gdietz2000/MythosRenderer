@@ -6,8 +6,8 @@ namespace Mythos
 	{
 	public:
 		IMythosResource() = default;
-		virtual void*& GetData() = 0;
-		virtual void SafeRelease() = 0;
+		inline virtual void*& GetData() = 0;
+		inline virtual void SafeRelease() = 0;
 	protected:
 	};
 }

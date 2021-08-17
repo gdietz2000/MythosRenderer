@@ -260,27 +260,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreateDepthBuffer("depthTexture", "depthBuffer");
 		if (!success)
 			return -1;
-
-		/*D3D11_VIEWPORT view = mythos->GetViewport();
-
-		D3D11_TEXTURE2D_DESC zBufferDesc;
-		ZeroMemory(&zBufferDesc, sizeof(zBufferDesc));
-		zBufferDesc.ArraySize = 1;
-		zBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-		zBufferDesc.Width = view.Width;
-		zBufferDesc.Height = view.Height;
-		zBufferDesc.Format = DXGI_FORMAT_D32_FLOAT;
-		zBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		zBufferDesc.SampleDesc.Count = 1;
-		zBufferDesc.MipLevels = 1;
-
-		hr = mythos->GetCreator()->CreateTexture2D(&zBufferDesc, nullptr, &zBufferTexture);
-		if (FAILED(hr))
-			return -1;
-
-		hr = mythos->GetCreator()->CreateDepthStencilView(zBufferTexture, nullptr, &depthBuffer);
-		if (FAILED(hr))
-			return -1;*/
 	}
 
 	UINT strides[] = { sizeof(TempVertex) };

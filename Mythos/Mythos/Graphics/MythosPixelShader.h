@@ -10,8 +10,8 @@ namespace Mythos {
 	{
 	public:
 		MythosPixelShader() = default;
-		virtual void*& GetData() override { return (void*&)m_Shader; }
-		virtual void SafeRelease() { if (m_Shader) { m_Shader->Release(); m_Shader = nullptr; } }
+		inline virtual void*& GetData() override { return (void*&)m_Shader; }
+		inline virtual void SafeRelease() { if (m_Shader) { m_Shader->Release(); m_Shader = nullptr; } }
 	private:
 		ID3D11PixelShader* m_Shader = nullptr;
 	};
