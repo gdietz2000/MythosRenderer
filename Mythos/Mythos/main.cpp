@@ -158,7 +158,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	auto temp = mythos->GetViewport();
 
 	freeCamera.SetCamera(Eye, Target, Up);
-	freeCamera.SetProjection(Math::Matrix4::PerspectiveFovLH(PI / 3.0f, temp.Width / temp.Height, 0.1f, 1000.0f));
+	freeCamera.SetProjection(PI / 3.0f, temp.Width / temp.Height, 0.1f, 1000.0f);
 
 	MyMatrices.World = World;
 	MyMatrices.View = freeCamera.GetCamera();

@@ -11,7 +11,8 @@ namespace Mythos
 
 		//Camera Methods
 		void SetCamera(Math::Vector3 position, Math::Vector3 target, Math::Vector3 up);
-
+		void SetProjection(float fov, float aspectRatio, float nearPlane, float farPlane);
+		
 		void GetCameraInput();
 
 		Math::Vector3 GetPosition();

@@ -3,7 +3,19 @@
 namespace Mythos
 {
 	void MythosFreeroamCamera::SetCamera(Math::Vector3 position, Math::Vector3 target, Math::Vector3 up) {
+		m_CameraPosition = position;
+		m_TargetDirection = target.Normalize();
+		m_UpDirection = up.Normalize();
 		m_Camera = Math::Matrix4::LookAtLH(position, target, up);
+	}
+
+	void MythosFreeroamCamera::SetProjection(float fov, float aspectRatio, float nearPlane, float farPlane)
+	{
+		m_FieldOfView = fov;
+		m_AspectRatio = aspectRatio;
+		m_NearPlane = nearPlane;
+		m_FarPlane = farPlane;
+		m_Projection = Math::Matrix4::PerspectiveFovLH(fov, aspectRatio, nearPlane, farPlane);
 	}
 
 	void MythosFreeroamCamera::GetCameraInput()
