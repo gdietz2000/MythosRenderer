@@ -155,8 +155,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	//Rasterization Stuff
 	ID3D11RasterizerState* rasterState = nullptr;
-	ID3D11Texture2D* zBufferTexture = nullptr;
-	ID3D11DepthStencilView* depthBuffer = nullptr;
+	//ID3D11Texture2D* zBufferTexture = nullptr;
+	//ID3D11DepthStencilView* depthBuffer = nullptr;
 
 	//Rendering the Triangle
 	//ID3D11Buffer* vertexBuffer = nullptr;
@@ -188,7 +188,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		success = mythos->CreateRenderTargetFromSwapChain("defaultRenderTarget");
+		success = mythos->CreateMainRenderTarget("mainRenderTarget");
 		if (!success)
 			return -1;
 
@@ -297,8 +297,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		CameraInput();
 
-		ID3D11RenderTargetView* targets = { (ID3D11RenderTargetView*)mythos->GetResource("defaultRenderTarget")->GetData() };
-		mythos->ClearRenderTarget("defaultRenderTarget");
+		ID3D11RenderTargetView* targets = { (ID3D11RenderTargetView*)mythos->GetResource("mainRenderTarget")->GetData() };
+		mythos->ClearRenderTarget("mainRenderTarget");
 		mythos->ClearDepthBuffer("depthBuffer");
 		mythos->GetContext()->OMSetRenderTargets(1, &targets, (ID3D11DepthStencilView*)mythos->GetResource("depthBuffer")->GetData());
 		mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
@@ -334,8 +334,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (m_RTV) m_RTV->Release();*/
 
 	if (rasterState) rasterState->Release();
-	if (zBufferTexture) zBufferTexture->Release();
-	if (depthBuffer) depthBuffer->Release();
+	//if (zBufferTexture) zBufferTexture->Release();
+	//if (depthBuffer) depthBuffer->Release();
 
 	//if (vertexBuffer) vertexBuffer->Release();
 	//if (indexBuffer) indexBuffer->Release();

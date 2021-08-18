@@ -301,7 +301,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateRenderTargetFromSwapChain(const char* renderTargetName)
+	BOOL Mythos::CreateMainRenderTarget(const char* renderTargetName)
 	{
 		if (!NameAvailable(renderTargetName))
 			return FALSE;
@@ -362,7 +362,7 @@ namespace Mythos
 
 		renderDesc.Format = textureDesc.Format;
 		renderDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-		renderDesc.Texture2D.MipSlice = 1;
+		renderDesc.Texture2D.MipSlice = 0;
 
 		hr = m_Creator.GetCreator()->CreateRenderTargetView((ID3D11Resource*)texture->GetData(), &renderDesc, (ID3D11RenderTargetView**)&renderTarget->GetData());
 

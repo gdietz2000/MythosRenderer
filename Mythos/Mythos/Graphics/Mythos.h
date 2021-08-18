@@ -57,7 +57,7 @@ namespace Mythos
 		BOOL CreateVertexShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
 		BOOL CreatePixelShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
 
-		BOOL CreateRenderTargetFromSwapChain(const char* renderTargetName);
+		BOOL CreateMainRenderTarget(const char* renderTargetName);
 		BOOL CreateRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName);
 		void SetClearRenderTargetColor(Math::Vector4 clearColor);
 		void ClearRenderTarget(const char* renderTargetName);
