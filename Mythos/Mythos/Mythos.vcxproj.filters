@@ -90,6 +90,12 @@
     <ClInclude Include="Graphics\MythosTextureSampler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\MythosRasterizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\MythosInputLayout.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

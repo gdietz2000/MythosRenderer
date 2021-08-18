@@ -158,7 +158,9 @@
     <ClInclude Include="Graphics\MythosContext.h" />
     <ClInclude Include="Graphics\MythosCreator.h" />
     <ClInclude Include="Graphics\MythosDepthBuffer.h" />
+    <ClInclude Include="Graphics\MythosInputLayout.h" />
     <ClInclude Include="Graphics\MythosPixelShader.h" />
+    <ClInclude Include="Graphics\MythosRasterizer.h" />
     <ClInclude Include="Graphics\MythosRenderTarget.h" />
     <ClInclude Include="Graphics\MythosShaderResource.h" />
     <ClInclude Include="Graphics\MythosSwapChain.h" />

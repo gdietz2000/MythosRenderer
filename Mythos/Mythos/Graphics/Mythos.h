@@ -30,7 +30,36 @@ namespace Mythos
 		MYTHOS_RESOURCE_TEXTURE_2D,
 		MYTHOS_RESOURCE_SHADER_RESOURCE,
 		MYTHOS_RESOURCE_TEXTURE_SAMPLER,
+		MYTHOS_RESOURCE_RASTERIZER,
 		MYTHOS_RESOURCE_COUNT
+	};
+
+	enum MythosFillMode
+	{
+		MYTHOS_FILL_WIREFRAME = 2,
+		MYTHOS_FILL_SOLID = 3
+	};
+
+	enum MythosCullMode
+	{
+		MYTHOS_CULL_NONE = 1,
+		MYTHOS_CULL_FRONT = 2,
+		MYTHOS_CULL_BACK = 3
+	};
+
+	enum MythosFormat
+	{
+		FLOAT1,
+		FLOAT2,
+		FLOAT3,
+		FLOAT4,
+	};
+
+	struct MythosInputElement
+	{
+		const char* m_SemanticName;
+		unsigned int m_SemanticIndex;
+		unsigned int m_Format;
 	};
 
 	//This class will be the main accessor when it comes to rendering
@@ -57,6 +86,8 @@ namespace Mythos
 		BOOL CreateVertexShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
 		BOOL CreatePixelShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
 
+		BOOL CreateInputLayout(const MythosInputElement* elements, unsigned int numElements, const char* vertexShaderName, const char* inputLayoutName);
+
 		BOOL CreateMainRenderTarget(const char* renderTargetName);
 		BOOL CreateRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName);
 		void SetClearRenderTargetColor(Math::Vector4 clearColor);
@@ -65,6 +96,8 @@ namespace Mythos
 		BOOL CreateTexture2D(const wchar_t* filepath, const char* textureName);
 		BOOL CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName);
 		BOOL CreateTextureSampler(const char* samplerName);
+
+		BOOL CreateSimpleRasterizerState(const char* rasterizerStateName);
 
 		BOOL UpdateMythosResource(const char* name, void* data, unsigned int byteSize);
 

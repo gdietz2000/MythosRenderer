@@ -3,6 +3,8 @@
 #include "d3dcompiler.h"
 #pragma comment(lib, "d3dcompiler.lib")
 
+#include <vector>
+
 #include "Vector4.h"
 
 #include "MythosBuffer.h"
@@ -13,6 +15,8 @@
 #include "MythosRenderTarget.h"
 #include "MythosDepthBuffer.h"
 #include "MythosTextureSampler.h"
+#include "MythosRasterizer.h"
+#include "MythosInputLayout.h"
 #include "DDSTextureLoader.h"
 
 namespace Mythos
@@ -99,8 +103,6 @@ namespace Mythos
 		vertexDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 		vertexDesc.ByteWidth = byteSize;
 		vertexDesc.CPUAccessFlags = 0;
-		vertexDesc.MiscFlags = 0;
-		vertexDesc.StructureByteStride = 0;
 		vertexDesc.Usage = D3D11_USAGE_DEFAULT;
 
 		D3D11_SUBRESOURCE_DATA subData;
@@ -301,6 +303,54 @@ namespace Mythos
 		return TRUE;
 	}
 
+	BOOL Mythos::CreateInputLayout(const MythosInputElement* elements, unsigned int numElements, const char* vertexShaderName, const char* inputLayoutName)
+	{
+		if (!NameAvailable(inputLayoutName))
+			return FALSE;
+
+		/*D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
+			{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+			{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0}
+		};*/
+
+		std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
+		int totalBytes = 0;
+		for (int i = 0; i < numElements; ++i)
+		{
+			D3D11_INPUT_ELEMENT_DESC temp;
+			int byteOffset = 0;
+			temp.SemanticName = elements[i].m_SemanticName;
+			temp.SemanticIndex = elements[i].m_SemanticIndex;
+			switch (elements[i].m_Format)
+			{
+			case MythosFormat::FLOAT1: { temp.Format = DXGI_FORMAT_R32_FLOAT; byteOffset = 4; break; }
+			case MythosFormat::FLOAT2: { temp.Format = DXGI_FORMAT_R32G32_FLOAT; byteOffset = 8; break; }
+			case MythosFormat::FLOAT3: { temp.Format = DXGI_FORMAT_R32G32B32_FLOAT; byteOffset = 12; break; }
+			case MythosFormat::FLOAT4: { temp.Format = DXGI_FORMAT_R32G32B32A32_FLOAT; byteOffset = 16; break; }
+			}
+			temp.InputSlot = 0;
+			temp.AlignedByteOffset = totalBytes;
+			temp.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+			temp.InstanceDataStepRate = 0;
+			totalBytes += byteOffset;
+			inputElements.push_back(temp);
+		}
+
+		auto blob = GetShaderBlob(vertexShaderName);
+		IMythosResource* inputLayout = new MythosInputLayout();
+
+		HRESULT hr = m_Creator.GetCreator()->CreateInputLayout(inputElements.data(), numElements, blob->GetBufferPointer(), blob->GetBufferSize(), (ID3D11InputLayout**)&inputLayout->GetData());
+		if (FAILED(hr)) {
+			delete inputLayout;
+			return FALSE;
+		}
+
+		m_NamesToIndex.insert(std::make_pair(inputLayoutName, MYTHOS_RESOURCE_INPUT_LAYOUT));
+		m_Resources[MYTHOS_RESOURCE_INPUT_LAYOUT].insert(std::make_pair(inputLayoutName, inputLayout));
+
+		return TRUE;
+	}
+
 	BOOL Mythos::CreateMainRenderTarget(const char* renderTargetName)
 	{
 		if (!NameAvailable(renderTargetName))
@@ -473,6 +523,29 @@ namespace Mythos
 
 		m_NamesToIndex.insert(std::make_pair(samplerName, MYTHOS_RESOURCE_TEXTURE_SAMPLER));
 		m_Resources[MYTHOS_RESOURCE_TEXTURE_SAMPLER].insert(std::make_pair(samplerName, samplerState));
+
+		return TRUE;
+	}
+
+	BOOL Mythos::CreateSimpleRasterizerState(const char* rasterizerStateName)
+	{
+		D3D11_RASTERIZER_DESC rasterDesc;
+		ZeroMemory(&rasterDesc, sizeof(rasterDesc));
+		rasterDesc.FillMode = D3D11_FILL_SOLID;
+		rasterDesc.CullMode = D3D11_CULL_BACK;
+
+		IMythosResource* rasterState = new MythosRasterizer();
+		HRESULT hr = m_Creator.GetCreator()->CreateRasterizerState(&rasterDesc, (ID3D11RasterizerState**)&rasterState->GetData());
+
+		if (FAILED(hr))
+		{
+			delete rasterState;
+			return FALSE;
+		}
+
+
+		m_NamesToIndex.insert(std::make_pair(rasterizerStateName, MYTHOS_RESOURCE_RASTERIZER));
+		m_Resources[MYTHOS_RESOURCE_RASTERIZER].insert(std::make_pair(rasterizerStateName, rasterState));
 
 		return TRUE;
 	}

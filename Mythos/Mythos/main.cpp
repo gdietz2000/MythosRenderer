@@ -154,7 +154,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	Mythos::Mythos* mythos = new Mythos::Mythos(&windowsWindow.GetWindow());
 
 	//Rasterization Stuff
-	ID3D11RasterizerState* rasterState = nullptr;
+	//ID3D11RasterizerState* rasterState = nullptr;
 	//ID3D11Texture2D* zBufferTexture = nullptr;
 	//ID3D11DepthStencilView* depthBuffer = nullptr;
 
@@ -237,24 +237,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
+		/*D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
 			{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 			{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0}
+		};*/
+
+		Mythos::MythosInputElement layoutDesc[] = {
+			{"POSITION", 0, Mythos::FLOAT4},
+			{"COLOR", 0, Mythos::FLOAT4}
 		};
 
-		hr = mythos->GetCreator()->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), mythos->GetShaderBlob("vertexShader")->GetBufferPointer(), mythos->GetShaderBlob("vertexShader")->GetBufferSize(), &inputLayout);
+		success = mythos->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), "vertexShader", "inputLayout");
+		if (!success)
+			return -1;
+
+		/*hr = mythos->GetCreator()->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), mythos->GetShaderBlob("vertexShader")->GetBufferPointer(), mythos->GetShaderBlob("vertexShader")->GetBufferSize(), &inputLayout);
 		if (FAILED(hr)) {
 			return -1;
-		}
+		}*/
 
-		D3D11_RASTERIZER_DESC rasterDesc;
-		ZeroMemory(&rasterDesc, sizeof(rasterDesc));
-		rasterDesc.FillMode = D3D11_FILL_SOLID;
-		rasterDesc.CullMode = D3D11_CULL_NONE;
-
-		hr = mythos->GetCreator()->CreateRasterizerState(&rasterDesc, &rasterState);
-
-		if (FAILED(hr))
+		success = mythos->CreateSimpleRasterizerState("simpleRasterizer");
+		if (!success)
 			return -1;
 
 		success = mythos->CreateDepthBuffer("depthTexture", "depthBuffer");
@@ -309,12 +312,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		ID3D11Buffer* constBuffers{ (ID3D11Buffer*)mythos->GetResource("constantBuffer")->GetData() };
 
 		mythos->GetContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		mythos->GetContext()->IASetInputLayout(inputLayout);
+		mythos->GetContext()->IASetInputLayout((ID3D11InputLayout*)mythos->GetResource("inputLayout")->GetData());
 		mythos->GetContext()->IASetVertexBuffers(0, 1, &buffers, strides, offset);
 		mythos->GetContext()->IASetIndexBuffer((ID3D11Buffer*)mythos->GetResource("indexBuffer")->GetData(), DXGI_FORMAT_R32_UINT, 0);
 		mythos->GetContext()->VSSetShader((ID3D11VertexShader*)mythos->GetResource("vertexShader")->GetData(), nullptr, NULL);
 		mythos->GetContext()->VSSetConstantBuffers(0, 1, &constBuffers);
-		mythos->GetContext()->RSSetState(rasterState);
+		mythos->GetContext()->RSSetState((ID3D11RasterizerState*)mythos->GetResource("simpleRasterizer")->GetData());
 
 
 		//ID3D11ShaderResourceView* resources = { (ID3D11ShaderResourceView*)mythos->GetResource("CastleFlag")->GetData() };
@@ -333,7 +336,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (m_Swap) m_Swap->Release();
 	if (m_RTV) m_RTV->Release();*/
 
-	if (rasterState) rasterState->Release();
+	//if (rasterState) rasterState->Release();
 	//if (zBufferTexture) zBufferTexture->Release();
 	//if (depthBuffer) depthBuffer->Release();
 
