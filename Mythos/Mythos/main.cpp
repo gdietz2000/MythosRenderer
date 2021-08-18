@@ -144,28 +144,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MYTHOS));
 
 	MSG msg;
-	//Basic DirectX Rendering stuff
-	//ID3D11Device* m_Device = nullptr;
-	//ID3D11DeviceContext* m_Context = nullptr;
-	//IDXGISwapChain* m_Swap = nullptr;
-	//ID3D11RenderTargetView* m_RTV = nullptr;
-	//D3D11_VIEWPORT m_Viewport;
 
 	Mythos::Mythos* mythos = new Mythos::Mythos(&windowsWindow.GetWindow());
-
-	//Rasterization Stuff
-	//ID3D11RasterizerState* rasterState = nullptr;
-	//ID3D11Texture2D* zBufferTexture = nullptr;
-	//ID3D11DepthStencilView* depthBuffer = nullptr;
-
-	//Rendering the Triangle
-	//ID3D11Buffer* vertexBuffer = nullptr;
-	//ID3D11Buffer* indexBuffer = nullptr;
-	//ID3D11Buffer* constantBuffer = nullptr;
-
-	ID3D11InputLayout* inputLayout = nullptr;
-	//ID3D11VertexShader* vertexShader = nullptr;
-	//ID3D11PixelShader* pixelShader = nullptr;
 
 	if (windowsWindow.GetWindow())
 	{
@@ -237,11 +217,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		/*D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
-			{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-			{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0}
-		};*/
-
 		Mythos::MythosInputElement layoutDesc[] = {
 			{"POSITION", 0, Mythos::FLOAT4},
 			{"COLOR", 0, Mythos::FLOAT4}
@@ -250,11 +225,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), "vertexShader", "inputLayout");
 		if (!success)
 			return -1;
-
-		/*hr = mythos->GetCreator()->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), mythos->GetShaderBlob("vertexShader")->GetBufferPointer(), mythos->GetShaderBlob("vertexShader")->GetBufferSize(), &inputLayout);
-		if (FAILED(hr)) {
-			return -1;
-		}*/
 
 		success = mythos->CreateSimpleRasterizerState("simpleRasterizer");
 		if (!success)
@@ -330,22 +300,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		mythos->Present();
 	}
-
-	/*if (m_Device) mythos->GetCreator()->Release();
-	if (m_Context) mythos->GetContext()->Release();
-	if (m_Swap) m_Swap->Release();
-	if (m_RTV) m_RTV->Release();*/
-
-	//if (rasterState) rasterState->Release();
-	//if (zBufferTexture) zBufferTexture->Release();
-	//if (depthBuffer) depthBuffer->Release();
-
-	//if (vertexBuffer) vertexBuffer->Release();
-	//if (indexBuffer) indexBuffer->Release();
-	//if (constantBuffer) constantBuffer->Release();
-	if (inputLayout) inputLayout->Release();
-	//if (vertexShader) vertexShader->Release();
-	//if (pixelShader) pixelShader->Release();
 
 	delete mythos;
 
