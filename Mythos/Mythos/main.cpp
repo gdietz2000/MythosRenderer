@@ -10,6 +10,7 @@ using namespace Math;
 
 #include "Windows/WindowsApplication.h"
 #include "Graphics/Mythos.h"
+#include "Graphics/MythosFreeroamCamera.h"
 
 #include "d3d11.h"
 #pragma comment(lib, "d3d11.lib")
@@ -30,102 +31,6 @@ struct WVP {
 	Matrix4 View;
 	Matrix4 Projection;
 }MyMatrices;
-
-Matrix4 Camera;
-Vector4 CameraPosition;
-float PitchClamp = 0.0f;
-float YawClamp = 0.0f;
-
-void CameraInput()
-{
-	float LocalX = 0, LocalZ = 0;
-	float GlobalY = 0;
-	float camYaw = 0;
-	float camPitch = 0;
-	//Movement Inputs
-	if (GetAsyncKeyState(0x41))
-	{
-		LocalX -= 0.1f;
-	}
-
-	if (GetAsyncKeyState(0x44))
-	{
-		LocalX += 0.1f;
-	}
-
-	if (GetAsyncKeyState(VK_SHIFT))
-	{
-		GlobalY -= 0.1f;
-	}
-
-	if (GetAsyncKeyState(VK_SPACE))
-	{
-		GlobalY += 0.1f;
-	}
-
-	if (GetAsyncKeyState(0x53))
-	{
-		LocalZ -= 0.1f;
-	}
-
-	if (GetAsyncKeyState(0x57))
-	{
-		LocalZ += 0.1f;
-	}
-
-	if (GetAsyncKeyState(VK_UP))
-	{
-		if (PitchClamp > -1.4f)
-		{
-			camPitch -= 0.005f;
-			PitchClamp -= 0.005f;
-		}
-	}
-
-	if (GetAsyncKeyState(VK_DOWN))
-	{
-		if (PitchClamp < 1.4f)
-		{
-			camPitch += 0.005f;
-			PitchClamp += 0.005f;
-		}
-	}
-
-	if (GetAsyncKeyState(VK_LEFT))
-	{
-		camYaw -= 0.005f;
-		YawClamp -= 0.005f;
-	}
-
-	if (GetAsyncKeyState(VK_RIGHT))
-	{
-		camYaw += 0.005f;
-		YawClamp += 0.005f;
-	}
-
-	Camera = Camera.Inverse();
-
-	Matrix4 temp = Matrix4::Translate(LocalX, 0, LocalZ);
-	Camera = temp * Camera;
-	temp = Matrix4::Translate(0, GlobalY, 0);
-	Camera = Camera * temp;
-
-	Vector4 tempPosition = Camera.row3;
-
-	Camera.row3 = { 0,0,0,1 };
-
-	temp = Matrix4::RotateY(camYaw);
-	Camera = Camera * temp;
-	Camera.row3 = tempPosition;
-	Camera = Matrix4::RotateX(camPitch) * Camera;
-
-	CameraPosition = Camera.row3;
-
-	Camera = Camera.Inverse();
-
-	MyMatrices.View = Camera;
-}
-
 
 #ifdef _WIN32
 
@@ -246,13 +151,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	Vector3 Target = { 0,0,1 };
 	Vector3 Up = { 0,1,0 };
 
+	Mythos::MythosFreeroamCamera freeCamera;
+
 	Matrix4 World = Matrix4::Identity;
-	Camera = Matrix4::LookAtLH(Eye, Target, Up);
-	Matrix4 Projection = Matrix4::PerspectiveFovLH(PI / 3.0f, 2.03428578f, 0.1f, 1000.0f);
+
+	auto temp = mythos->GetViewport();
+
+	freeCamera.SetCamera(Eye, Target, Up);
+	freeCamera.SetProjection(Math::Matrix4::PerspectiveFovLH(PI / 3.0f, temp.Width / temp.Height, 0.1f, 1000.0f));
 
 	MyMatrices.World = World;
-	MyMatrices.View = Camera;
-	MyMatrices.Projection = Projection;
+	MyMatrices.View = freeCamera.GetCamera();
+	MyMatrices.Projection = freeCamera.GetProjection();
 
 	// Main message loop:
 	while (true)
@@ -268,7 +178,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (msg.message == WM_QUIT)
 			break;
 
-		CameraInput();
+		freeCamera.GetCameraInput();
+		MyMatrices.View = freeCamera.GetCamera();
 
 		ID3D11RenderTargetView* targets = { (ID3D11RenderTargetView*)mythos->GetResource("mainRenderTarget")->GetData() };
 		mythos->ClearRenderTarget("mainRenderTarget");
