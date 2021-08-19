@@ -93,7 +93,7 @@ namespace Mythos
 		m_ShaderBlobs.clear();
 	}
 
-	BOOL Mythos::CreateVertexBuffer(void* data, unsigned int byteSize, const char* name)
+	BOOL Mythos::CreateDefaultVertexBuffer(void* data, unsigned int byteSize, const char* name)
 	{
 		if (!NameAvailable(name))
 			return FALSE;
@@ -125,7 +125,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateIndexBuffer(void* data, unsigned int byteSize, const char* name)
+	BOOL Mythos::CreateDefaultIndexBuffer(void* data, unsigned int byteSize, const char* name)
 	{
 		if (!NameAvailable(name))
 			return FALSE;
@@ -160,7 +160,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateConstantBuffer(void* data, unsigned int byteSize, const char* name)
+	BOOL Mythos::CreateDefaultConstantBuffer(void* data, unsigned int byteSize, const char* name)
 	{
 		if (!NameAvailable(name))
 			return FALSE;
@@ -195,7 +195,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateDepthBuffer(const char* depthTextureName, const char* depthBufferName)
+	BOOL Mythos::CreateDefaultDepthBuffer(const char* depthTextureName, const char* depthBufferName)
 	{
 		if (!NameAvailable(depthTextureName) || !NameAvailable(depthBufferName))
 			return FALSE;
@@ -208,7 +208,7 @@ namespace Mythos
 		zBufferDesc.Height = m_Viewport.Height;
 		zBufferDesc.Format = DXGI_FORMAT_D32_FLOAT;
 		zBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		zBufferDesc.SampleDesc.Count = 1;
+		zBufferDesc.SampleDesc.Count= 1;
 		zBufferDesc.MipLevels = 1;
 
 		IMythosResource* depthTexture = new MythosTexture2D();
@@ -318,10 +318,10 @@ namespace Mythos
 			temp.SemanticIndex = elements[i].m_SemanticIndex;
 			switch (elements[i].m_Format)
 			{
-			case MythosFormat::FLOAT1: { temp.Format = DXGI_FORMAT_R32_FLOAT; byteOffset = 4; break; }
-			case MythosFormat::FLOAT2: { temp.Format = DXGI_FORMAT_R32G32_FLOAT; byteOffset = 8; break; }
-			case MythosFormat::FLOAT3: { temp.Format = DXGI_FORMAT_R32G32B32_FLOAT; byteOffset = 12; break; }
-			case MythosFormat::FLOAT4: { temp.Format = DXGI_FORMAT_R32G32B32A32_FLOAT; byteOffset = 16; break; }
+			case MythosFormat::MYTHOS_FORMAT_32_FLOAT1: { temp.Format = DXGI_FORMAT_R32_FLOAT; byteOffset = 4; break; }
+			case MythosFormat::MYTHOS_FORMAT_32_FLOAT2: { temp.Format = DXGI_FORMAT_R32G32_FLOAT; byteOffset = 8; break; }
+			case MythosFormat::MYTHOS_FORMAT_32_FLOAT3: { temp.Format = DXGI_FORMAT_R32G32B32_FLOAT; byteOffset = 12; break; }
+			case MythosFormat::MYTHOS_FORMAT_32_FLOAT4: { temp.Format = DXGI_FORMAT_R32G32B32A32_FLOAT; byteOffset = 16; break; }
 			}
 			temp.InputSlot = 0;
 			temp.AlignedByteOffset = totalBytes;
@@ -374,7 +374,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName)
+	BOOL Mythos::CreateDefaultRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName)
 	{
 		if (!NameAvailable(textureName) || !NameAvailable(renderTargetName))
 			return FALSE;
@@ -439,7 +439,7 @@ namespace Mythos
 			m_Context.GetContext()->ClearRenderTargetView((ID3D11RenderTargetView*)renderTarget->GetData(), m_RenderTargetClearColor.comp);
 	}
 
-	BOOL Mythos::CreateTexture2D(const wchar_t* filepath, const char* textureName)
+	BOOL Mythos::CreateDefaultTexture2D(const wchar_t* filepath, const char* textureName)
 	{
 		if (!NameAvailable(textureName))
 			return FALSE;
@@ -458,7 +458,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName)
+	BOOL Mythos::CreateDefaultShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName)
 	{
 		if (!NameAvailable(shaderResourceName))
 			return FALSE;
@@ -489,7 +489,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateTextureSampler(const char* samplerName)
+	BOOL Mythos::CreateDefaultTextureSampler(const char* samplerName)
 	{
 		if (!NameAvailable(samplerName))
 			return FALSE;
@@ -522,7 +522,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateSimpleRasterizerState(const char* rasterizerStateName)
+	BOOL Mythos::CreateDefaultRasterizerState(const char* rasterizerStateName)
 	{
 		D3D11_RASTERIZER_DESC rasterDesc;
 		ZeroMemory(&rasterDesc, sizeof(rasterDesc));

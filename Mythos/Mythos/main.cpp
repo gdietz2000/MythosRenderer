@@ -69,7 +69,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			{{1,   1, 1, 1}, {0.77,0,0.77,1}},
 		};
 
-		BOOL success = mythos->CreateVertexBuffer(triangle, sizeof(TempVertex) * ARRAYSIZE(triangle), "vertexBuffer");
+		BOOL success = mythos->CreateDefaultVertexBuffer(triangle, sizeof(TempVertex) * ARRAYSIZE(triangle), "vertexBuffer");
 		if (!success)
 			return -1;
 
@@ -92,11 +92,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			0,4,5
 		};
 
-		success = mythos->CreateIndexBuffer(triangleIndices, sizeof(int) * ARRAYSIZE(triangleIndices), "indexBuffer");
+		success = mythos->CreateDefaultIndexBuffer(triangleIndices, sizeof(int) * ARRAYSIZE(triangleIndices), "indexBuffer");
 		if (!success)
 			return -1;
 
-		success = mythos->CreateConstantBuffer(nullptr, sizeof(WVP), "constantBuffer");
+		success = mythos->CreateDefaultConstantBuffer(nullptr, sizeof(WVP), "constantBuffer");
 		if (!success)
 			return -1;
 
@@ -114,32 +114,32 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		success = mythos->CreateTexture2D(L"Assets/Textures/CastleFlag.dds", "CastleFlagTexture");
+		success = mythos->CreateDefaultTexture2D(L"Assets/Textures/CastleFlag.dds", "CastleFlagTexture");
 		if (!success)
 			return -1;
 
-		success = mythos->CreateShaderResource("CastleFlagTexture", "CastleFlag");
+		success = mythos->CreateDefaultShaderResource("CastleFlagTexture", "CastleFlag");
 		if (!success)
 			return -1;
 
 		Mythos::MythosInputElement layoutDesc[] = {
-			{"POSITION", 0, Mythos::FLOAT4},
-			{"COLOR", 0, Mythos::FLOAT4}
+			{"POSITION", 0, Mythos::MYTHOS_FORMAT_32_FLOAT4},
+			{"COLOR", 0, Mythos::MYTHOS_FORMAT_32_FLOAT4}
 		};
 
 		success = mythos->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), "vertexShader", "inputLayout");
 		if (!success)
 			return -1;
 
-		success = mythos->CreateSimpleRasterizerState("simpleRasterizer");
+		success = mythos->CreateDefaultRasterizerState("simpleRasterizer");
 		if (!success)
 			return -1;
 
-		success = mythos->CreateDepthBuffer("depthTexture", "depthBuffer");
+		success = mythos->CreateDefaultDepthBuffer("depthTexture", "depthBuffer");
 		if (!success)
 			return -1;
 
-		success = mythos->CreateTextureSampler("samplerState");
+		success = mythos->CreateDefaultTextureSampler("samplerState");
 		if (!success)
 			return -1;
 	}
@@ -182,6 +182,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		MyMatrices.View = freeCamera.GetCamera();
 
 		ID3D11RenderTargetView* targets = { (ID3D11RenderTargetView*)mythos->GetResource("mainRenderTarget")->GetData() };
+		mythos->SetClearRenderTargetColor({ 0,1,1,1 });
 		mythos->ClearRenderTarget("mainRenderTarget");
 		mythos->ClearDepthBuffer("depthBuffer");
 		mythos->GetContext()->OMSetRenderTargets(1, &targets, (ID3D11DepthStencilView*)mythos->GetResource("depthBuffer")->GetData());
