@@ -93,7 +93,7 @@ namespace Mythos
 		m_ShaderBlobs.clear();
 	}
 
-	BOOL Mythos::CreateDefaultVertexBuffer(void* data, unsigned int byteSize, const char* name)
+	BOOL Mythos::CreateVertexBuffer(void* data, unsigned int byteSize, const char* name)
 	{
 		if (!NameAvailable(name))
 			return FALSE;
@@ -125,7 +125,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateDefaultIndexBuffer(void* data, unsigned int byteSize, const char* name)
+	BOOL Mythos::CreateIndexBuffer(void* data, unsigned int byteSize, const char* name)
 	{
 		if (!NameAvailable(name))
 			return FALSE;
@@ -160,7 +160,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateDefaultConstantBuffer(void* data, unsigned int byteSize, const char* name)
+	BOOL Mythos::CreateConstantBuffer(void* data, unsigned int byteSize, const char* name)
 	{
 		if (!NameAvailable(name))
 			return FALSE;
@@ -195,7 +195,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateDefaultDepthBuffer(const char* depthTextureName, const char* depthBufferName)
+	BOOL Mythos::CreateDepthBuffer(const char* depthTextureName, const char* depthBufferName)
 	{
 		if (!NameAvailable(depthTextureName) || !NameAvailable(depthBufferName))
 			return FALSE;
@@ -374,7 +374,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateDefaultRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName)
+	BOOL Mythos::CreateRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName)
 	{
 		if (!NameAvailable(textureName) || !NameAvailable(renderTargetName))
 			return FALSE;
@@ -439,7 +439,7 @@ namespace Mythos
 			m_Context.GetContext()->ClearRenderTargetView((ID3D11RenderTargetView*)renderTarget->GetData(), m_RenderTargetClearColor.comp);
 	}
 
-	BOOL Mythos::CreateDefaultTexture2D(const wchar_t* filepath, const char* textureName)
+	BOOL Mythos::CreateTexture2D(const wchar_t* filepath, const char* textureName)
 	{
 		if (!NameAvailable(textureName))
 			return FALSE;
@@ -458,7 +458,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateDefaultShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName)
+	BOOL Mythos::CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName)
 	{
 		if (!NameAvailable(shaderResourceName))
 			return FALSE;
@@ -489,7 +489,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateDefaultTextureSampler(const char* samplerName)
+	BOOL Mythos::CreateTextureSampler(const char* samplerName)
 	{
 		if (!NameAvailable(samplerName))
 			return FALSE;
@@ -522,7 +522,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateDefaultRasterizerState(const char* rasterizerStateName)
+	BOOL Mythos::CreateRasterizerState(const char* rasterizerStateName)
 	{
 		D3D11_RASTERIZER_DESC rasterDesc;
 		ZeroMemory(&rasterDesc, sizeof(rasterDesc));

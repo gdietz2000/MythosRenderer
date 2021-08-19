@@ -69,7 +69,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			{{1,   1, 1, 1}, {0.77,0,0.77,1}},
 		};
 
-		BOOL success = mythos->CreateDefaultVertexBuffer(triangle, sizeof(TempVertex) * ARRAYSIZE(triangle), "vertexBuffer");
+		BOOL success = mythos->CreateVertexBuffer(triangle, sizeof(TempVertex) * ARRAYSIZE(triangle), "vertexBuffer");
 		if (!success)
 			return -1;
 
@@ -92,11 +92,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			0,4,5
 		};
 
-		success = mythos->CreateDefaultIndexBuffer(triangleIndices, sizeof(int) * ARRAYSIZE(triangleIndices), "indexBuffer");
+		success = mythos->CreateIndexBuffer(triangleIndices, sizeof(int) * ARRAYSIZE(triangleIndices), "indexBuffer");
 		if (!success)
 			return -1;
 
-		success = mythos->CreateDefaultConstantBuffer(nullptr, sizeof(WVP), "constantBuffer");
+		success = mythos->CreateConstantBuffer(nullptr, sizeof(WVP), "constantBuffer");
 		if (!success)
 			return -1;
 
@@ -114,11 +114,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		success = mythos->CreateDefaultTexture2D(L"Assets/Textures/CastleFlag.dds", "CastleFlagTexture");
+		success = mythos->CreateTexture2D(L"Assets/Textures/CastleFlag.dds", "CastleFlagTexture");
 		if (!success)
 			return -1;
 
-		success = mythos->CreateDefaultShaderResource("CastleFlagTexture", "CastleFlag");
+		success = mythos->CreateShaderResource("CastleFlagTexture", "CastleFlag");
 		if (!success)
 			return -1;
 
@@ -131,15 +131,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		success = mythos->CreateDefaultRasterizerState("simpleRasterizer");
+		success = mythos->CreateRasterizerState("simpleRasterizer");
 		if (!success)
 			return -1;
 
-		success = mythos->CreateDefaultDepthBuffer("depthTexture", "depthBuffer");
+		success = mythos->CreateDepthBuffer("depthTexture", "depthBuffer");
 		if (!success)
 			return -1;
 
-		success = mythos->CreateDefaultTextureSampler("samplerState");
+		success = mythos->CreateTextureSampler("samplerState");
 		if (!success)
 			return -1;
 	}
