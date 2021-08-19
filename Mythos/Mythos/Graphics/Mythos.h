@@ -49,10 +49,17 @@ namespace Mythos
 		inline D3D11_VIEWPORT GetViewport() { return m_Viewport; }
 
 		BOOL CreateVertexBuffer(void* data, unsigned int byteSize, const char* name);
+		BOOL CreateVertexBuffer(MythosBufferDescriptor* descriptor, const char* name);
+
 		BOOL CreateIndexBuffer(void* data, unsigned int byteSize, const char* name);
+		BOOL CreateIndexBuffer(MythosBufferDescriptor* descriptor, const char* name);
+
 		BOOL CreateConstantBuffer(void* data, unsigned int byteSize, const char* name);
+		BOOL CreateConstantBuffer(MythosBufferDescriptor* descriptor, const char* name);
 
 		BOOL CreateDepthBuffer(const char* depthTextureName, const char* depthBufferName);
+		BOOL CreateDepthBuffer(MythosDepthBufferDescriptor* descriptor, const char* name);
+
 		void SetClearDepthBufferValue(float clearValue);
 		void ClearDepthBuffer(const char* depthBufferName);
 
@@ -62,15 +69,24 @@ namespace Mythos
 		BOOL CreateInputLayout(const MythosInputElement* elements, unsigned int numElements, const char* vertexShaderName, const char* inputLayoutName);
 
 		BOOL CreateMainRenderTarget(const char* renderTargetName);
+
 		BOOL CreateRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName);
+		BOOL CreateRenderTarget(MythosRenderTargetDescriptor* descriptor, const char* name);
+
 		void SetClearRenderTargetColor(Math::Vector4 clearColor);
 		void ClearRenderTarget(const char* renderTargetName);
 
 		BOOL CreateTexture2D(const wchar_t* filepath, const char* textureName);
-		BOOL CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName);
-		BOOL CreateTextureSampler(const char* samplerName);
+		BOOL CreateTexture2D(MythosTextureDescriptor* descriptor, const char* textureName);
 
-		BOOL CreateRasterizerState(const char* rasterizerStateName);
+		BOOL CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName);
+		BOOL CreateShaderResource(MythosShaderResourceDescriptor* descriptor, const char* shaderResourceName);
+
+		BOOL CreateTextureSampler(const char* samplerName);
+		BOOL CreateTextureSampler(MythosSamplerDescriptor* descriptor, const char* samplerName);
+
+		BOOL CreateRasterizerState(const char* rasterizerName);
+		BOOL CreateRasterizerState(MythosRasterizerDescriptor* descriptor, const char* rasterizerName);
 
 		BOOL UpdateMythosResource(const char* name, void* data, unsigned int byteSize);
 
