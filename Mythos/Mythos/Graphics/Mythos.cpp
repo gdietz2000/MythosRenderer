@@ -116,8 +116,65 @@ namespace Mythos
 		else
 			hr = m_Creator.GetCreator()->CreateBuffer(&vertexDesc, NULL, (ID3D11Buffer**)&vertexBuffer->GetData());
 
-		if (FAILED(hr))
+		if (FAILED(hr)) {
+			delete vertexBuffer;
 			return FALSE;
+		}
+
+		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_VERTEX_BUFFER));
+		m_Resources[MYTHOS_RESOURCE_VERTEX_BUFFER].insert(std::make_pair(name, vertexBuffer));
+
+		return TRUE;
+	}
+
+	BOOL Mythos::CreateVertexBuffer(MythosBufferDescriptor* desc, const char* name)
+	{
+		if (!NameAvailable(name))
+			return FALSE;
+
+		D3D11_BUFFER_DESC vertexDesc;
+		ZeroMemory(&vertexDesc, sizeof(vertexDesc));
+		vertexDesc.ByteWidth = desc->byteSize;
+		vertexDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+
+		switch (desc->cpuAccess)
+		{
+		case MYTHOS_DEFAULT_ACCESS: {
+			vertexDesc.CPUAccessFlags = 0;
+			vertexDesc.Usage = D3D11_USAGE_DEFAULT;
+			break;
+		}
+		case MYTHOS_DYNAMIC_ACCESS: {
+			vertexDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			vertexDesc.Usage = D3D11_USAGE_DYNAMIC;
+			break;
+		}
+		case MYTHOS_IMMUTABLE_ACCESS: {
+			vertexDesc.CPUAccessFlags = 0;
+			vertexDesc.Usage = D3D11_USAGE_IMMUTABLE;
+			break;
+		}
+		}
+
+		vertexDesc.MiscFlags = 0;
+		vertexDesc.StructureByteStride = 0;
+
+		D3D11_SUBRESOURCE_DATA subData;
+		ZeroMemory(&subData, sizeof(subData));
+		if (desc->data != nullptr)
+			subData.pSysMem = desc->data;
+		HRESULT hr;
+		IMythosResource* vertexBuffer = new MythosBuffer();
+		if (desc->data != nullptr)
+			hr = m_Creator.GetCreator()->CreateBuffer(&vertexDesc, &subData, (ID3D11Buffer**)&vertexBuffer->GetData());
+		else
+			hr = m_Creator.GetCreator()->CreateBuffer(&vertexDesc, NULL, (ID3D11Buffer**)&vertexBuffer->GetData());
+
+		if (FAILED(hr)) {
+			delete vertexBuffer;
+			return FALSE;
+		}
+
 
 		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_VERTEX_BUFFER));
 		m_Resources[MYTHOS_RESOURCE_VERTEX_BUFFER].insert(std::make_pair(name, vertexBuffer));
@@ -151,8 +208,65 @@ namespace Mythos
 		else
 			hr = m_Creator.GetCreator()->CreateBuffer(&indexDesc, NULL, (ID3D11Buffer**)&indexBuffer->GetData());
 
-		if (FAILED(hr))
+		if (FAILED(hr)) {
+			delete indexBuffer;
 			return FALSE;
+		}
+
+		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_INDEX_BUFFER));
+		m_Resources[MYTHOS_RESOURCE_INDEX_BUFFER].insert(std::make_pair(name, indexBuffer));
+
+		return TRUE;
+	}
+
+	BOOL Mythos::CreateIndexBuffer(MythosBufferDescriptor* desc, const char* name)
+	{
+		if (!NameAvailable(name))
+			return FALSE;
+
+		D3D11_BUFFER_DESC indexDesc;
+		ZeroMemory(&indexDesc, sizeof(indexDesc));
+		indexDesc.ByteWidth = desc->byteSize;
+		indexDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+		switch (desc->cpuAccess)
+		{
+		case MYTHOS_DEFAULT_ACCESS: {
+			indexDesc.CPUAccessFlags = 0;
+			indexDesc.Usage = D3D11_USAGE_DEFAULT;
+			break;
+		}
+		case MYTHOS_DYNAMIC_ACCESS: {
+			indexDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			indexDesc.Usage = D3D11_USAGE_DYNAMIC;
+			break;
+		}
+		case MYTHOS_IMMUTABLE_ACCESS: {
+			indexDesc.CPUAccessFlags = 0;
+			indexDesc.Usage = D3D11_USAGE_IMMUTABLE;
+			break;
+		}
+		}
+
+		indexDesc.MiscFlags = 0;
+		indexDesc.StructureByteStride = 0;
+
+		D3D11_SUBRESOURCE_DATA subData;
+		ZeroMemory(&subData, sizeof(subData));
+		if (desc->data != nullptr)
+			subData.pSysMem = desc->data;
+		HRESULT hr;
+		IMythosResource* indexBuffer = new MythosBuffer();
+		if (desc->data != nullptr)
+			hr = m_Creator.GetCreator()->CreateBuffer(&indexDesc, &subData, (ID3D11Buffer**)&indexBuffer->GetData());
+		else
+			hr = m_Creator.GetCreator()->CreateBuffer(&indexDesc, NULL, (ID3D11Buffer**)&indexBuffer->GetData());
+
+		if (FAILED(hr)) {
+			delete indexBuffer;
+			return FALSE;
+		}
+
 
 		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_INDEX_BUFFER));
 		m_Resources[MYTHOS_RESOURCE_INDEX_BUFFER].insert(std::make_pair(name, indexBuffer));
@@ -186,8 +300,64 @@ namespace Mythos
 		else
 			hr = m_Creator.GetCreator()->CreateBuffer(&constantDesc, NULL, (ID3D11Buffer**)&constantBuffer->GetData());
 
-		if (FAILED(hr))
+		if (FAILED(hr)) {
+			delete constantBuffer;
 			return FALSE;
+		}
+
+		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_CONSTANT_BUFFER));
+		m_Resources[MYTHOS_RESOURCE_CONSTANT_BUFFER].insert(std::make_pair(name, constantBuffer));
+
+		return TRUE;
+	}
+
+	BOOL Mythos::CreateConstantBuffer(MythosBufferDescriptor* desc, const char* name)
+	{
+		if (!NameAvailable(name))
+			return FALSE;
+
+		D3D11_BUFFER_DESC constantDesc;
+		ZeroMemory(&constantDesc, sizeof(constantDesc));
+		constantDesc.ByteWidth = desc->byteSize;
+		constantDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+		switch (desc->cpuAccess)
+		{
+		case MYTHOS_DEFAULT_ACCESS: {
+			constantDesc.CPUAccessFlags = 0;
+			constantDesc.Usage = D3D11_USAGE_DEFAULT;
+			break;
+		}
+		case MYTHOS_DYNAMIC_ACCESS: {
+			constantDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			constantDesc.Usage = D3D11_USAGE_DYNAMIC;
+			break;
+		}
+		case MYTHOS_IMMUTABLE_ACCESS: {
+			constantDesc.CPUAccessFlags = 0;
+			constantDesc.Usage = D3D11_USAGE_IMMUTABLE;
+			break;
+		}
+		}
+
+		constantDesc.MiscFlags = 0;
+		constantDesc.StructureByteStride = 0;
+
+		D3D11_SUBRESOURCE_DATA subData;
+		ZeroMemory(&subData, sizeof(subData));
+		if (desc->data != nullptr)
+			subData.pSysMem = desc->data;
+		HRESULT hr;
+		IMythosResource* constantBuffer = new MythosBuffer();
+		if (desc->data != nullptr)
+			hr = m_Creator.GetCreator()->CreateBuffer(&constantDesc, &subData, (ID3D11Buffer**)&constantBuffer->GetData());
+		else
+			hr = m_Creator.GetCreator()->CreateBuffer(&constantDesc, NULL, (ID3D11Buffer**)&constantBuffer->GetData());
+
+		if (FAILED(hr)) {
+			delete constantBuffer;
+			return FALSE;
+		}
 
 		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_CONSTANT_BUFFER));
 		m_Resources[MYTHOS_RESOURCE_CONSTANT_BUFFER].insert(std::make_pair(name, constantBuffer));
@@ -208,7 +378,7 @@ namespace Mythos
 		zBufferDesc.Height = m_Viewport.Height;
 		zBufferDesc.Format = DXGI_FORMAT_D32_FLOAT;
 		zBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		zBufferDesc.SampleDesc.Count= 1;
+		zBufferDesc.SampleDesc.Count = 1;
 		zBufferDesc.MipLevels = 1;
 
 		IMythosResource* depthTexture = new MythosTexture2D();
@@ -314,9 +484,9 @@ namespace Mythos
 		{
 			D3D11_INPUT_ELEMENT_DESC temp;
 			int byteOffset = 0;
-			temp.SemanticName = elements[i].m_SemanticName;
-			temp.SemanticIndex = elements[i].m_SemanticIndex;
-			switch (elements[i].m_Format)
+			temp.SemanticName = elements[i].SemanticName;
+			temp.SemanticIndex = elements[i].SemanticIndex;
+			switch (elements[i].Format)
 			{
 			case MythosFormat::MYTHOS_FORMAT_32_FLOAT1: { temp.Format = DXGI_FORMAT_R32_FLOAT; byteOffset = 4; break; }
 			case MythosFormat::MYTHOS_FORMAT_32_FLOAT2: { temp.Format = DXGI_FORMAT_R32G32_FLOAT; byteOffset = 8; break; }
@@ -359,15 +529,15 @@ namespace Mythos
 
 		IMythosResource* renderTarget = new MythosRenderTarget();
 		hr = m_Creator.GetCreator()->CreateRenderTargetView(backbuffer, nullptr, (ID3D11RenderTargetView**)&renderTarget->GetData());
-		
+
 		backbuffer->Release();
 
-		if (FAILED(hr)) 
+		if (FAILED(hr))
 		{
 			delete renderTarget;
 			return FALSE;
 		}
-		
+
 		m_NamesToIndex.insert(std::make_pair(renderTargetName, MYTHOS_RESOURCE_RENDER_TARGET));
 		m_Resources[MYTHOS_RESOURCE_RENDER_TARGET].insert(std::make_pair(renderTargetName, renderTarget));
 
@@ -562,7 +732,7 @@ namespace Mythos
 
 	IMythosResource* Mythos::GetResource(const char* name)
 	{
-	
+
 		auto num = m_NamesToIndex.find(name);
 		if (num != m_NamesToIndex.end())
 		{

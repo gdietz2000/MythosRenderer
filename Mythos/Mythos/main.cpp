@@ -69,11 +69,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			{{1,   1, 1, 1}, {0.77,0,0.77,1}},
 		};
 
-		BOOL success = mythos->CreateVertexBuffer(triangle, sizeof(TempVertex) * ARRAYSIZE(triangle), "vertexBuffer");
-		if (!success)
-			return -1;
+		Mythos::MythosBufferDescriptor vertexDesc;
+		vertexDesc.data = triangle;
+		vertexDesc.byteSize = sizeof(TempVertex) * ARRAYSIZE(triangle);
+		vertexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
 
-		success = mythos->CreateMainRenderTarget("mainRenderTarget");
+		BOOL success = mythos->CreateVertexBuffer(&vertexDesc, "vertexBuffer");
 		if (!success)
 			return -1;
 
@@ -92,11 +93,26 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			0,4,5
 		};
 
-		success = mythos->CreateIndexBuffer(triangleIndices, sizeof(int) * ARRAYSIZE(triangleIndices), "indexBuffer");
+		Mythos::MythosBufferDescriptor indexDesc;
+		indexDesc.data = triangleIndices;
+		indexDesc.byteSize = sizeof(int) * ARRAYSIZE(triangleIndices);
+		indexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
+
+
+		success = mythos->CreateIndexBuffer(&indexDesc, "indexBuffer");
 		if (!success)
 			return -1;
 
-		success = mythos->CreateConstantBuffer(nullptr, sizeof(WVP), "constantBuffer");
+		Mythos::MythosBufferDescriptor constantDesc;
+		constantDesc.data = nullptr;
+		constantDesc.byteSize = sizeof(WVP);
+		constantDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DYNAMIC_ACCESS;
+
+		success = mythos->CreateConstantBuffer(&constantDesc, "constantBuffer");
+		if (!success)
+			return -1;
+
+		success = mythos->CreateMainRenderTarget("mainRenderTarget");
 		if (!success)
 			return -1;
 
@@ -111,14 +127,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			return -1;
 
 		success = mythos->CreatePixelShader(pixelShaderFilePath, entryPoint, pixelShaderModel, "pixelShader");
-		if (!success)
-			return -1;
-
-		success = mythos->CreateTexture2D(L"Assets/Textures/CastleFlag.dds", "CastleFlagTexture");
-		if (!success)
-			return -1;
-
-		success = mythos->CreateShaderResource("CastleFlagTexture", "CastleFlag");
 		if (!success)
 			return -1;
 
@@ -201,12 +209,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->VSSetConstantBuffers(0, 1, &constBuffers);
 		mythos->GetContext()->RSSetState((ID3D11RasterizerState*)mythos->GetResource("simpleRasterizer")->GetData());
 
-
-		//ID3D11ShaderResourceView* resources = { (ID3D11ShaderResourceView*)mythos->GetResource("CastleFlag")->GetData() };
 		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
 		ID3D11SamplerState* samplers = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
 		mythos->GetContext()->PSSetSamplers(0, 1, &samplers);
-		//mythos->GetContext()->PSSetShaderResources(0, 1, &resources);
 
 		mythos->GetContext()->DrawIndexed(36, 0, 0);
 

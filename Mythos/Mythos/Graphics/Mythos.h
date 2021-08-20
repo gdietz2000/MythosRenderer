@@ -58,7 +58,6 @@ namespace Mythos
 		BOOL CreateConstantBuffer(MythosBufferDescriptor* descriptor, const char* name);
 
 		BOOL CreateDepthBuffer(const char* depthTextureName, const char* depthBufferName);
-		BOOL CreateDepthBuffer(MythosDepthBufferDescriptor* descriptor, const char* name);
 
 		void SetClearDepthBufferValue(float clearValue);
 		void ClearDepthBuffer(const char* depthBufferName);
