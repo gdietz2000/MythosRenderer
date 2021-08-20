@@ -116,6 +116,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
+		Mythos::MythosTextureDescriptor rtDesc;
+		rtDesc.bindFlags = Mythos::MYTHOS_BIND_RENDER_TARGET | Mythos::MYTHOS_BIND_SHADER_RESOURCE;
+		rtDesc.cpuAccess = Mythos::MYTHOS_DEFAULT_ACCESS;
+		rtDesc.format = Mythos::MYTHOS_FORMAT_32_FLOAT4;
+		rtDesc.width = mythos->GetViewport().Width;
+		rtDesc.height = mythos->GetViewport().Height;
+		rtDesc.mipLevels = 1;
+		rtDesc.sampleCount = 1;
+		rtDesc.sampleQuality = 0;
+		
+		success = mythos->CreateRenderTarget(&rtDesc, "tempTexture", "newRTV");
+		if (!success)
+			return -1;
+
 		const wchar_t* vertexShaderFilePath = L"Assets/Shaders/VertexShader.hlsl";
 		const wchar_t* pixelShaderFilePath = L"Assets/Shaders/PixelShader.hlsl";
 		const char* entryPoint = "main";
@@ -139,7 +153,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		success = mythos->CreateRasterizerState("simpleRasterizer");
+		Mythos::MythosRasterizerDescriptor rasterDesc;
+		ZeroMemory(&rasterDesc, sizeof(rasterDesc));
+		rasterDesc.CullMode = Mythos::MYTHOS_CULL_BACK;
+		rasterDesc.FillMode = Mythos::MYTHOS_FILL_SOLID;
+
+		success = mythos->CreateRasterizerState(&rasterDesc, "simpleRasterizer");
 		if (!success)
 			return -1;
 
@@ -147,7 +166,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		success = mythos->CreateTextureSampler("samplerState");
+		Mythos::MythosSamplerDescriptor samplerDesc;
+		samplerDesc.AddressMode = Mythos::MYTHOS_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.BorderColor = Math::Vector4(1, 1, 1, 1);
+		samplerDesc.MaxAnisotropy = 1;
+		samplerDesc.MaxLOD = 1;
+		samplerDesc.MinLOD = 0;
+		samplerDesc.MipLODBias = 1.0f;
+		success = mythos->CreateTextureSampler(&samplerDesc, "samplerState");
 		if (!success)
 			return -1;
 	}

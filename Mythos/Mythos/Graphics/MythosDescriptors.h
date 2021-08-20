@@ -2,6 +2,8 @@
 
 namespace Mythos
 {
+#define BIT(x) 1 << x
+
 	//All enums that will need to created
 	enum MythosFillMode
 	{
@@ -50,10 +52,10 @@ namespace Mythos
 
 	enum MythosBindFlags
 	{
-		MYTHOS_BIND_NONE,
-		MYTHOS_BIND_DEPTH,
-		MYTHOS_BIND_RENDER_TARGET,
-		MYTHOS_BIND_SHADER_RESOURCE,
+		MYTHOS_BIND_NONE = BIT(0),
+		MYTHOS_BIND_DEPTH = BIT(1),
+		MYTHOS_BIND_RENDER_TARGET = BIT(2),
+		MYTHOS_BIND_SHADER_RESOURCE = BIT(3),
 	};
 
 	//Buffer Descriptor
@@ -76,7 +78,7 @@ namespace Mythos
 	{
 		const char* SemanticName;
 		unsigned int SemanticIndex;
-		unsigned int Format;
+		MythosFormat Format;
 	};
 
 	//Rasterizer Descriptor
@@ -102,8 +104,8 @@ namespace Mythos
 		unsigned int mipLevels;
 		unsigned int sampleCount;
 		unsigned int sampleQuality;
+		unsigned int bindFlags;
 		MythosFormat format;
-		MythosBindFlags bindFlags;
 		MythosAccessability cpuAccess;
 	};
 

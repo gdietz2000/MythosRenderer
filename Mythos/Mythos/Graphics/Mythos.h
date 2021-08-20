@@ -11,7 +11,6 @@
 
 namespace Mythos
 {
-#define BIT(x) 1 << x
 
 	enum MythosResourceTypes
 	{
@@ -70,7 +69,7 @@ namespace Mythos
 		BOOL CreateMainRenderTarget(const char* renderTargetName);
 
 		BOOL CreateRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName);
-		BOOL CreateRenderTarget(MythosRenderTargetDescriptor* descriptor, const char* name);
+		BOOL CreateRenderTarget(MythosTextureDescriptor* descriptor, const char* textureName, const char* renderTargetName);
 
 		void SetClearRenderTargetColor(Math::Vector4 clearColor);
 		void ClearRenderTarget(const char* renderTargetName);
@@ -79,7 +78,7 @@ namespace Mythos
 		BOOL CreateTexture2D(MythosTextureDescriptor* descriptor, const char* textureName);
 
 		BOOL CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName);
-		BOOL CreateShaderResource(MythosShaderResourceDescriptor* descriptor, const char* shaderResourceName);
+		BOOL CreateShaderResource(MythosShaderResourceDescriptor* descriptor, const char* textureToBecomeResourceName, const char* shaderResourceName);
 
 		BOOL CreateTextureSampler(const char* samplerName);
 		BOOL CreateTextureSampler(MythosSamplerDescriptor* descriptor, const char* samplerName);
@@ -101,6 +100,8 @@ namespace Mythos
 
 		//Helper Function
 		BOOL NameAvailable(const char* name);
+		UINT GetFormat(MythosFormat format);
+		UINT GetFormatSize(MythosFormat format);
 
 		/*Create a system where resources are seperated based on resource type ie:
 		Vertex Buffers

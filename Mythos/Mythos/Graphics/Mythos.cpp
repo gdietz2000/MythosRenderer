@@ -486,13 +486,8 @@ namespace Mythos
 			int byteOffset = 0;
 			temp.SemanticName = elements[i].SemanticName;
 			temp.SemanticIndex = elements[i].SemanticIndex;
-			switch (elements[i].Format)
-			{
-			case MythosFormat::MYTHOS_FORMAT_32_FLOAT1: { temp.Format = DXGI_FORMAT_R32_FLOAT; byteOffset = 4; break; }
-			case MythosFormat::MYTHOS_FORMAT_32_FLOAT2: { temp.Format = DXGI_FORMAT_R32G32_FLOAT; byteOffset = 8; break; }
-			case MythosFormat::MYTHOS_FORMAT_32_FLOAT3: { temp.Format = DXGI_FORMAT_R32G32B32_FLOAT; byteOffset = 12; break; }
-			case MythosFormat::MYTHOS_FORMAT_32_FLOAT4: { temp.Format = DXGI_FORMAT_R32G32B32A32_FLOAT; byteOffset = 16; break; }
-			}
+			temp.Format = (DXGI_FORMAT)GetFormat(elements[i].Format);
+			byteOffset = GetFormatSize(elements[i].Format);
 			temp.InputSlot = 0;
 			temp.AlignedByteOffset = totalBytes;
 			temp.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
@@ -544,6 +539,7 @@ namespace Mythos
 		return TRUE;
 	}
 
+
 	BOOL Mythos::CreateRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName)
 	{
 		if (!NameAvailable(textureName) || !NameAvailable(renderTargetName))
@@ -564,6 +560,86 @@ namespace Mythos
 		textureDesc.MiscFlags = 0;
 		textureDesc.SampleDesc.Count = 1;
 		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		IMythosResource* texture = new MythosTexture2D();
+		IMythosResource* renderTarget = new MythosRenderTarget();
+		HRESULT hr = m_Creator.GetCreator()->CreateTexture2D(&textureDesc, nullptr, (ID3D11Texture2D**)&texture->GetData());
+
+		if (FAILED(hr)) {
+			delete texture;
+			delete renderTarget;
+			return FALSE;
+		}
+
+		renderDesc.Format = textureDesc.Format;
+		renderDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		renderDesc.Texture2D.MipSlice = 0;
+
+		hr = m_Creator.GetCreator()->CreateRenderTargetView((ID3D11Resource*)texture->GetData(), &renderDesc, (ID3D11RenderTargetView**)&renderTarget->GetData());
+
+		if (FAILED(hr))
+		{
+			delete texture;
+			delete renderTarget;
+			return FALSE;
+		}
+
+		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture));
+
+		m_NamesToIndex.insert(std::make_pair(renderTargetName, MYTHOS_RESOURCE_RENDER_TARGET));
+		m_Resources[MYTHOS_RESOURCE_RENDER_TARGET].insert(std::make_pair(renderTargetName, renderTarget));
+
+		return TRUE;
+	}
+
+	BOOL Mythos::CreateRenderTarget(MythosTextureDescriptor* desc, const char* textureName, const char* renderTargetName)
+	{
+		if (!NameAvailable(textureName) || !NameAvailable(renderTargetName))
+			return FALSE;
+
+		D3D11_TEXTURE2D_DESC textureDesc;
+		ZeroMemory(&textureDesc, sizeof(textureDesc));
+
+		D3D11_RENDER_TARGET_VIEW_DESC renderDesc;
+		ZeroMemory(&renderDesc, sizeof(renderDesc));
+
+		if (desc->bindFlags & MYTHOS_BIND_DEPTH)
+			textureDesc.BindFlags |= D3D11_BIND_DEPTH_STENCIL;
+		if (desc->bindFlags & MYTHOS_BIND_RENDER_TARGET)
+			textureDesc.BindFlags |= D3D11_BIND_RENDER_TARGET;
+		if (desc->bindFlags & MYTHOS_BIND_SHADER_RESOURCE)
+			textureDesc.BindFlags |= D3D11_BIND_SHADER_RESOURCE;
+
+		switch (desc->cpuAccess)
+		{
+		case MYTHOS_DEFAULT_ACCESS: {
+			textureDesc.CPUAccessFlags = 0;
+			textureDesc.Usage = D3D11_USAGE_DEFAULT;
+			break;
+		}
+		case MYTHOS_DYNAMIC_ACCESS: {
+			textureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			textureDesc.Usage = D3D11_USAGE_DYNAMIC;
+			break;
+		}
+		case MYTHOS_IMMUTABLE_ACCESS: {
+			textureDesc.CPUAccessFlags = 0;
+			textureDesc.Usage = D3D11_USAGE_IMMUTABLE;
+			break;
+		}
+		}
+
+		textureDesc.Format = (DXGI_FORMAT)GetFormat(desc->format);
+
+		textureDesc.ArraySize = 1;
+		textureDesc.Height = desc->height;
+		textureDesc.Width = desc->width;
+
+		textureDesc.MipLevels = desc->mipLevels;
+		textureDesc.MiscFlags = 0;
+		textureDesc.SampleDesc.Count = desc->sampleCount;
+		textureDesc.SampleDesc.Quality = desc->sampleQuality;
 
 		IMythosResource* texture = new MythosTexture2D();
 		IMythosResource* renderTarget = new MythosRenderTarget();
@@ -628,6 +704,22 @@ namespace Mythos
 		return TRUE;
 	}
 
+	BOOL Mythos::CreateTexture2D(MythosTextureDescriptor* desc, const char* textureName)
+	{
+		if (!NameAvailable(textureName))
+			return FALSE;
+
+		IMythosResource* texture2D = new MythosTexture2D();
+		D3D11_TEXTURE2D_DESC textureDesc;
+		ZeroMemory(&textureDesc, sizeof(textureDesc));
+		
+
+		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture2D));
+
+		return TRUE;
+	}
+
 	BOOL Mythos::CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName)
 	{
 		if (!NameAvailable(shaderResourceName))
@@ -658,6 +750,7 @@ namespace Mythos
 
 		return TRUE;
 	}
+
 
 	BOOL Mythos::CreateTextureSampler(const char* samplerName)
 	{
@@ -692,12 +785,98 @@ namespace Mythos
 		return TRUE;
 	}
 
+	BOOL Mythos::CreateTextureSampler(MythosSamplerDescriptor* desc, const char* samplerName)
+	{
+		if (!NameAvailable(samplerName))
+			return FALSE;
+
+		D3D11_SAMPLER_DESC samplerDesc;
+		ZeroMemory(&samplerDesc, sizeof(samplerDesc));
+
+		D3D11_TEXTURE_ADDRESS_MODE addressMode;
+
+		switch (desc->AddressMode)
+		{
+		case MYTHOS_TEXTURE_ADDRESS_BORDER: addressMode = D3D11_TEXTURE_ADDRESS_BORDER; break;
+		case MYTHOS_TEXTURE_ADDRESS_CLAMP: addressMode = D3D11_TEXTURE_ADDRESS_CLAMP; break;
+		case MYTHOS_TEXTURE_ADDRESS_MIRROR: addressMode = D3D11_TEXTURE_ADDRESS_MIRROR; break;
+		default: addressMode = D3D11_TEXTURE_ADDRESS_WRAP; break;
+		}
+
+		samplerDesc.AddressU = addressMode;
+		samplerDesc.AddressV = addressMode;
+		samplerDesc.AddressW = addressMode;
+		samplerDesc.BorderColor[0] = desc->BorderColor.x;
+		samplerDesc.BorderColor[1] = desc->BorderColor.y;
+		samplerDesc.BorderColor[2] = desc->BorderColor.z;
+		samplerDesc.BorderColor[3] = desc->BorderColor.w;
+		samplerDesc.MaxAnisotropy = desc->MaxAnisotropy;
+		samplerDesc.MaxLOD = desc->MaxLOD;
+		samplerDesc.MinLOD = desc->MinLOD;
+		samplerDesc.MipLODBias = desc->MipLODBias;
+
+		IMythosResource* samplerState = new MythosTextureSampler();
+		HRESULT hr = m_Creator.GetCreator()->CreateSamplerState(&samplerDesc, (ID3D11SamplerState**)&samplerState->GetData());
+		if (FAILED(hr)) {
+			delete samplerState;
+			return FALSE;
+		}
+
+		m_NamesToIndex.insert(std::make_pair(samplerName, MYTHOS_RESOURCE_TEXTURE_SAMPLER));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_SAMPLER].insert(std::make_pair(samplerName, samplerState));
+
+		return TRUE;
+	}
+
 	BOOL Mythos::CreateRasterizerState(const char* rasterizerStateName)
 	{
 		D3D11_RASTERIZER_DESC rasterDesc;
 		ZeroMemory(&rasterDesc, sizeof(rasterDesc));
 		rasterDesc.FillMode = D3D11_FILL_SOLID;
 		rasterDesc.CullMode = D3D11_CULL_BACK;
+
+		IMythosResource* rasterState = new MythosRasterizer();
+		HRESULT hr = m_Creator.GetCreator()->CreateRasterizerState(&rasterDesc, (ID3D11RasterizerState**)&rasterState->GetData());
+
+		if (FAILED(hr))
+		{
+			delete rasterState;
+			return FALSE;
+		}
+
+
+		m_NamesToIndex.insert(std::make_pair(rasterizerStateName, MYTHOS_RESOURCE_RASTERIZER));
+		m_Resources[MYTHOS_RESOURCE_RASTERIZER].insert(std::make_pair(rasterizerStateName, rasterState));
+
+		return TRUE;
+	}
+
+	BOOL Mythos::CreateRasterizerState(MythosRasterizerDescriptor* desc, const char* rasterizerStateName)
+	{
+		D3D11_RASTERIZER_DESC rasterDesc;
+		ZeroMemory(&rasterDesc, sizeof(rasterDesc));
+		rasterDesc.AntialiasedLineEnable = desc->AntialiasLineEnabled;
+		
+		switch (desc->CullMode)
+		{
+			case MYTHOS_CULL_NONE: rasterDesc.CullMode = D3D11_CULL_NONE; break;
+			case MYTHOS_CULL_FRONT: rasterDesc.CullMode = D3D11_CULL_FRONT; break;
+			case MYTHOS_CULL_BACK: rasterDesc.CullMode = D3D11_CULL_BACK; break;
+		}
+
+		switch (desc->FillMode)
+		{
+		case MYTHOS_FILL_WIREFRAME: rasterDesc.FillMode = D3D11_FILL_WIREFRAME; break;
+		case MYTHOS_FILL_SOLID: rasterDesc.FillMode = D3D11_FILL_SOLID; break;
+		}
+
+		rasterDesc.DepthBias = desc->DepthBias;
+		rasterDesc.DepthBiasClamp = desc->DepthBiasClamp;
+		rasterDesc.DepthClipEnable = desc->DepthClipEnable;
+		rasterDesc.FrontCounterClockwise = desc->FrontCounterClockwise;
+		rasterDesc.MultisampleEnable = desc->MultiSampleEnable;
+		rasterDesc.ScissorEnable = desc->ScissorEnable;
+		rasterDesc.SlopeScaledDepthBias = desc->SlopeScaledDepthBias;
 
 		IMythosResource* rasterState = new MythosRasterizer();
 		HRESULT hr = m_Creator.GetCreator()->CreateRasterizerState(&rasterDesc, (ID3D11RasterizerState**)&rasterState->GetData());
@@ -764,5 +943,101 @@ namespace Mythos
 			return TRUE;
 
 		return FALSE;
+	}
+
+	UINT Mythos::GetFormat(MythosFormat format)
+	{
+		unsigned int formatType = 0;
+		switch (format)
+		{
+		case MYTHOS_FORMAT_32_FLOAT1:
+			formatType = DXGI_FORMAT_R32_FLOAT;
+			break;
+		case MYTHOS_FORMAT_32_FLOAT2:
+			formatType = DXGI_FORMAT_R32G32_FLOAT;
+			break;
+		case MYTHOS_FORMAT_32_FLOAT3:
+			formatType = DXGI_FORMAT_R32G32B32_FLOAT;
+			break;
+		case MYTHOS_FORMAT_32_FLOAT4:
+			formatType = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			break;
+		case MYTHOS_FORMAT_32_INT1:
+			formatType = DXGI_FORMAT_R32_SINT;
+			break;
+		case MYTHOS_FORMAT_32_INT2:
+			formatType = DXGI_FORMAT_R32G32_SINT;
+			break;
+		case MYTHOS_FORMAT_32_INT3:
+			formatType = DXGI_FORMAT_R32G32B32_SINT;
+			break;
+		case MYTHOS_FORMAT_32_INT4:
+			formatType = DXGI_FORMAT_R32G32B32A32_SINT;
+			break;
+		case MYTHOS_FORMAT_32_UNKNOWN1:
+			formatType = DXGI_FORMAT_R32_TYPELESS;
+			break;
+		case MYTHOS_FORMAT_32_UNKNOWN2:
+			formatType = DXGI_FORMAT_R32G32_TYPELESS;
+			break;
+		case MYTHOS_FORMAT_32_UNKNOWN3:
+			formatType = DXGI_FORMAT_R32G32B32_TYPELESS;
+			break;
+		case MYTHOS_FORMAT_32_UNKNOWN4:
+			formatType = DXGI_FORMAT_R32G32B32A32_TYPELESS;
+			break;
+		case MYTHOS_FORMAT_32_DEPTH:
+			formatType = DXGI_FORMAT_D32_FLOAT;
+			break;
+		}
+		return formatType;
+	}
+
+	UINT Mythos::GetFormatSize(MythosFormat format)
+	{
+		unsigned int formatSize = 0;
+		switch (format)
+		{
+		case MYTHOS_FORMAT_32_FLOAT1:
+			formatSize = sizeof(float) * 1;
+			break;
+		case MYTHOS_FORMAT_32_FLOAT2:
+			formatSize = sizeof(float) * 2;
+			break;
+		case MYTHOS_FORMAT_32_FLOAT3:
+			formatSize = sizeof(float) * 3;
+			break;
+		case MYTHOS_FORMAT_32_FLOAT4:
+			formatSize = sizeof(float) * 4;
+			break;
+		case MYTHOS_FORMAT_32_INT1:
+			formatSize = sizeof(int) * 1;
+			break;
+		case MYTHOS_FORMAT_32_INT2:
+			formatSize = sizeof(int) * 2;
+			break;
+		case MYTHOS_FORMAT_32_INT3:
+			formatSize = sizeof(int) * 3;
+			break;
+		case MYTHOS_FORMAT_32_INT4:
+			formatSize = sizeof(int) * 4;
+			break;
+		case MYTHOS_FORMAT_32_UNKNOWN1:
+			formatSize = 4;
+			break;
+		case MYTHOS_FORMAT_32_UNKNOWN2:
+			formatSize = 8;
+			break;
+		case MYTHOS_FORMAT_32_UNKNOWN3:
+			formatSize = 12;
+			break;
+		case MYTHOS_FORMAT_32_UNKNOWN4:
+			formatSize = 16;
+			break;
+		case MYTHOS_FORMAT_32_DEPTH:
+			formatSize = 4;
+			break;
+		}
+		return formatSize;
 	}
 }
