@@ -539,6 +539,14 @@ namespace Mythos
 		return TRUE;
 	}
 
+	void Mythos::SetTopology(MythosTopology topology)
+	{
+		if (topology == MYTHOS_LINE_LIST)
+			m_Context.GetContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+
+		if (topology == MYTHOS_TRIANGLE_LIST)
+			m_Context.GetContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	}
 
 	BOOL Mythos::CreateRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName)
 	{

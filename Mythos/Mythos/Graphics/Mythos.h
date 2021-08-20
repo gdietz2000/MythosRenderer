@@ -68,6 +68,8 @@ namespace Mythos
 
 		BOOL CreateMainRenderTarget(const char* renderTargetName);
 
+		void SetTopology(MythosTopology topology);
+
 		BOOL CreateRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName);
 		BOOL CreateRenderTarget(MythosTextureDescriptor* descriptor, const char* textureName, const char* renderTargetName);
 

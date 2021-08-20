@@ -198,6 +198,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	MyMatrices.View = freeCamera.GetCamera();
 	MyMatrices.Projection = freeCamera.GetProjection();
 
+	mythos->SetTopology(Mythos::MYTHOS_TRIANGLE_LIST);
+
 	// Main message loop:
 	while (true)
 	{
@@ -227,7 +229,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		ID3D11Buffer* buffers = { (ID3D11Buffer*)mythos->GetResource("vertexBuffer")->GetData() };
 		ID3D11Buffer* constBuffers{ (ID3D11Buffer*)mythos->GetResource("constantBuffer")->GetData() };
 
-		mythos->GetContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		mythos->GetContext()->IASetInputLayout((ID3D11InputLayout*)mythos->GetResource("inputLayout")->GetData());
 		mythos->GetContext()->IASetVertexBuffers(0, 1, &buffers, strides, offset);
 		mythos->GetContext()->IASetIndexBuffer((ID3D11Buffer*)mythos->GetResource("indexBuffer")->GetData(), DXGI_FORMAT_R32_UINT, 0);

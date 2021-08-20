@@ -5,6 +5,12 @@ namespace Mythos
 #define BIT(x) 1 << x
 
 	//All enums that will need to created
+	enum MythosTopology
+	{
+		MYTHOS_LINE_LIST,
+		MYTHOS_TRIANGLE_LIST
+	};
+
 	enum MythosFillMode
 	{
 		MYTHOS_FILL_WIREFRAME = 0,
