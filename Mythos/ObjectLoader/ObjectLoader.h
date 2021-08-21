@@ -5,8 +5,8 @@
 
 struct InputMesh
 {
-	std::vector<Math::Vector3> m_Vertices;
-	std::vector<int> m_Indices;
+	std::vector<std::vector<Math::Vector3>> m_Meshes;
+	std::vector<std::vector<int>> m_MeshIndices;
 };
 
 struct OutputMesh

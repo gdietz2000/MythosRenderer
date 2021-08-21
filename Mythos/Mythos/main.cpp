@@ -183,8 +183,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreateTextureSampler(&samplerDesc, "samplerState");
 		if (!success)
 			return -1;
-
-		delete deagle;
 	}
 
 	UINT strides[] = { sizeof(Math::Vector3) };
@@ -249,12 +247,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		ID3D11SamplerState* samplers = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
 		mythos->GetContext()->PSSetSamplers(0, 1, &samplers);
 
-		mythos->GetContext()->DrawIndexed(909, 0, 0);
+		mythos->GetContext()->DrawIndexed(deagle->m_indices.size(), 0, 0);
 
 		mythos->Present();
 	}
 
 	delete mythos;
+	delete deagle;
 
 	return (int)msg.wParam;
 }

@@ -15,9 +15,9 @@ InputMesh* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 
 	InputMesh* newMesh = new InputMesh();
 
-	int oCount = 0;
+	int currentMesh = -1;
 
-	while (oCount != 2)
+	while (true)
 	{
 		char lineHeader[128];
 
@@ -25,13 +25,16 @@ InputMesh* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 		if (res == EOF)
 			break;
 
-		if (strcmp(lineHeader, "o") == 0)
-			oCount++;
+		if (strcmp(lineHeader, "o") == 0) {
+			newMesh->m_Meshes.push_back(std::vector<Math::Vector3>());
+			newMesh->m_MeshIndices.push_back(std::vector<int>());
+			currentMesh++;
+		}
 
 		if (strcmp(lineHeader, "v") == 0) {
 			Math::Vector3 vertex;
 			fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-			newMesh->m_Vertices.push_back(vertex);
+			newMesh->m_Meshes[currentMesh].push_back(vertex);
 		}
 
 		if (strcmp(lineHeader, "f") == 0)
@@ -44,9 +47,9 @@ InputMesh* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 				delete newMesh;
 				return nullptr;
 			}
-			newMesh->m_Indices.push_back(vertexIndices[0] - 1);
-			newMesh->m_Indices.push_back(vertexIndices[1] - 1);
-			newMesh->m_Indices.push_back(vertexIndices[2] - 1);
+			newMesh->m_MeshIndices[currentMesh].push_back(vertexIndices[0] - 1);
+			newMesh->m_MeshIndices[currentMesh].push_back(vertexIndices[1] - 1);
+			newMesh->m_MeshIndices[currentMesh].push_back(vertexIndices[2] - 1);
 		}
 	}
 

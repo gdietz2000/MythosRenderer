@@ -9,15 +9,26 @@ int main(int argc, char** argv)
 	std::ofstream output;
 	output.open("outputFile.txt", std::ios_base::trunc | std::ios_base::out);
 
-	for (int i = 0; i < importedMesh->m_Vertices.size(); ++i)
+
+	output << "nm\n";
+
+	for (int i = 0; i < importedMesh->m_Meshes.size(); ++i)
 	{
-		output << "vp " << importedMesh->m_Vertices[i].x << " " << importedMesh->m_Vertices[i].y << " " << importedMesh->m_Vertices[i].z << '\n';
+		for (int j = 0; j < importedMesh->m_Meshes[i].size(); ++j)
+		{
+			output << "vp " << importedMesh->m_Meshes[i][j].x << " " << importedMesh->m_Meshes[i][j].y << " " << importedMesh->m_Meshes[i][j].z << '\n';
+
+		}
+
+		for (int j = 0; j < importedMesh->m_MeshIndices[i].size(); ++j)
+		{
+			output << "i " << importedMesh->m_MeshIndices[i][j] << '\n';
+		}
+
+		output << "nm\n";
 	}
 
-	for (int i = 0; i < importedMesh->m_Indices.size(); ++i)
-	{
-		output << "i " << importedMesh->m_Indices[i] << '\n';
-	}
+
 
 	output.close();
 
