@@ -71,15 +71,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Users\gdiet\Documents\MythosRenderer\Mythos\Mythos\Mathematics\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Users\gdiet\Documents\MythosRenderer\Mythos\Mythos\Mathematics\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\Users\gdiet\Documents\MythosRenderer\Mythos\Mythos\Mathematics\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\Users\gdiet\Documents\MythosRenderer\Mythos\Mythos\Mathematics\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -87,6 +91,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\gdiet\Documents\MythosRenderer\Mythos\Mythos\Mathematics\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -99,6 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\gdiet\Documents\MythosRenderer\Mythos\Mythos\Mathematics\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -113,6 +119,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\gdiet\Documents\MythosRenderer\Mythos\Mythos\Mathematics\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,6 +136,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\gdiet\Documents\MythosRenderer\Mythos\Mythos\Mathematics\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -138,6 +146,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Mythos\Mathematics\src\Matrix2.cpp" />
+    <ClCompile Include="..\Mythos\Mathematics\src\Matrix3.cpp" />
+    <ClCompile Include="..\Mythos\Mathematics\src\Matrix4.cpp" />
+    <ClCompile Include="..\Mythos\Mathematics\src\Quaternion.cpp" />
+    <ClCompile Include="..\Mythos\Mathematics\src\Rng.cpp" />
+    <ClCompile Include="..\Mythos\Mathematics\src\Vector2.cpp" />
+    <ClCompile Include="..\Mythos\Mathematics\src\Vector3.cpp" />
+    <ClCompile Include="..\Mythos\Mathematics\src\Vector4.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="ObjectLoader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Mythos\Mathematics\include\Mathematics.h" />
+    <ClInclude Include="..\Mythos\Mathematics\include\Matrix2.h" />
+    <ClInclude Include="..\Mythos\Mathematics\include\Matrix3.h" />
+    <ClInclude Include="..\Mythos\Mathematics\include\Matrix4.h" />
+    <ClInclude Include="..\Mythos\Mathematics\include\Quaternion.h" />
+    <ClInclude Include="..\Mythos\Mathematics\include\Rng.h" />
+    <ClInclude Include="..\Mythos\Mathematics\include\Vector2.h" />
+    <ClInclude Include="..\Mythos\Mathematics\include\Vector3.h" />
+    <ClInclude Include="..\Mythos\Mathematics\include\Vector4.h" />
+    <ClInclude Include="ObjectLoader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

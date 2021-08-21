@@ -51,6 +51,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	MSG msg;
 
 	Mythos::Mythos* mythos = new Mythos::Mythos(&windowsWindow.GetWindow());
+	Mythos::MythosMesh* deagle = mythos->LoadModel("Assets/Models/outputFile.txt");
+
+	if (!deagle)
+	{
+		delete mythos;
+		delete deagle;
+		return -1;
+	}
 
 	if (windowsWindow.GetWindow())
 	{
@@ -70,8 +78,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		};
 
 		Mythos::MythosBufferDescriptor vertexDesc;
-		vertexDesc.data = triangle;
-		vertexDesc.byteSize = sizeof(TempVertex) * ARRAYSIZE(triangle);
+		vertexDesc.data = deagle->m_vertices.data();
+		vertexDesc.byteSize = sizeof(Math::Vector3) * deagle->m_vertices.size();
 		vertexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
 
 		BOOL success = mythos->CreateVertexBuffer(&vertexDesc, "vertexBuffer");
@@ -94,8 +102,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		};
 
 		Mythos::MythosBufferDescriptor indexDesc;
-		indexDesc.data = triangleIndices;
-		indexDesc.byteSize = sizeof(int) * ARRAYSIZE(triangleIndices);
+		indexDesc.data = deagle->m_indices.data();
+		indexDesc.byteSize = sizeof(int) * deagle->m_indices.size();
 		indexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
 
 
@@ -145,8 +153,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			return -1;
 
 		Mythos::MythosInputElement layoutDesc[] = {
-			{"POSITION", 0, Mythos::MYTHOS_FORMAT_32_FLOAT4},
-			{"COLOR", 0, Mythos::MYTHOS_FORMAT_32_FLOAT4}
+			{"POSITION", 0, Mythos::MYTHOS_FORMAT_32_FLOAT3},
 		};
 
 		success = mythos->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), "vertexShader", "inputLayout");
@@ -176,9 +183,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreateTextureSampler(&samplerDesc, "samplerState");
 		if (!success)
 			return -1;
+
+		delete deagle;
 	}
 
-	UINT strides[] = { sizeof(TempVertex) };
+	UINT strides[] = { sizeof(Math::Vector3) };
 	UINT offset[] = { 0 };
 
 	Vector3 Eye = { 0,0,-10 };
@@ -187,7 +196,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	Mythos::MythosFreeroamCamera freeCamera;
 
-	Matrix4 World = Matrix4::Identity;
+	Matrix4 World = Matrix4::Scale(10);
 
 	auto temp = mythos->GetViewport();
 
@@ -240,7 +249,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		ID3D11SamplerState* samplers = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
 		mythos->GetContext()->PSSetSamplers(0, 1, &samplers);
 
-		mythos->GetContext()->DrawIndexed(36, 0, 0);
+		mythos->GetContext()->DrawIndexed(909, 0, 0);
 
 		mythos->Present();
 	}

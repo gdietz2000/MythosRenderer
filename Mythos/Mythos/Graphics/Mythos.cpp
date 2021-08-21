@@ -4,7 +4,9 @@
 #pragma comment(lib, "d3dcompiler.lib")
 
 #include <vector>
+#include <fstream>
 
+#include "Vector3.h"
 #include "Vector4.h"
 
 #include "MythosBuffer.h"
@@ -18,6 +20,9 @@
 #include "MythosRasterizer.h"
 #include "MythosInputLayout.h"
 #include "DDSTextureLoader.h"
+
+#define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable:4996)
 
 namespace Mythos
 {
@@ -914,6 +919,38 @@ namespace Mythos
 		m_Context.GetContext()->Unmap((ID3D11Buffer*)resource->GetData(), 0);
 
 		return TRUE;
+	}
+
+	MythosMesh* Mythos::LoadModel(const char* filepath)
+	{
+		FILE* file = fopen(filepath, "r");
+		if (file == NULL) {
+			return nullptr;
+		}
+		
+		MythosMesh* newMesh = new MythosMesh();
+
+		while(true)
+		{
+			char lineHeader[128];
+			int res = fscanf(file, "%s", lineHeader);
+			if (res == EOF)
+				break;
+
+			if (strcmp(lineHeader, "vp") == 0) {
+				Math::Vector3 vertex;
+				fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				newMesh->m_vertices.push_back(vertex);
+			}
+
+			if (strcmp(lineHeader, "i") == 0) {
+				int indice;
+				fscanf(file, "%i\n", &indice);
+				newMesh->m_indices.push_back(indice);
+			}
+		}
+
+		return newMesh;
 	}
 
 	IMythosResource* Mythos::GetResource(const char* name)

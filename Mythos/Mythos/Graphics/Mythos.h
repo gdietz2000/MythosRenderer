@@ -34,6 +34,13 @@ namespace Mythos
 		MYTHOS_RESOURCE_COUNT
 	};
 
+	class MythosMesh 
+	{
+	public:
+		std::vector<Math::Vector3> m_vertices;
+		std::vector<int> m_indices;
+	};
+
 	//This class will be the main accessor when it comes to rendering
 	class Mythos 
 	{
@@ -89,6 +96,7 @@ namespace Mythos
 
 		BOOL UpdateMythosResource(const char* name, void* data, unsigned int byteSize);
 
+		MythosMesh* LoadModel(const char* filepath);
 
 		//GetResource will return a resource based off of the id given.
 		IMythosResource* GetResource(const char* name);
