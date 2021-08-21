@@ -20,12 +20,6 @@ using namespace Math;
 #include <crtdbg.h>
 #define ENABLE_LEAK_DETECTION() _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF)
 
-//Temporary Vertex
-struct TempVertex {
-	Vector4 position;
-	Vector4 color;
-};
-
 struct WVP {
 	Matrix4 World;
 	Matrix4 View;
@@ -51,7 +45,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	MSG msg;
 
 	Mythos::Mythos* mythos = new Mythos::Mythos(&windowsWindow.GetWindow());
-	Mythos::MythosMesh* deagle = mythos->LoadModel("Assets/Models/outputFile.txt");
+	Mythos::MythosMesh* deagle = mythos->LoadModel("Assets/Models/outputFile.txt", 0);
+	int modelIndex = 0;
 
 	if (!deagle)
 	{
@@ -65,51 +60,24 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		HRESULT hr;
 
-		TempVertex triangle[] = {
-			{{1,  -1, -1, 1}, {1,0,0,1}},
-			{{-1, -1, -1, 1}, {0.77,0.77,0,1}},
-			{{-1,  1, -1, 1}, {1,1,0,1}},
-			{{1,   1, -1, 1}, {0,1,0,1}},
-
-			{{1,  -1, 1, 1}, {0,0.77,0.77,1}},
-			{{-1, -1, 1, 1}, {0,1,1,1}},
-			{{-1,  1, 1, 1}, {0,0,1,1}},
-			{{1,   1, 1, 1}, {0.77,0,0.77,1}},
-		};
-
 		Mythos::MythosBufferDescriptor vertexDesc;
-		vertexDesc.data = deagle->m_vertices.data();
-		vertexDesc.byteSize = sizeof(Math::Vector3) * deagle->m_vertices.size();
+		vertexDesc.data = deagle->GetVertexData(modelIndex);
+		vertexDesc.byteSize = sizeof(Math::Vector3) * deagle->GetVertexDataSize(modelIndex);
 		vertexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
 
 		BOOL success = mythos->CreateVertexBuffer(&vertexDesc, "vertexBuffer");
 		if (!success)
 			return -1;
 
-		int triangleIndices[] = {
-			0,1,2,
-			0,2,3,
-			1,5,6,
-			1,6,2,
-			5,4,7,
-			5,7,6,
-			4,0,3,
-			4,3,7,
-			3,2,6,
-			3,6,7,
-			0,5,1,
-			0,4,5
-		};
-
-		Mythos::MythosBufferDescriptor indexDesc;
-		indexDesc.data = deagle->m_indices.data();
-		indexDesc.byteSize = sizeof(int) * deagle->m_indices.size();
+		/*Mythos::MythosBufferDescriptor indexDesc;
+		indexDesc.data = deagle->GetIndiceData(modelIndex);
+		indexDesc.byteSize = sizeof(int) * deagle->GetIndiceDataSize(modelIndex);
 		indexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
 
 
 		success = mythos->CreateIndexBuffer(&indexDesc, "indexBuffer");
 		if (!success)
-			return -1;
+			return -1;*/
 
 		Mythos::MythosBufferDescriptor constantDesc;
 		constantDesc.data = nullptr;
@@ -154,6 +122,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		Mythos::MythosInputElement layoutDesc[] = {
 			{"POSITION", 0, Mythos::MYTHOS_FORMAT_32_FLOAT3},
+			{"UV", 0, Mythos::MYTHOS_FORMAT_32_FLOAT2},
+			{"NORMAL", 0, Mythos::MYTHOS_FORMAT_32_FLOAT3}
 		};
 
 		success = mythos->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), "vertexShader", "inputLayout");
@@ -183,9 +153,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreateTextureSampler(&samplerDesc, "samplerState");
 		if (!success)
 			return -1;
+
+		success = mythos->CreateTexture2D(L"Assets/Textures/Deagle_BaseColor.dds", "DeagleDiffuse");
+		if (!success)
+			return -1;
 	}
 
-	UINT strides[] = { sizeof(Math::Vector3) };
+	UINT strides[] = { sizeof(Mythos::MythosVertex) };
 	UINT offset[] = { 0 };
 
 	Vector3 Eye = { 0,0,-10 };
@@ -194,7 +168,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	Mythos::MythosFreeroamCamera freeCamera;
 
-	Matrix4 World = Matrix4::Scale(10);
+	Matrix4 World = Matrix4::Scale(10) * Matrix4::RotateY(3.14f / -2.0f);
 
 	auto temp = mythos->GetViewport();
 
@@ -238,16 +212,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		mythos->GetContext()->IASetInputLayout((ID3D11InputLayout*)mythos->GetResource("inputLayout")->GetData());
 		mythos->GetContext()->IASetVertexBuffers(0, 1, &buffers, strides, offset);
-		mythos->GetContext()->IASetIndexBuffer((ID3D11Buffer*)mythos->GetResource("indexBuffer")->GetData(), DXGI_FORMAT_R32_UINT, 0);
+		//mythos->GetContext()->IASetIndexBuffer((ID3D11Buffer*)mythos->GetResource("indexBuffer")->GetData(), DXGI_FORMAT_R32_UINT, 0);
 		mythos->GetContext()->VSSetShader((ID3D11VertexShader*)mythos->GetResource("vertexShader")->GetData(), nullptr, NULL);
 		mythos->GetContext()->VSSetConstantBuffers(0, 1, &constBuffers);
 		mythos->GetContext()->RSSetState((ID3D11RasterizerState*)mythos->GetResource("simpleRasterizer")->GetData());
 
-		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
+		ID3D11ShaderResourceView* resources = { (ID3D11ShaderResourceView*)mythos->GetResource("DeagleDiffuse")->GetData() };
 		ID3D11SamplerState* samplers = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
+		
+		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
+
+		//mythos->GetContext()->PSSetShaderResources(0, 1, &resources);
 		mythos->GetContext()->PSSetSamplers(0, 1, &samplers);
 
-		mythos->GetContext()->DrawIndexed(deagle->m_indices.size(), 0, 0);
+		//mythos->GetContext()->DrawIndexed(deagle->GetIndiceDataSize(modelIndex), 0, 0);
+		mythos->GetContext()->Draw(deagle->GetVertexDataSize(modelIndex), 0);
 
 		mythos->Present();
 	}

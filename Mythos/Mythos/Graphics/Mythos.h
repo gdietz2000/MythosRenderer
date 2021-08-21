@@ -7,6 +7,7 @@
 #include "MythosCreator.h"
 #include "MythosContext.h"
 #include "MythosSwapChain.h"
+#include "MythosMesh.h"
 #include "MythosDescriptors.h"
 
 namespace Mythos
@@ -32,13 +33,6 @@ namespace Mythos
 		MYTHOS_RESOURCE_TEXTURE_SAMPLER,
 		MYTHOS_RESOURCE_RASTERIZER,
 		MYTHOS_RESOURCE_COUNT
-	};
-
-	class MythosMesh 
-	{
-	public:
-		std::vector<Math::Vector3> m_vertices;
-		std::vector<int> m_indices;
 	};
 
 	//This class will be the main accessor when it comes to rendering
@@ -96,8 +90,6 @@ namespace Mythos
 
 		BOOL UpdateMythosResource(const char* name, void* data, unsigned int byteSize);
 
-		MythosMesh* LoadModel(const char* filepath);
-
 		//GetResource will return a resource based off of the id given.
 		IMythosResource* GetResource(const char* name);
 		ID3D10Blob* GetShaderBlob(const char* name);
@@ -137,5 +129,8 @@ namespace Mythos
 		std::unordered_map<const char*, unsigned int> m_NamesToIndex;
 		std::vector<std::unordered_map<const char*, IMythosResource*>> m_Resources;
 		std::unordered_map<const char*, ID3D10Blob*> m_ShaderBlobs;
+
+		//Storage for Models
+		std::unordered_map<unsigned int, MythosMesh*> m_MythosMeshes;
 	};
 }

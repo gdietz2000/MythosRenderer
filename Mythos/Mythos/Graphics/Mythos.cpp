@@ -725,7 +725,7 @@ namespace Mythos
 		IMythosResource* texture2D = new MythosTexture2D();
 		D3D11_TEXTURE2D_DESC textureDesc;
 		ZeroMemory(&textureDesc, sizeof(textureDesc));
-		
+
 
 		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
 		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture2D));
@@ -868,12 +868,12 @@ namespace Mythos
 		D3D11_RASTERIZER_DESC rasterDesc;
 		ZeroMemory(&rasterDesc, sizeof(rasterDesc));
 		rasterDesc.AntialiasedLineEnable = desc->AntialiasLineEnabled;
-		
+
 		switch (desc->CullMode)
 		{
-			case MYTHOS_CULL_NONE: rasterDesc.CullMode = D3D11_CULL_NONE; break;
-			case MYTHOS_CULL_FRONT: rasterDesc.CullMode = D3D11_CULL_FRONT; break;
-			case MYTHOS_CULL_BACK: rasterDesc.CullMode = D3D11_CULL_BACK; break;
+		case MYTHOS_CULL_NONE: rasterDesc.CullMode = D3D11_CULL_NONE; break;
+		case MYTHOS_CULL_FRONT: rasterDesc.CullMode = D3D11_CULL_FRONT; break;
+		case MYTHOS_CULL_BACK: rasterDesc.CullMode = D3D11_CULL_BACK; break;
 		}
 
 		switch (desc->FillMode)
@@ -921,37 +921,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	MythosMesh* Mythos::LoadModel(const char* filepath)
-	{
-		FILE* file = fopen(filepath, "r");
-		if (file == NULL) {
-			return nullptr;
-		}
-		
-		MythosMesh* newMesh = new MythosMesh();
 
-		while(true)
-		{
-			char lineHeader[128];
-			int res = fscanf(file, "%s", lineHeader);
-			if (res == EOF)
-				break;
-
-			if (strcmp(lineHeader, "vp") == 0) {
-				Math::Vector3 vertex;
-				fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-				newMesh->m_vertices.push_back(vertex);
-			}
-
-			if (strcmp(lineHeader, "i") == 0) {
-				int indice;
-				fscanf(file, "%i\n", &indice);
-				newMesh->m_indices.push_back(indice);
-			}
-		}
-
-		return newMesh;
-	}
 
 	IMythosResource* Mythos::GetResource(const char* name)
 	{

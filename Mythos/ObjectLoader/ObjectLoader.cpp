@@ -17,7 +17,9 @@ InputMesh* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 
 	int currentMesh = -1;
 
-	while (true)
+	int oCount = 0;
+
+	while (oCount != 2)
 	{
 		char lineHeader[128];
 
@@ -26,18 +28,28 @@ InputMesh* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 			break;
 
 		if (strcmp(lineHeader, "o") == 0) {
-			newMesh->m_Meshes.push_back(std::vector<Math::Vector3>());
-			newMesh->m_MeshIndices.push_back(std::vector<int>());
-			currentMesh++;
+			oCount++;
 		}
 
-		if (strcmp(lineHeader, "v") == 0) {
+		else if (strcmp(lineHeader, "v") == 0) {
 			Math::Vector3 vertex;
 			fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-			newMesh->m_Meshes[currentMesh].push_back(vertex);
+			newMesh->m_Vertices.push_back(vertex);
 		}
 
-		if (strcmp(lineHeader, "f") == 0)
+		else if (strcmp(lineHeader, "vt") == 0) {
+			Math::Vector2 uv;
+			fscanf(file, "%f %f\n", &uv.x, &uv.y);
+			newMesh->m_Uvs.push_back(uv);
+		}
+
+		else if (strcmp(lineHeader, "vn") == 0) {
+			Math::Vector3 normal;
+			fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+			newMesh->m_Normals.push_back(normal);
+		}
+
+		else if (strcmp(lineHeader, "f") == 0)
 		{
 			unsigned int vertexIndices[3], uvIndices[3], normalIndices[3];
 			int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndices[0], &uvIndices[0], &normalIndices[0], &vertexIndices[1], &uvIndices[1], &normalIndices[1], &vertexIndices[2], &uvIndices[2], &normalIndices[2]);
@@ -47,9 +59,17 @@ InputMesh* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 				delete newMesh;
 				return nullptr;
 			}
-			newMesh->m_MeshIndices[currentMesh].push_back(vertexIndices[0] - 1);
-			newMesh->m_MeshIndices[currentMesh].push_back(vertexIndices[1] - 1);
-			newMesh->m_MeshIndices[currentMesh].push_back(vertexIndices[2] - 1);
+			newMesh->m_VertexIndices.push_back(vertexIndices[0] - 1);
+			newMesh->m_VertexIndices.push_back(vertexIndices[1] - 1);
+			newMesh->m_VertexIndices.push_back(vertexIndices[2] - 1);
+			
+			newMesh->m_UvIndices.push_back(uvIndices[0] - 1);
+			newMesh->m_UvIndices.push_back(uvIndices[1] - 1);
+			newMesh->m_UvIndices.push_back(uvIndices[2] - 1);
+			
+			newMesh->m_NormalIndices.push_back(normalIndices[0] - 1);
+			newMesh->m_NormalIndices.push_back(normalIndices[1] - 1);
+			newMesh->m_NormalIndices.push_back(normalIndices[2] - 1);
 		}
 	}
 
