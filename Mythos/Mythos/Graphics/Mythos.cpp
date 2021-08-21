@@ -759,7 +759,6 @@ namespace Mythos
 		return TRUE;
 	}
 
-
 	BOOL Mythos::CreateTextureSampler(const char* samplerName)
 	{
 		if (!NameAvailable(samplerName))

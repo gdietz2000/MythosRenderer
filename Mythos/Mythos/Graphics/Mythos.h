@@ -80,7 +80,6 @@ namespace Mythos
 		BOOL CreateTexture2D(MythosTextureDescriptor* descriptor, const char* textureName);
 
 		BOOL CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName);
-		BOOL CreateShaderResource(MythosShaderResourceDescriptor* descriptor, const char* textureToBecomeResourceName, const char* shaderResourceName);
 
 		BOOL CreateTextureSampler(const char* samplerName);
 		BOOL CreateTextureSampler(MythosSamplerDescriptor* descriptor, const char* samplerName);

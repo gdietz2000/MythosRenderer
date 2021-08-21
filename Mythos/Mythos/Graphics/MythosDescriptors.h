@@ -115,14 +115,6 @@ namespace Mythos
 		MythosAccessability cpuAccess;
 	};
 
-	//Shader Resource Descriptor
-	struct MythosShaderResourceDescriptor
-	{
-		MythosFormat Format;
-		unsigned int MipLevels;
-		unsigned int MostDetailedMip;
-	};
-
 	//Texture Sampler Descriptor
 	struct MythosSamplerDescriptor
 	{
