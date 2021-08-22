@@ -2,7 +2,6 @@ struct InputVertex
 {
     float4 position : SV_Position;
     float2 uv : UV;
-    float3 normal : NORMAL;
 };
 
 Texture2D Diffuse : register(t0);

@@ -779,6 +779,7 @@ namespace Mythos
 		samplerDesc.BorderColor[1] = 1;
 		samplerDesc.BorderColor[2] = 1;
 		samplerDesc.BorderColor[3] = 1;
+		samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 		samplerDesc.MaxAnisotropy = 1;
 		samplerDesc.MaxLOD = 1;
 		samplerDesc.MinLOD = 0;
@@ -921,7 +922,45 @@ namespace Mythos
 		return TRUE;
 	}
 
+	MythosMesh* Mythos::LoadMesh(const char* filepath)
+	{
+		FILE* file = fopen(filepath, "r");
+		if (file == NULL) {
+			return nullptr;
+		}
 
+		MythosVertex tempVertex;
+		MythosMesh* newMesh = new MythosMesh();
+
+		while(true)
+		{
+			char lineHeader[128];
+
+			int res = fscanf(file, "%s", lineHeader);
+			if (res == EOF)
+				break;
+
+			if (strcmp(lineHeader, "v") == 0) {
+				Math::Vector3 temp;
+				fscanf(file, "%f %f %f", &temp.x, &temp.y, &temp.z);
+
+				tempVertex.position = temp;
+			}
+
+			else if (strcmp(lineHeader, "vt") == 0) {
+				Math::Vector2 temp;
+				fscanf(file, "%f %f", &temp.x, &temp.y);
+				temp.y *= -1;
+				tempVertex.uv = temp;
+				
+				
+				newMesh->m_Vertices.push_back(tempVertex);
+			}
+		}
+
+		return newMesh;
+
+	}
 
 	IMythosResource* Mythos::GetResource(const char* name)
 	{

@@ -4,14 +4,12 @@ struct TempVertex
 {
     float3 position : POSITION;
     float2 uv : UV;
-    float3 normal : NORMAL;
 };
 
 struct OutputVertex
 {
     float4 position : SV_Position;
     float2 uv : UV;
-    float3 normal : NORMAL;
 };
 
 cbuffer WVP : register(b0)
@@ -29,6 +27,5 @@ OutputVertex main( TempVertex temp )
     output.position = mul(output.position, View);
     output.position = mul(output.position, Projection);
     output.uv = temp.uv;
-    output.normal = temp.normal;
 	return output;
 }

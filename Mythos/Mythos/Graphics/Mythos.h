@@ -90,6 +90,8 @@ namespace Mythos
 
 		BOOL UpdateMythosResource(const char* name, void* data, unsigned int byteSize);
 
+		MythosMesh* LoadMesh(const char* filepath);
+
 		//GetResource will return a resource based off of the id given.
 		IMythosResource* GetResource(const char* name);
 		ID3D10Blob* GetShaderBlob(const char* name);

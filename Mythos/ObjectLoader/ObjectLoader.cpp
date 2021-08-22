@@ -15,11 +15,7 @@ InputMesh* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 
 	InputMesh* newMesh = new InputMesh();
 
-	int currentMesh = -1;
-
-	int oCount = 0;
-
-	while (oCount != 2)
+	while (true)
 	{
 		char lineHeader[128];
 
@@ -27,49 +23,31 @@ InputMesh* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 		if (res == EOF)
 			break;
 
-		if (strcmp(lineHeader, "o") == 0) {
-			oCount++;
-		}
-
 		else if (strcmp(lineHeader, "v") == 0) {
-			Math::Vector3 vertex;
-			fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-			newMesh->m_Vertices.push_back(vertex);
+			Math::Vector3 temp;
+			fscanf(file, "%f %f %f", &temp.x, &temp.y, &temp.z);
+			newMesh->m_Vertices.push_back(temp);
 		}
 
 		else if (strcmp(lineHeader, "vt") == 0) {
-			Math::Vector2 uv;
-			fscanf(file, "%f %f\n", &uv.x, &uv.y);
-			newMesh->m_Uvs.push_back(uv);
+			Math::Vector2 temp;
+			fscanf(file, "%f %f", &temp.x, &temp.y);
+			newMesh->m_Uvs.push_back(temp);
 		}
 
-		else if (strcmp(lineHeader, "vn") == 0) {
-			Math::Vector3 normal;
-			fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
-			newMesh->m_Normals.push_back(normal);
-		}
-
-		else if (strcmp(lineHeader, "f") == 0)
-		{
-			unsigned int vertexIndices[3], uvIndices[3], normalIndices[3];
-			int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndices[0], &uvIndices[0], &normalIndices[0], &vertexIndices[1], &uvIndices[1], &normalIndices[1], &vertexIndices[2], &uvIndices[2], &normalIndices[2]);
-			if (matches != 9) 
-			{
-				printf("Cannot parse this object with this simple parser");
-				delete newMesh;
-				return nullptr;
+		else if (strcmp(lineHeader, "f") == 0) {
+			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+			int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+			if (matches != 9) {
+				printf("File can't be read by our simple parser : ( Try exporting with other options\n");
 			}
-			newMesh->m_VertexIndices.push_back(vertexIndices[0] - 1);
-			newMesh->m_VertexIndices.push_back(vertexIndices[1] - 1);
-			newMesh->m_VertexIndices.push_back(vertexIndices[2] - 1);
+			newMesh->m_VerticeIndices.push_back(vertexIndex[0] - 1);
+			newMesh->m_VerticeIndices.push_back(vertexIndex[1] - 1);
+			newMesh->m_VerticeIndices.push_back(vertexIndex[2] - 1);
 			
-			newMesh->m_UvIndices.push_back(uvIndices[0] - 1);
-			newMesh->m_UvIndices.push_back(uvIndices[1] - 1);
-			newMesh->m_UvIndices.push_back(uvIndices[2] - 1);
-			
-			newMesh->m_NormalIndices.push_back(normalIndices[0] - 1);
-			newMesh->m_NormalIndices.push_back(normalIndices[1] - 1);
-			newMesh->m_NormalIndices.push_back(normalIndices[2] - 1);
+			newMesh->m_UvIndices.push_back(uvIndex[0] - 1);
+			newMesh->m_UvIndices.push_back(uvIndex[1] - 1);
+			newMesh->m_UvIndices.push_back(uvIndex[2] - 1);
 		}
 	}
 
