@@ -15,6 +15,7 @@ namespace Mythos
 	struct MythosMesh 
 	{
 		std::vector<MythosVertex> m_Vertices;
+		std::vector<int> m_Indices;
 	};
 
 	class MythosObject

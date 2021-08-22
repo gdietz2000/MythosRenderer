@@ -4,9 +4,9 @@
 
 int main(int argc, char** argv)
 {
-	InputMesh* importedMesh = ObjectLoader::CreateMeshFromOBJ("Assets/Deagle.obj");
-
-	std::ofstream output;
+	//TempMesh* importedMesh = ObjectLoader::CreateMeshFromFBX("Assets/DesertEagle.fbx");
+	FBX_InitLoad("Assets/DesertEagle.fbx", "outputFile.txt");
+	/*std::ofstream output;
 	output.open("outputFile.txt", std::ios_base::trunc | std::ios_base::out);
 
 	for (int i = 0; i < importedMesh->m_VerticeIndices.size(); ++i)
@@ -15,8 +15,7 @@ int main(int argc, char** argv)
 		output << "vt " << importedMesh->m_Uvs[importedMesh->m_UvIndices[i]].x << ' ' << importedMesh->m_Uvs[importedMesh->m_UvIndices[i]].y << '\n';
 	}
 
-	output.close();
+	output.close();*/
 
-	delete importedMesh;
 	return 0;
 }
