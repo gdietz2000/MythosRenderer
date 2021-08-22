@@ -53,3 +53,9 @@ InputMesh* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 
 	return newMesh;
 }
+
+InputMesh* ObjectLoader::CreateMeshFromFBX(const char* filepath)
+{
+	InputMesh* newMesh = new InputMesh();
+	return newMesh;
+}
