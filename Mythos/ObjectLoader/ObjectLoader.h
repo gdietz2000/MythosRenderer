@@ -19,10 +19,17 @@ struct ModelMesh
 	int GetIndexSize() { return m_Indices.size(); }
 };
 
+struct Model
+{
+	std::vector<ModelMesh*> m_Meshes;
+};
+
 struct ObjectLoader
 {
 public:
-	static ModelMesh* CreateMeshFromOBJ(const char* filepath);
+	static Model* CreateMeshFromOBJ(const char* filepath);
 private:
 	static void CompactMeshData(ModelMesh* mesh);
+
+	static int GetObjectCount(FILE* file);
 };
