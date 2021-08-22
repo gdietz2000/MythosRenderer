@@ -18,8 +18,9 @@ namespace Mythos
 		std::vector<int> m_Indices;
 	};
 
-	class MythosObject
+	struct MythosObject
 	{
-		
+		~MythosObject() { for (int i = 0; i < m_Meshes.size(); ++i) { delete m_Meshes[i]; } m_Meshes.clear(); }
+		std::vector<MythosMesh*> m_Meshes;
 	};
 }

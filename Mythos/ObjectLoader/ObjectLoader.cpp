@@ -98,7 +98,7 @@ Model* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 		}
 
 		for (int j = 0; j < vertexIndices.size(); ++j) {
-			unsigned int vertexIndex = vertexIndices[i];
+			unsigned int vertexIndex = vertexIndices[j];
 			Math::Vector3 vertex = tempVertices[vertexIndex - 1 - vertexIndexSub];
 			outVertices.push_back(vertex);
 		}

@@ -90,7 +90,7 @@ namespace Mythos
 
 		BOOL UpdateMythosResource(const char* name, void* data, unsigned int byteSize);
 
-		MythosMesh* LoadMesh(const char* filepath);
+		MythosObject* LoadMesh(const char* filepath);
 
 		//GetResource will return a resource based off of the id given.
 		IMythosResource* GetResource(const char* name);

@@ -45,7 +45,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	MSG msg;
 
 	Mythos::Mythos* mythos = new Mythos::Mythos(&windowsWindow.GetWindow());
-	Mythos::MythosMesh* deagle = mythos->LoadMesh("Assets/Models/outputFile.txt");
+	Mythos::MythosObject* deagle = mythos->LoadMesh("Assets/Models/outputFile.txt");
+	int objectModel = 11;
 
 	if (windowsWindow.GetWindow())
 	{
@@ -61,8 +62,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		};
 
 		Mythos::MythosBufferDescriptor vertexDesc;
-		vertexDesc.data = deagle->m_Vertices.data();
-		vertexDesc.byteSize = sizeof(Mythos::MythosVertex) * deagle->m_Vertices.size();
+		vertexDesc.data = deagle->m_Meshes[objectModel]->m_Vertices.data();
+		vertexDesc.byteSize = sizeof(Mythos::MythosVertex) * deagle->m_Meshes[objectModel]->m_Vertices.size();
 		vertexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
 		BOOL success = mythos->CreateVertexBuffer(&vertexDesc, "vertexBuffer");
 		if (!success)
@@ -74,8 +75,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		};
 
 		Mythos::MythosBufferDescriptor indexDesc;
-		indexDesc.data = deagle->m_Indices.data();
-		indexDesc.byteSize = sizeof(int) * deagle->m_Indices.size();
+		indexDesc.data = deagle->m_Meshes[objectModel]->m_Indices.data();
+		indexDesc.byteSize = sizeof(int) * deagle->m_Meshes[objectModel]->m_Indices.size();
 		indexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
 
 
@@ -232,7 +233,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->PSSetSamplers(0, 1, &samplers);
 
 		//mythos->GetContext()->Draw(deagle->m_Vertices.size(), 0);
-		mythos->GetContext()->DrawIndexed(deagle->m_Indices.size(), 0, 0);
+		mythos->GetContext()->DrawIndexed(deagle->m_Meshes[objectModel]->m_Indices.size(), 0, 0);
 
 		mythos->Present();
 	}

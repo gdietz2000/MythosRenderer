@@ -922,40 +922,55 @@ namespace Mythos
 		return TRUE;
 	}
 
-	MythosMesh* Mythos::LoadMesh(const char* filepath)
+	MythosObject* Mythos::LoadMesh(const char* filepath)
 	{
-		MythosMesh* mesh = new MythosMesh();
+		MythosObject* importedModel = new MythosObject();
 
-		std::vector<MythosVertex> vertices;
-		std::vector<int> indices;
-
-		std::fstream file{ filepath, std::ios_base::in | std::ios_base::binary };
+		std::fstream file{filepath, std::ios_base::in | std::ios_base::binary };
 
 		if (!file.is_open())
-			return nullptr;
+			return 0;
 
-		uint32_t player_index_count;
-		file.read((char*)&player_index_count, sizeof(uint32_t));
+		uint32_t modelCount;
+		file.read((char*)&modelCount, sizeof(uint32_t));
 
-		mesh->m_Indices.resize(player_index_count);
+		importedModel->m_Meshes.resize(modelCount);
 
-		file.read((char*)mesh->m_Indices.data(), sizeof(uint32_t) * player_index_count);
+		for (int i = 0; i < modelCount; ++i)
+		{
+			std::vector<MythosVertex> m_Vertices;
+			std::vector<int> m_Indices;
 
-		uint32_t player_vertex_count;
-		file.read((char*)&player_vertex_count, sizeof(uint32_t));
+			uint32_t player_index_count;
+			file.read((char*)&player_index_count, sizeof(uint32_t));
 
-		mesh->m_Vertices.resize(player_vertex_count);
+			m_Indices.resize(player_index_count);
 
-		file.read((char*)mesh->m_Vertices.data(), sizeof(MythosVertex) * player_vertex_count);
+			file.read((char*)m_Indices.data(), sizeof(uint32_t) * player_index_count);
+
+			uint32_t player_vertex_count;
+			file.read((char*)&player_vertex_count, sizeof(uint32_t));
+
+			m_Vertices.resize(player_vertex_count);
+
+			file.read((char*)m_Vertices.data(), sizeof(MythosVertex) * player_vertex_count);
+
+			MythosMesh* mesh = new MythosMesh();
+
+			mesh->m_Indices = m_Indices;
+			mesh->m_Vertices = m_Vertices;
+
+			for (MythosVertex& vertex : mesh->m_Vertices)
+			{
+				vertex.uv.y = (1.0f - vertex.uv.y);
+			}
+
+			importedModel->m_Meshes[i] = mesh;
+		}
 
 		file.close();
 
-		for (MythosVertex& vert : mesh->m_Vertices)
-		{
-			vert.uv.y = (1.0f - vert.uv.y);
-		}
-
-		return mesh;
+		return importedModel;
 	}
 
 	IMythosResource* Mythos::GetResource(const char* name)
