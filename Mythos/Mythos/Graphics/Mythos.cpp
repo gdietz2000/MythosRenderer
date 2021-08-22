@@ -924,8 +924,38 @@ namespace Mythos
 
 	MythosMesh* Mythos::LoadMesh(const char* filepath)
 	{
-		MythosMesh* newMesh = new MythosMesh();
-		return newMesh;
+		MythosMesh* mesh = new MythosMesh();
+
+		std::vector<MythosVertex> vertices;
+		std::vector<int> indices;
+
+		std::fstream file{ filepath, std::ios_base::in | std::ios_base::binary };
+
+		if (!file.is_open())
+			return nullptr;
+
+		uint32_t player_index_count;
+		file.read((char*)&player_index_count, sizeof(uint32_t));
+
+		mesh->m_Indices.resize(player_index_count);
+
+		file.read((char*)mesh->m_Indices.data(), sizeof(uint32_t) * player_index_count);
+
+		uint32_t player_vertex_count;
+		file.read((char*)&player_vertex_count, sizeof(uint32_t));
+
+		mesh->m_Vertices.resize(player_vertex_count);
+
+		file.read((char*)mesh->m_Vertices.data(), sizeof(MythosVertex) * player_vertex_count);
+
+		file.close();
+
+		for (MythosVertex& vert : mesh->m_Vertices)
+		{
+			vert.uv.y = (1.0f - vert.uv.y);
+		}
+
+		return mesh;
 	}
 
 	IMythosResource* Mythos::GetResource(const char* name)

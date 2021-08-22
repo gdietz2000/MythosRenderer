@@ -4,18 +4,44 @@
 
 int main(int argc, char** argv)
 {
-	//TempMesh* importedMesh = ObjectLoader::CreateMeshFromFBX("Assets/DesertEagle.fbx");
-	FBX_InitLoad("Assets/DesertEagle.fbx", "outputFile.txt");
-	/*std::ofstream output;
-	output.open("outputFile.txt", std::ios_base::trunc | std::ios_base::out);
+	ModelMesh* newMesh = ObjectLoader::CreateMeshFromOBJ("Assets/DesertEagle.obj");
 
-	for (int i = 0; i < importedMesh->m_VerticeIndices.size(); ++i)
+	std::ofstream exportFile = std::ofstream("outputFile.txt", std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
+	if (exportFile.is_open())
 	{
-		output << "v " << importedMesh->m_Vertices[importedMesh->m_VerticeIndices[i]].x << ' ' << importedMesh->m_Vertices[importedMesh->m_VerticeIndices[i]].y << ' ' << importedMesh->m_Vertices[importedMesh->m_VerticeIndices[i]].z << '\n';
-		output << "vt " << importedMesh->m_Uvs[importedMesh->m_UvIndices[i]].x << ' ' << importedMesh->m_Uvs[importedMesh->m_UvIndices[i]].y << '\n';
+		uint32_t indexCount = newMesh->GetIndexSize();
+		uint32_t vertexCount = newMesh->GetVertexSize();
+		exportFile.write((const char*)&indexCount, sizeof(uint32_t));
+		exportFile.write((const char*)newMesh->m_Indices.data(), sizeof(uint32_t) * indexCount);
+		exportFile.write((const char*)&vertexCount, sizeof(uint32_t));
+		exportFile.write((const char*)newMesh->m_Vertices.data(), sizeof(ModelVertexInformation) * vertexCount);
 	}
 
-	output.close();*/
+	exportFile.close();
+
+	std::vector<ModelVertexInformation> m_Vertices;
+	std::vector<int> m_Indices;
+
+	std::fstream file{ "outputFile.txt", std::ios_base::in | std::ios_base::binary };
+
+	if (!file.is_open())
+		return 0;
+
+	uint32_t player_index_count;
+	file.read((char*)&player_index_count, sizeof(uint32_t));
+
+	m_Indices.resize(player_index_count);
+
+	file.read((char*)m_Indices.data(), sizeof(uint32_t) * player_index_count);
+
+	uint32_t player_vertex_count;
+	file.read((char*)&player_vertex_count, sizeof(uint32_t));
+
+	m_Vertices.resize(player_vertex_count);
+
+	file.read((char*)m_Vertices.data(), sizeof(ModelVertexInformation) * player_vertex_count);
+
+	file.close();
 
 	return 0;
 }

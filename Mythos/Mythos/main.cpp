@@ -60,7 +60,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			{{1,-1,0}, {1,1}}
 		};
 
-		BOOL success = mythos->CreateVertexBuffer(square, sizeof(Mythos::MythosVertex) * ARRAYSIZE(square), "vertexBuffer");
+		Mythos::MythosBufferDescriptor vertexDesc;
+		vertexDesc.data = deagle->m_Vertices.data();
+		vertexDesc.byteSize = sizeof(Mythos::MythosVertex) * deagle->m_Vertices.size();
+		vertexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
+		BOOL success = mythos->CreateVertexBuffer(&vertexDesc, "vertexBuffer");
 		if (!success)
 			return -1;
 
@@ -70,8 +74,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		};
 
 		Mythos::MythosBufferDescriptor indexDesc;
-		indexDesc.data = indices;
-		indexDesc.byteSize = sizeof(int) * 6;
+		indexDesc.data = deagle->m_Indices.data();
+		indexDesc.byteSize = sizeof(int) * deagle->m_Indices.size();
 		indexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
 
 
@@ -169,8 +173,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	Mythos::MythosFreeroamCamera freeCamera;
 
-	Matrix4 World = Matrix4::Identity;
-	//Matrix4 World = Matrix4::Scale(10) * Matrix4::RotateY(3.14f / -2.0f);
+	//Matrix4 World = Matrix4::Identity;
+	Matrix4 World = Matrix4::Scale(10) * Matrix4::RotateY(3.14f / -2.0f);
 
 	auto temp = mythos->GetViewport();
 
@@ -227,8 +231,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->PSSetShaderResources(0, 1, &resources);
 		mythos->GetContext()->PSSetSamplers(0, 1, &samplers);
 
-		mythos->GetContext()->DrawIndexed(6, 0, 0);
 		//mythos->GetContext()->Draw(deagle->m_Vertices.size(), 0);
+		mythos->GetContext()->DrawIndexed(deagle->m_Indices.size(), 0, 0);
 
 		mythos->Present();
 	}
