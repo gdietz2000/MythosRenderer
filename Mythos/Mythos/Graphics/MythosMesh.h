@@ -10,6 +10,7 @@ namespace Mythos
 	{
 		Math::Vector3 position;
 		Math::Vector2 uv;
+		Math::Vector3 normals;
 	};
 
 	struct MythosMesh 

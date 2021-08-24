@@ -8,6 +8,7 @@ struct ModelVertexInformation
 {
 	Math::Vector3 m_Vertex;
 	Math::Vector2 m_Uvs;
+	Math::Vector3 m_Normals;
 };
 
 

@@ -46,7 +46,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	Mythos::Mythos* mythos = new Mythos::Mythos(&windowsWindow.GetWindow());
 	Mythos::MythosObject* deagle = mythos->LoadMesh("Assets/Models/outputFile.txt");
-	int objectModel = 11;
+	int objectModel = 10;
 
 	if (windowsWindow.GetWindow())
 	{
@@ -128,6 +128,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		Mythos::MythosInputElement layoutDesc[] = {
 			{"POSITION", 0, Mythos::MYTHOS_FORMAT_32_FLOAT3},
 			{"UV", 0, Mythos::MYTHOS_FORMAT_32_FLOAT2},
+			{"NORMAL", 0, Mythos::MYTHOS_FORMAT_32_FLOAT3}
 		};
 
 		success = mythos->CreateInputLayout(layoutDesc, ARRAYSIZE(layoutDesc), "vertexShader", "inputLayout");

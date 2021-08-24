@@ -23,6 +23,8 @@ Model* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 
 	int vertexIndexSub = 0;
 	int uvIndexSub = 0;
+	int normalIndexSub = 0;
+
 	int objectCounter = 0;
 
 	for (int i = 0; i < objCount; ++i)
@@ -31,6 +33,7 @@ Model* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 
 		std::vector<Math::Vector3> outVertices;
 		std::vector<Math::Vector2> outUvs;
+		std::vector<Math::Vector3> outNormals;
 
 		std::vector<Math::Vector3> tempVertices;
 		std::vector<Math::Vector2> tempUvs;
@@ -109,15 +112,23 @@ Model* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 			outUvs.push_back(uv);
 		}
 
+		for (int j = 0; j < normalIndices.size(); ++j) {
+			unsigned int normalIndex = normalIndices[j];
+			Math::Vector3 normal = tempNormals[normalIndex - 1 - normalIndexSub];
+			outNormals.push_back(normal);
+		}
+
 		for (int j = 0; j < vertexIndices.size(); ++j) {
 			ModelVertexInformation data;
 			data.m_Vertex = outVertices[j];
 			data.m_Uvs = outUvs[j];
+			data.m_Normals = outNormals[j];
 			modelMesh->m_Vertices.push_back(data);
 		}
 
 		vertexIndexSub += tempVertices.size();
 		uvIndexSub += tempUvs.size();
+		normalIndexSub += tempNormals.size();
 
 		CompactMeshData(modelMesh);
 		model->m_Meshes[i] = modelMesh;
