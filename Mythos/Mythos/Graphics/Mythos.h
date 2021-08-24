@@ -55,7 +55,7 @@ namespace Mythos
 
 		//The Batch Buffer will be the full render of the object
 		//All vertices and indices in one draw call
-		BOOL CreateBatchBuffer(MythosObject* object, const char* vertexName, const char* indexName);
+		BOOL CreateBatchBuffer(MythosModel* object, const char* vertexName, const char* indexName);
 
 		BOOL CreateIndexBuffer(void* data, unsigned int byteSize, const char* name);
 		BOOL CreateIndexBuffer(MythosBufferDescriptor* descriptor, const char* name);
@@ -96,7 +96,7 @@ namespace Mythos
 
 		BOOL UpdateMythosResource(const char* name, void* data, unsigned int byteSize);
 
-		MythosObject* LoadMesh(const char* filepath);
+		MythosModel* LoadMesh(const char* filepath);
 
 		//GetResource will return a resource based off of the id given.
 		IMythosResource* GetResource(const char* name);

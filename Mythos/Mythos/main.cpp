@@ -45,7 +45,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	MSG msg;
 
 	Mythos::Mythos* mythos = new Mythos::Mythos(&windowsWindow.GetWindow());
-	Mythos::MythosObject* deagle = mythos->LoadMesh("Assets/Models/outputFile.txt");
+	Mythos::MythosModel* deagle = mythos->LoadMesh("Assets/Models/outputFile.txt");
 	int objectModel = 10;
 
 	if (windowsWindow.GetWindow())

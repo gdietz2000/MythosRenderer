@@ -922,9 +922,9 @@ namespace Mythos
 		return TRUE;
 	}
 
-	MythosObject* Mythos::LoadMesh(const char* filepath)
+	MythosModel* Mythos::LoadMesh(const char* filepath)
 	{
-		MythosObject* importedModel = new MythosObject();
+		MythosModel* importedModel = new MythosModel();
 
 		std::fstream file{ filepath, std::ios_base::in | std::ios_base::binary };
 
