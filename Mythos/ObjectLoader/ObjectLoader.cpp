@@ -119,7 +119,7 @@ Model* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 		}
 
 		for (int j = 0; j < vertexIndices.size(); ++j) {
-			ModelVertexInformation data;
+			VertexInfo data;
 			data.m_Vertex = outVertices[j];
 			data.m_Uvs = outUvs[j];
 			data.m_Normals = outNormals[j];
@@ -139,7 +139,7 @@ Model* ObjectLoader::CreateMeshFromOBJ(const char* filepath)
 
 void ObjectLoader::CompactMeshData(ModelMesh* mesh)
 {
-	std::vector<ModelVertexInformation> vertices;
+	std::vector<VertexInfo> vertices;
 	std::vector<int> indices;
 
 
