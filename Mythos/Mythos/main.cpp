@@ -66,8 +66,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		vertexDesc.byteSize = sizeof(Mythos::MythosVertex) * deagle->m_Meshes[objectModel]->m_Vertices.size();
 		vertexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
 		BOOL success = mythos->CreateVertexBuffer(&vertexDesc, "vertexBuffer");
-		if (!success)
-			return -1;
 
 		int indices[] = {
 			0,1,2,

@@ -16,7 +16,9 @@ namespace Mythos
 	enum MythosResourceTypes
 	{
 		MYTHOS_RESOURCE_VERTEX_BUFFER = 0,
+		MYTHOS_RESOURCE_BATCH_VERTEX_BUFFER,
 		MYTHOS_RESOURCE_INDEX_BUFFER,
+		MYTHOS_RESOURCE_BATCH_INDEX_BUFFER,
 		MYTHOS_RESOURCE_CONSTANT_BUFFER,
 		MYTHOS_RESOURCE_DEPTH_BUFFER,
 		MYTHOS_RESOURCE_VERTEX_SHADER,
@@ -50,6 +52,10 @@ namespace Mythos
 
 		BOOL CreateVertexBuffer(void* data, unsigned int byteSize, const char* name);
 		BOOL CreateVertexBuffer(MythosBufferDescriptor* descriptor, const char* name);
+
+		//The Batch Buffer will be the full render of the object
+		//All vertices and indices in one draw call
+		BOOL CreateBatchBuffer(MythosObject* object, const char* vertexName, const char* indexName);
 
 		BOOL CreateIndexBuffer(void* data, unsigned int byteSize, const char* name);
 		BOOL CreateIndexBuffer(MythosBufferDescriptor* descriptor, const char* name);

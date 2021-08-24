@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 			exportFile.write((const char*)&indexCount, sizeof(uint32_t));
 			exportFile.write((const char*)newMesh->m_Meshes[i]->m_Indices.data(), sizeof(uint32_t) * indexCount);
 			exportFile.write((const char*)&vertexCount, sizeof(uint32_t));
-			exportFile.write((const char*)newMesh->m_Meshes[i]->m_Vertices.data(), sizeof(ModelVertexInformation) * vertexCount);
+			exportFile.write((const char*)newMesh->m_Meshes[i]->m_Vertices.data(), sizeof(VertexInfo) * vertexCount);
 		}
 	}
 
@@ -39,7 +39,7 @@ int main(int argc, char** argv)
 
 	for (int i = 0; i < modelCount; ++i)
 	{
-		std::vector<ModelVertexInformation> m_Vertices;
+		std::vector<VertexInfo> m_Vertices;
 		std::vector<int> m_Indices;
 
 		uint32_t player_index_count;
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 
 		m_Vertices.resize(player_vertex_count);
 
-		file.read((char*)m_Vertices.data(), sizeof(ModelVertexInformation) * player_vertex_count);
+		file.read((char*)m_Vertices.data(), sizeof(VertexInfo) * player_vertex_count);
 
 		ModelMesh* mesh = new ModelMesh();
 

@@ -926,7 +926,7 @@ namespace Mythos
 	{
 		MythosObject* importedModel = new MythosObject();
 
-		std::fstream file{filepath, std::ios_base::in | std::ios_base::binary };
+		std::fstream file{ filepath, std::ios_base::in | std::ios_base::binary };
 
 		if (!file.is_open())
 			return 0;
