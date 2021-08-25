@@ -460,7 +460,7 @@ namespace Mythos
 
 		ID3D10Blob* errorBlob;
 		ID3D10Blob* pixelBlob;
-		HRESULT hr = D3DCompileFromFile(filePath, NULL, NULL, entryPoint, modelType, NULL, NULL, &pixelBlob, &errorBlob);
+		HRESULT hr = D3DCompileFromFile(filePath, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint, modelType, NULL, NULL, &pixelBlob, &errorBlob);
 		if (FAILED(hr))
 			return FALSE;
 
