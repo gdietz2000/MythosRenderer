@@ -162,6 +162,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			return -1;
 
 		success = mythos->CreateShaderResource("DeagleDiffuse", "DeagleDiffuseResource");
+		if (!success)
+			return -1;
+
+		success = mythos->CreateTexture2D(L"Assets/Textures/Deagle_AmbientOcculsion.dds", "DeagleAmbient");
+		if (!success)
+			return -1;
+
+		success = mythos->CreateShaderResource("DeagleAmbient", "DeagleAmbientResource");
+		if (!success)
+			return -1;
 	}
 
 	UINT strides[] = { sizeof(Mythos::MythosVertex) };
@@ -223,13 +233,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->VSSetConstantBuffers(0, 1, &constBuffers);
 		mythos->GetContext()->RSSetState((ID3D11RasterizerState*)mythos->GetResource("simpleRasterizer")->GetData());
 
-		ID3D11ShaderResourceView* resources = { (ID3D11ShaderResourceView*)mythos->GetResource("DeagleDiffuseResource")->GetData() };
-		ID3D11SamplerState* samplers = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
+		ID3D11ShaderResourceView* resources[] = { (ID3D11ShaderResourceView*)mythos->GetResource("DeagleDiffuseResource")->GetData(), (ID3D11ShaderResourceView*)mythos->GetResource("DeagleAmbientResource")->GetData() };
+		ID3D11SamplerState* samplers[] = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
 		
 		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
 
-		mythos->GetContext()->PSSetShaderResources(0, 1, &resources);
-		mythos->GetContext()->PSSetSamplers(0, 1, &samplers);
+		mythos->GetContext()->PSSetShaderResources(0, 2, resources);
+		mythos->GetContext()->PSSetSamplers(0, 1, samplers);
 
 		//mythos->GetContext()->Draw(deagle->m_Vertices.size(), 0);
 		mythos->GetContext()->DrawIndexed(deagle->m_Meshes[objectModel]->m_Indices.size(), 0, 0);

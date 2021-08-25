@@ -6,10 +6,12 @@ struct InputVertex
 };
 
 Texture2D Diffuse : register(t0);
+Texture2D Ambient : register(t1);
 
 SamplerState SimpleSampler : register(s0);
 
 float4 main(InputVertex v) : SV_TARGET
 {
-    return Diffuse.Sample(SimpleSampler, v.uv);
+    float ambientOcculusion = Ambient.Sample(SimpleSampler, v.uv);
+    return ambientOcculusion * Diffuse.Sample(SimpleSampler, v.uv);
 }
