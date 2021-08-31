@@ -279,6 +279,41 @@ namespace Mythos
 		return TRUE;
 	}
 
+	BOOL Mythos::CreateModelBuffers(MythosModel* object, const char* vertexName, const char* indexName)
+	{
+		std::vector<MythosVertex> vertices;
+		std::vector<int> indices;
+
+		for (int i = 0; i < object->m_Meshes.size(); ++i)
+		{
+			int vertCount = vertices.size();
+
+			vertices.insert(vertices.end(), object->m_Meshes[i]->m_Vertices.begin(), object->m_Meshes[i]->m_Vertices.end());
+
+			for (int j = 0; j < object->m_Meshes[i]->m_Indices.size(); ++j) {
+				indices.push_back(object->m_Meshes[i]->m_Indices[j] + vertCount);
+			}
+		}
+
+		MythosBufferDescriptor vertexDesc;
+		vertexDesc.data = vertices.data();
+		vertexDesc.byteSize = sizeof(MythosVertex) * vertices.size();
+		vertexDesc.cpuAccess = MythosAccessability::MYTHOS_DEFAULT_ACCESS;
+		BOOL success = CreateVertexBuffer(&vertexDesc, vertexName);
+		if (!success)
+			return FALSE;
+
+		MythosBufferDescriptor indexDesc;
+		indexDesc.data = indices.data();
+		indexDesc.byteSize = sizeof(int) * indices.size();
+		indexDesc.cpuAccess = MythosAccessability::MYTHOS_DEFAULT_ACCESS;
+		success = CreateIndexBuffer(&indexDesc, indexName);
+		if (!success)
+			return FALSE;
+
+		return TRUE;
+	}
+
 	BOOL Mythos::CreateConstantBuffer(void* data, unsigned int byteSize, const char* name)
 	{
 		if (!NameAvailable(name))
@@ -936,6 +971,8 @@ namespace Mythos
 
 		importedModel->m_Meshes.resize(modelCount);
 
+		unsigned int totalNumIndices = 0;
+
 		for (int i = 0; i < modelCount; ++i)
 		{
 			std::vector<MythosVertex> m_Vertices;
@@ -966,10 +1003,13 @@ namespace Mythos
 			}
 
 			importedModel->m_Meshes[i] = mesh;
+
+			totalNumIndices += m_Indices.size();
 		}
 
 		file.close();
 
+		importedModel->m_TotalNumIndices = totalNumIndices;
 		return importedModel;
 	}
 

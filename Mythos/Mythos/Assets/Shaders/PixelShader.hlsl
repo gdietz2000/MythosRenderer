@@ -13,10 +13,6 @@ cbuffer CameraBuffer : register(b0)
     float4 cameraPosition;
 }
 
-Texture2D Diffuse : register(t0);
-Texture2D Metal : register(t1);
-Texture2D Rough : register(t2);
-
 SamplerState SimpleSampler : register(s0);
 
 float4 main(InputVertex v) : SV_TARGET

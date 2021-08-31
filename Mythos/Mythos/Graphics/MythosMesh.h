@@ -23,5 +23,6 @@ namespace Mythos
 	{
 		~MythosModel() { for (int i = 0; i < m_Meshes.size(); ++i) { delete m_Meshes[i]; } m_Meshes.clear(); }
 		std::vector<MythosMesh*> m_Meshes;
+		unsigned int m_TotalNumIndices;
 	};
 }

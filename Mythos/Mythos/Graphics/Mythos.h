@@ -53,12 +53,12 @@ namespace Mythos
 		BOOL CreateVertexBuffer(void* data, unsigned int byteSize, const char* name);
 		BOOL CreateVertexBuffer(MythosBufferDescriptor* descriptor, const char* name);
 
-		//The Batch Buffer will be the full render of the object
-		//All vertices and indices in one draw call
-		BOOL CreateBatchBuffer(MythosModel* object, const char* vertexName, const char* indexName);
-
 		BOOL CreateIndexBuffer(void* data, unsigned int byteSize, const char* name);
 		BOOL CreateIndexBuffer(MythosBufferDescriptor* descriptor, const char* name);
+
+		//The Batch Buffer will be the full render of the object
+		//All vertices and indices in one draw call
+		BOOL CreateModelBuffers(MythosModel* object, const char* vertexName, const char* indexName);
 
 		BOOL CreateConstantBuffer(void* data, unsigned int byteSize, const char* name);
 		BOOL CreateConstantBuffer(MythosBufferDescriptor* descriptor, const char* name);

@@ -45,6 +45,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	MSG msg;
 
 	Mythos::Mythos* mythos = new Mythos::Mythos(&windowsWindow.GetWindow());
+	Mythos::MythosModel* deagle = mythos->LoadMesh("Assets/Models/DesertEagle.txt");
 	Mythos::MythosModel* sphere = mythos->LoadMesh("Assets/Models/UvSphere.txt");
 
 	if (windowsWindow.GetWindow())
@@ -52,19 +53,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		HRESULT hr;
 
-		Mythos::MythosBufferDescriptor vertexDesc;
-		vertexDesc.data = sphere->m_Meshes[0]->m_Vertices.data();
-		vertexDesc.byteSize = sizeof(Mythos::MythosVertex) * sphere->m_Meshes[0]->m_Vertices.size();
-		vertexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
-		BOOL success = mythos->CreateVertexBuffer(&vertexDesc, "vertexBuffer");
-
-		Mythos::MythosBufferDescriptor indexDesc;
-		indexDesc.data = sphere->m_Meshes[0]->m_Indices.data();
-		indexDesc.byteSize = sizeof(int) * sphere->m_Meshes[0]->m_Indices.size();
-		indexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
-
-
-		success = mythos->CreateIndexBuffer(&indexDesc, "indexBuffer");
+		BOOL success = mythos->CreateModelBuffers(sphere, "vertexBuffer", "indexBuffer");
 		if (!success)
 			return -1;
 
@@ -160,6 +149,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	Mythos::MythosFreeroamCamera freeCamera;
 
 	Matrix4 World = Matrix4::Identity;
+	//Matrix4 World = Matrix4::Scale(10) * Matrix4::RotateY(-3.14 / 2.0);
 
 	auto temp = mythos->GetViewport();
 
@@ -218,12 +208,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->PSSetConstantBuffers(0, 1, pixelConstantBuffers);
 		mythos->GetContext()->PSSetSamplers(0, 1, samplers);
 
-		mythos->GetContext()->DrawIndexed(sphere->m_Meshes[0]->m_Indices.size(), 0, 0);
+		mythos->GetContext()->DrawIndexed(sphere->m_TotalNumIndices, 0, 0);
 
 		mythos->Present();
 	}
 
 	delete mythos;
+	delete deagle;
 	delete sphere;
 
 	return (int)msg.wParam;
