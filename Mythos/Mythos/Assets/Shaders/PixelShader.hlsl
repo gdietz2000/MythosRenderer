@@ -6,6 +6,7 @@ struct InputVertex
     float2 uv : UV;
     float3 normal : NORMAL;
     float3 world : WORLDPOS;
+    float3 local : LOCALPOS;
 };
 
 cbuffer CameraBuffer : register(b0)

@@ -13,6 +13,7 @@ struct OutputVertex
     float2 uv : UV;
     float3 normal : NORMAL;
     float3 world : WORLDPOS;
+    float3 local : LOCALPOS;
 };
 
 cbuffer WVP : register(b0)
@@ -26,6 +27,7 @@ OutputVertex main( TempVertex temp )
 {
     OutputVertex output = (OutputVertex) 0;
     output.position = float4(temp.position, 1);
+    output.local = output.position;
     output.position = mul(output.position, World);
     output.world = output.position.xyz;
     output.position = mul(output.position, View);

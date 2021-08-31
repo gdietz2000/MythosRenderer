@@ -105,6 +105,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
+		success = mythos->CreatePixelShader(L"Assets/Shaders/IBLShader.hlsl", entryPoint, pixelShaderModel, "iblShader");
+
 		Mythos::MythosInputElement layoutDesc[] = {
 			{"POSITION", 0, Mythos::MYTHOS_FORMAT_32_FLOAT3},
 			{"UV", 0, Mythos::MYTHOS_FORMAT_32_FLOAT2},
@@ -138,6 +140,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreateTextureSampler(&samplerDesc, "samplerState");
 		if (!success)
 			return -1;
+
+		success = mythos->CreateTexture2D(L"Assets/Textures/Newport_Loft.dds", "ibl");
+		if (!success)
+			return -1;
+
+		success = mythos->CreateShaderResource("ibl", "iblResource");
+		if (!success)
+			return -1;
 	}
 
 	UINT strides[] = { sizeof(Mythos::MythosVertex) };
@@ -149,7 +159,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	Mythos::MythosFreeroamCamera freeCamera;
 
-	Matrix4 World = Matrix4::Identity;
+	//Matrix4 World = Matrix4::Identity;
+	Matrix4 World = Matrix4::Scale(-1) * Matrix4::Translate(freeCamera.GetPosition());
 	//Matrix4 World = Matrix4::Scale(10) * Matrix4::RotateY(-3.14 / 2.0);
 
 	auto temp = mythos->GetViewport();
@@ -188,6 +199,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->OMSetRenderTargets(1, &targets, (ID3D11DepthStencilView*)mythos->GetResource("depthBuffer")->GetData());
 		mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
 
+		World = Matrix4::Scale(-1) * Matrix4::Translate(freeCamera.GetPosition());
+		MyMatrices.World = World;
 		mythos->UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
 		Math::Vector4 camPos = Math::Vector4(freeCamera.GetPosition(), 1);
 		mythos->UpdateMythosResource("cameraPositionBuffer", &camPos, sizeof(Math::Vector4));
@@ -203,10 +216,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->RSSetState((ID3D11RasterizerState*)mythos->GetResource("simpleRasterizer")->GetData());
 
 		ID3D11Buffer* pixelConstantBuffers[] = { (ID3D11Buffer*)mythos->GetResource("cameraPositionBuffer")->GetData() };
+		ID3D11ShaderResourceView* srvs[] = { (ID3D11ShaderResourceView*)mythos->GetResource("iblResource")->GetData() };
 		ID3D11SamplerState* samplers[] = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
 		
-		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
+		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("iblShader")->GetData(), nullptr, NULL);
 		mythos->GetContext()->PSSetConstantBuffers(0, 1, pixelConstantBuffers);
+		mythos->GetContext()->PSSetShaderResources(0, 1, srvs);
 		mythos->GetContext()->PSSetSamplers(0, 1, samplers);
 
 		mythos->GetContext()->DrawIndexed(cube->m_TotalNumIndices, 0, 0);
