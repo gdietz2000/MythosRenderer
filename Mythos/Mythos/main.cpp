@@ -47,13 +47,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	Mythos::Mythos* mythos = new Mythos::Mythos(&windowsWindow.GetWindow());
 	Mythos::MythosModel* deagle = mythos->LoadMesh("Assets/Models/DesertEagle.txt");
 	Mythos::MythosModel* sphere = mythos->LoadMesh("Assets/Models/UvSphere.txt");
+	Mythos::MythosModel* cube = mythos->LoadMesh("Assets/Models/Cube.txt");
 
 	if (windowsWindow.GetWindow())
 	{
 
 		HRESULT hr;
 
-		BOOL success = mythos->CreateModelBuffers(sphere, "vertexBuffer", "indexBuffer");
+		BOOL success = mythos->CreateModelBuffers(cube, "vertexBuffer", "indexBuffer");
 		if (!success)
 			return -1;
 
@@ -208,7 +209,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->PSSetConstantBuffers(0, 1, pixelConstantBuffers);
 		mythos->GetContext()->PSSetSamplers(0, 1, samplers);
 
-		mythos->GetContext()->DrawIndexed(sphere->m_TotalNumIndices, 0, 0);
+		mythos->GetContext()->DrawIndexed(cube->m_TotalNumIndices, 0, 0);
 
 		mythos->Present();
 	}
@@ -216,6 +217,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	delete mythos;
 	delete deagle;
 	delete sphere;
+	delete cube;
 
 	return (int)msg.wParam;
 }
