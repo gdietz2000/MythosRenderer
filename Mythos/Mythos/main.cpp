@@ -159,8 +159,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	Mythos::MythosFreeroamCamera freeCamera;
 
-	//Matrix4 World = Matrix4::Identity;
-	Matrix4 World = Matrix4::Scale(-1) * Matrix4::Translate(freeCamera.GetPosition());
+	Matrix4 World = Matrix4::Identity;
 	//Matrix4 World = Matrix4::Scale(10) * Matrix4::RotateY(-3.14 / 2.0);
 
 	auto temp = mythos->GetViewport();
@@ -199,8 +198,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->OMSetRenderTargets(1, &targets, (ID3D11DepthStencilView*)mythos->GetResource("depthBuffer")->GetData());
 		mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
 
-		World = Matrix4::Scale(-1) * Matrix4::Translate(freeCamera.GetPosition());
-		MyMatrices.World = World;
 		mythos->UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
 		Math::Vector4 camPos = Math::Vector4(freeCamera.GetPosition(), 1);
 		mythos->UpdateMythosResource("cameraPositionBuffer", &camPos, sizeof(Math::Vector4));

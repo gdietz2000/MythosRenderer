@@ -23,6 +23,8 @@ float2 SampleSphericalMap(float3 v)
     uv *= invAtan;
     uv += 0.5;
     
+    uv.y = abs(1.0 - uv.y);
+    
     return uv;
 }
 
