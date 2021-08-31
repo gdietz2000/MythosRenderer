@@ -6,11 +6,10 @@ float3 fresnelSchlick(float cosTheta, float3 F0)
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-float distributionGGX(float3 n, float3 h, float roughness)
+float distributionGGX(float NdotH, float roughness)
 {
     float a = roughness * roughness;
     float a2 = a * a;
-    float NdotH = max(dot(n, h), 0.0);
     float NdotH2 = NdotH * NdotH;
     
     float num = a2;

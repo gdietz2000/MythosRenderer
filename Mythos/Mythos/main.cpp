@@ -45,36 +45,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	MSG msg;
 
 	Mythos::Mythos* mythos = new Mythos::Mythos(&windowsWindow.GetWindow());
-	Mythos::MythosModel* deagle = mythos->LoadMesh("Assets/Models/outputFile.txt");
-	int objectModel = 10;
+	Mythos::MythosModel* sphere = mythos->LoadMesh("Assets/Models/UvSphere.txt");
 
 	if (windowsWindow.GetWindow())
 	{
 
 		HRESULT hr;
 
-		Mythos::MythosVertex square[] =
-		{
-			{{-1,1,0}, {0,0}},
-			{{1,1,0}, {1,0}},
-			{{-1,-1,0}, {0,1} },
-			{{1,-1,0}, {1,1}}
-		};
-
 		Mythos::MythosBufferDescriptor vertexDesc;
-		vertexDesc.data = deagle->m_Meshes[objectModel]->m_Vertices.data();
-		vertexDesc.byteSize = sizeof(Mythos::MythosVertex) * deagle->m_Meshes[objectModel]->m_Vertices.size();
+		vertexDesc.data = sphere->m_Meshes[0]->m_Vertices.data();
+		vertexDesc.byteSize = sizeof(Mythos::MythosVertex) * sphere->m_Meshes[0]->m_Vertices.size();
 		vertexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
 		BOOL success = mythos->CreateVertexBuffer(&vertexDesc, "vertexBuffer");
 
-		int indices[] = {
-			0,1,2,
-			2,1,3
-		};
-
 		Mythos::MythosBufferDescriptor indexDesc;
-		indexDesc.data = deagle->m_Meshes[objectModel]->m_Indices.data();
-		indexDesc.byteSize = sizeof(int) * deagle->m_Meshes[objectModel]->m_Indices.size();
+		indexDesc.data = sphere->m_Meshes[0]->m_Indices.data();
+		indexDesc.byteSize = sizeof(int) * sphere->m_Meshes[0]->m_Indices.size();
 		indexDesc.cpuAccess = Mythos::MythosAccessability::MYTHOS_DEFAULT_ACCESS;
 
 
@@ -162,38 +148,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreateTextureSampler(&samplerDesc, "samplerState");
 		if (!success)
 			return -1;
-
-		success = mythos->CreateTexture2D(L"Assets/Textures/Deagle_BaseColor.dds", "DeagleDiffuse");
-		if (!success)
-			return -1;
-
-		success = mythos->CreateShaderResource("DeagleDiffuse", "DeagleDiffuseResource");
-		if (!success)
-			return -1;
-
-		success = mythos->CreateTexture2D(L"Assets/Textures/Deagle_AmbientOcculsion.dds", "DeagleAmbient");
-		if (!success)
-			return -1;
-
-		success = mythos->CreateShaderResource("DeagleAmbient", "DeagleAmbientResource");
-		if (!success)
-			return -1;
-		
-		success = mythos->CreateTexture2D(L"Assets/Textures/Deagle_Metallic.dds", "DeagleMetal");
-		if (!success)
-			return -1;
-
-		success = mythos->CreateShaderResource("DeagleMetal", "DeagleMetalResource");
-		if (!success)
-			return -1;
-
-		success = mythos->CreateTexture2D(L"Assets/Textures/Deagle_Roughness.dds", "DeagleRough");
-		if (!success)
-			return -1;
-
-		success = mythos->CreateShaderResource("DeagleRough", "DeagleRoughResource");
-		if (!success)
-			return -1;
 	}
 
 	UINT strides[] = { sizeof(Mythos::MythosVertex) };
@@ -205,8 +159,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	Mythos::MythosFreeroamCamera freeCamera;
 
-	//Matrix4 World = Matrix4::Identity;
-	Matrix4 World = Matrix4::Scale(10) * Matrix4::RotateY(3.14f / -2.0f);
+	Matrix4 World = Matrix4::Identity;
 
 	auto temp = mythos->GetViewport();
 
@@ -217,6 +170,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	MyMatrices.View = freeCamera.GetCamera();
 	MyMatrices.Projection = freeCamera.GetProjection();
 
+	mythos->GetContext()->IASetInputLayout((ID3D11InputLayout*)mythos->GetResource("inputLayout")->GetData());
 	mythos->SetTopology(Mythos::MYTHOS_TRIANGLE_LIST);
 
 	// Main message loop:
@@ -237,7 +191,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		MyMatrices.View = freeCamera.GetCamera();
 
 		ID3D11RenderTargetView* targets = { (ID3D11RenderTargetView*)mythos->GetResource("mainRenderTarget")->GetData() };
-		mythos->SetClearRenderTargetColor({ 0,1,1,1 });
+		mythos->SetClearRenderTargetColor({ 0.075,0.075,0.075,1 });
 		mythos->ClearRenderTarget("mainRenderTarget");
 		mythos->ClearDepthBuffer("depthBuffer");
 		mythos->GetContext()->OMSetRenderTargets(1, &targets, (ID3D11DepthStencilView*)mythos->GetResource("depthBuffer")->GetData());
@@ -258,26 +212,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->RSSetState((ID3D11RasterizerState*)mythos->GetResource("simpleRasterizer")->GetData());
 
 		ID3D11Buffer* pixelConstantBuffers[] = { (ID3D11Buffer*)mythos->GetResource("cameraPositionBuffer")->GetData() };
-		ID3D11ShaderResourceView* resources[] = {
-			(ID3D11ShaderResourceView*)mythos->GetResource("DeagleDiffuseResource")->GetData(),
-			(ID3D11ShaderResourceView*)mythos->GetResource("DeagleAmbientResource")->GetData(),
-			(ID3D11ShaderResourceView*)mythos->GetResource("DeagleMetalResource")->GetData(),
-			(ID3D11ShaderResourceView*)mythos->GetResource("DeagleRoughResource")->GetData(), };
 		ID3D11SamplerState* samplers[] = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
 		
 		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
 		mythos->GetContext()->PSSetConstantBuffers(0, 1, pixelConstantBuffers);
-		mythos->GetContext()->PSSetShaderResources(0, 4, resources);
 		mythos->GetContext()->PSSetSamplers(0, 1, samplers);
 
-		//mythos->GetContext()->Draw(deagle->m_Vertices.size(), 0);
-		mythos->GetContext()->DrawIndexed(deagle->m_Meshes[objectModel]->m_Indices.size(), 0, 0);
+		mythos->GetContext()->DrawIndexed(sphere->m_Meshes[0]->m_Indices.size(), 0, 0);
 
 		mythos->Present();
 	}
 
 	delete mythos;
-	delete deagle;
+	delete sphere;
 
 	return (int)msg.wParam;
 }
