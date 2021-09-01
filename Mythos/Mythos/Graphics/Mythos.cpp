@@ -565,13 +565,13 @@ namespace Mythos
 		IMythosResource* renderTarget = new MythosRenderTarget();
 		hr = m_Creator.GetCreator()->CreateRenderTargetView(backbuffer, nullptr, (ID3D11RenderTargetView**)&renderTarget->GetData());
 
-		backbuffer->Release();
-
 		if (FAILED(hr))
 		{
 			delete renderTarget;
 			return FALSE;
 		}
+
+		backbuffer->Release();
 
 		m_NamesToIndex.insert(std::make_pair(renderTargetName, MYTHOS_RESOURCE_RENDER_TARGET));
 		m_Resources[MYTHOS_RESOURCE_RENDER_TARGET].insert(std::make_pair(renderTargetName, renderTarget));
@@ -761,7 +761,7 @@ namespace Mythos
 		D3D11_TEXTURE2D_DESC textureDesc;
 		ZeroMemory(&textureDesc, sizeof(textureDesc));
 		textureDesc.ArraySize = 1;
-		textureDesc.BindFlags = desc->bindFlags;
+		textureDesc.BindFlags = GetBindFlags((MythosBindFlags)desc->bindFlags);
 		textureDesc.Format = (DXGI_FORMAT)GetFormat(desc->format);
 		textureDesc.MipLevels = desc->mipLevels;
 		textureDesc.MiscFlags = 0;
@@ -792,7 +792,7 @@ namespace Mythos
 		D3D11_SUBRESOURCE_DATA subData;
 		subData.pSysMem = data;
 
-		HRESULT hr = m_Creator.GetCreator()->CreateTexture2D(&textureDesc, &subData, (ID3D11Texture2D**)&texture2D->GetData());
+		HRESULT hr = m_Creator.GetCreator()->CreateTexture2D(&textureDesc, data ? &subData : nullptr, (ID3D11Texture2D**)&texture2D->GetData());
 		if (FAILED(hr)) {
 			delete texture2D;
 			return FALSE;
@@ -804,14 +804,14 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateTextureCube(MythosTextureDescriptor* desc, void** data, const char* textureName) 
+	BOOL Mythos::CreateTextureCube(MythosTextureDescriptor* desc, std::vector<IMythosResource*>& data, const char* textureName) 
 	{
 		D3D11_TEXTURE2D_DESC textureDesc;
 		textureDesc.Height = desc->height;
 		textureDesc.Width = desc->width;
 
 		textureDesc.ArraySize = 6;
-		textureDesc.BindFlags = desc->bindFlags;
+		textureDesc.BindFlags = GetBindFlags((MythosBindFlags)desc->bindFlags);
 		textureDesc.MipLevels = 1;
 		textureDesc.Format = (DXGI_FORMAT)GetFormat(desc->format);
 		textureDesc.SampleDesc.Count = desc->sampleCount;
@@ -846,21 +846,18 @@ namespace Mythos
 
 		std::vector<VectorChar> d[6];
 
+
 		for (int cubeMapFaceIndex = 0; cubeMapFaceIndex < 6; ++cubeMapFaceIndex)
 		{
 			d[cubeMapFaceIndex].resize(desc->width * desc->height);
 
-			unsigned char* imageInfo = (unsigned char*)data[cubeMapFaceIndex];
-			int size = desc->width * desc->height * 4;
+			// fill with red color  
+			VectorChar red = { 255,255,0,255 };
 
-			std::vector<VectorChar> image;
-			for (int i = 0; i < size; i += 4) {
-				image.push_back({ imageInfo[i], imageInfo[i + 1], imageInfo[i + 2], imageInfo[i + 3] });
-			}
-
-			for (int i = 0; i < image.size(); ++i) {
-				d[cubeMapFaceIndex][i] = image[i];
-			}
+			std::fill(
+				d[cubeMapFaceIndex].begin(),
+				d[cubeMapFaceIndex].end(),
+				red);
 
 			subData[cubeMapFaceIndex].pSysMem = &d[cubeMapFaceIndex][0];
 			subData[cubeMapFaceIndex].SysMemPitch = desc->width * 4;
@@ -1192,6 +1189,21 @@ namespace Mythos
 			return TRUE;
 
 		return FALSE;
+	}
+
+	UINT Mythos::GetBindFlags(MythosBindFlags flags)
+	{
+		unsigned int binds = 0;
+		if (flags & MYTHOS_BIND_RENDER_TARGET)
+		{
+			binds |= D3D11_BIND_RENDER_TARGET;
+		}
+
+		if (flags & MYTHOS_BIND_SHADER_RESOURCE) {
+			binds |= D3D11_BIND_SHADER_RESOURCE;
+		}
+
+		return binds;
 	}
 
 	UINT Mythos::GetFormat(MythosFormat format)

@@ -57,8 +57,6 @@ namespace Mythos
 		BOOL CreateIndexBuffer(void* data, unsigned int byteSize, const char* name);
 		BOOL CreateIndexBuffer(MythosBufferDescriptor* descriptor, const char* name);
 
-		//The Batch Buffer will be the full render of the object
-		//All vertices and indices in one draw call
 		BOOL CreateModelBuffers(MythosModel* object, const char* vertexName, const char* indexName);
 
 		BOOL CreateConstantBuffer(void* data, unsigned int byteSize, const char* name);
@@ -86,7 +84,7 @@ namespace Mythos
 
 		BOOL CreateTexture2D(const wchar_t* filepath, const char* textureName);
 		BOOL CreateTexture2D(MythosTextureDescriptor* descriptor, void* data, const char* textureName);
-		BOOL CreateTextureCube(MythosTextureDescriptor* descriptor, void** data, const char* textureName);
+		BOOL CreateTextureCube(MythosTextureDescriptor* descriptor, std::vector<IMythosResource*>& data, const char* textureName);
 
 		BOOL CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName);
 		BOOL CreateShaderResourceCube(const char* cubeToBecomeResourceName, const char* shaderResourceName);
@@ -112,6 +110,7 @@ namespace Mythos
 
 		//Helper Function
 		BOOL NameAvailable(const char* name);
+		UINT GetBindFlags(MythosBindFlags flag);
 		UINT GetFormat(MythosFormat format);
 		UINT GetFormatSize(MythosFormat format);
 

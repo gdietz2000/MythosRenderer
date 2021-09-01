@@ -86,7 +86,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		rtDesc.mipLevels = 1;
 		rtDesc.sampleCount = 1;
 		rtDesc.sampleQuality = 0;
-		
+
 		success = mythos->CreateRenderTarget(&rtDesc, "tempTexture", "newRTV");
 		if (!success)
 			return -1;
@@ -119,7 +119,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		Mythos::MythosRasterizerDescriptor rasterDesc;
 		ZeroMemory(&rasterDesc, sizeof(rasterDesc));
-		rasterDesc.CullMode = Mythos::MYTHOS_CULL_BACK;
+		rasterDesc.CullMode = Mythos::MYTHOS_CULL_NONE;
 		rasterDesc.FillMode = Mythos::MYTHOS_FILL_SOLID;
 
 		success = mythos->CreateRasterizerState(&rasterDesc, "simpleRasterizer");
@@ -149,39 +149,30 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		Mythos::MythosTextureDescriptor texDesc;
-		texDesc.bindFlags = Mythos::MYTHOS_BIND_SHADER_RESOURCE;
-		texDesc.cpuAccess = Mythos::MYTHOS_DEFAULT_ACCESS;
-		texDesc.format = Mythos::MYTHOS_FORMAT_8_FLOAT4;
-		texDesc.height = 1;
-		texDesc.width = 1;
-		texDesc.mipLevels = 1;
-		texDesc.sampleCount = 1;
-		texDesc.sampleQuality = 0;
+		const char* textureNames[] = {
+			"rtvTexture0",
+			"rtvTexture1",
+			"rtvTexture2",
+			"rtvTexture3",
+			"rtvTexture4",
+			"rtvTexture5"
+		};
 
-		unsigned char** imageData = nullptr;
-		imageData = new unsigned char* [6];
-		for (int i = 0; i < 6; ++i) {
-			imageData[i] = new unsigned char[4];
-			std::fill(imageData[i], imageData[i] + 4, 255);
-		}
-		
-
-		success = mythos->CreateTextureCube(&texDesc, (void**)imageData, "textureCube");
-		if (!success) {
-			return -1;
-		}
+		const char* rtvNames[] = {
+			"cubemap0",
+			"cubemap1",
+			"cubemap2",
+			"cubemap3",
+			"cubemap4",
+			"cubemap5",
+		};
 
 		for (int i = 0; i < 6; ++i) {
-			delete imageData[i];
+			success = mythos->CreateRenderTarget(512, 512, textureNames[i], rtvNames[i]);
+			if (!success)
+				return -1;
 		}
 
-		delete imageData;
-
-		success = mythos->CreateShaderResourceCube("textureCube", "cube");
-		if (!success) {
-			return -1;
-		}
 	}
 
 	UINT strides[] = { sizeof(Mythos::MythosVertex) };
@@ -208,6 +199,107 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mythos->GetContext()->IASetInputLayout((ID3D11InputLayout*)mythos->GetResource("inputLayout")->GetData());
 	mythos->SetTopology(Mythos::MYTHOS_TRIANGLE_LIST);
 
+	Matrix4 captureProjection = Matrix4::PerspectiveFovLH(radians(90.0f), 1.0f, 0.1f, 10.0);
+	Matrix4 captureViews[] = {
+		Matrix4::LookAtLH({0,0,0}, {1.0,0.0,0.0}, {0,-1,0}),
+		Matrix4::LookAtLH({0,0,0}, {-1.0,0.0,0.0}, {0,-1,0}),
+		Matrix4::LookAtLH({0,0,0}, {0.0,1.0,0.0}, {0,0,1}),
+		Matrix4::LookAtLH({0,0,0}, {0.0,-1.0,0.0}, {0,0,-1}),
+		Matrix4::LookAtLH({0,0,0}, {0.0,0.0,1.0}, {0,-1,0}),
+		Matrix4::LookAtLH({0,0,0}, {0.0,0.0,-1.0}, {0,-1,0})
+	};
+
+	const char* textureNames[] = {
+	"rtvTexture0",
+	"rtvTexture1",
+	"rtvTexture2",
+	"rtvTexture3",
+	"rtvTexture4",
+	"rtvTexture5"
+	};
+
+	const char* rtvNames[] = {
+		"cubemap0",
+		"cubemap1",
+		"cubemap2",
+		"cubemap3",
+		"cubemap4",
+		"cubemap5",
+	};
+
+	for (int i = 0; i < 6; ++i)
+	{
+		MyMatrices.World = Matrix4::Identity;
+		MyMatrices.View = captureViews[i];
+		MyMatrices.Projection = captureProjection;
+		mythos->UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
+
+		D3D11_VIEWPORT textureViewport;
+		textureViewport.Width = 512;
+		textureViewport.Height = 512;
+		textureViewport.TopLeftX = textureViewport.TopLeftY = 0;
+		textureViewport.MinDepth = 0; textureViewport.MaxDepth = 1;
+
+		mythos->GetContext()->RSSetViewports(1, &textureViewport);
+
+
+		mythos->SetClearRenderTargetColor({ 0,0,0,1 });
+		mythos->ClearRenderTarget(rtvNames[i]);
+		mythos->ClearDepthBuffer("depthBuffer");
+		mythos->GetContext()->OMSetRenderTargets(1, (ID3D11RenderTargetView**)&mythos->GetResource(rtvNames[i])->GetData(), nullptr);
+		mythos->GetContext()->RSSetViewports(1, &textureViewport);
+		mythos->GetContext()->RSSetState((ID3D11RasterizerState*)mythos->GetResource("simpleRasterizer")->GetData());
+
+		mythos->GetContext()->IASetVertexBuffers(0, 1, (ID3D11Buffer**)&mythos->GetResource("vertexBuffer")->GetData(), strides, offset);
+		mythos->GetContext()->IASetIndexBuffer((ID3D11Buffer*)mythos->GetResource("indexBuffer")->GetData(), DXGI_FORMAT_R32_UINT, 0);
+
+
+		mythos->GetContext()->VSSetShader((ID3D11VertexShader*)mythos->GetResource("vertexShader")->GetData(), nullptr, 0);
+		mythos->GetContext()->VSSetConstantBuffers(0, 1, (ID3D11Buffer**)&mythos->GetResource("constantBuffer")->GetData());
+		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("iblShader")->GetData(), nullptr, 0);
+		mythos->GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&mythos->GetResource("iblResource")->GetData());
+		mythos->GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&mythos->GetResource("samplerState")->GetData());
+
+		mythos->GetContext()->DrawIndexed(36, 0, 0);
+
+		mythos->Present();
+
+	}
+
+	std::vector<Mythos::IMythosResource*> textures;
+	for (int i = 0; i < 6; ++i) {
+
+		textures.push_back(mythos->GetResource(textureNames[i]));
+	}
+
+	Mythos::MythosTextureDescriptor cubeDesc;
+	cubeDesc.bindFlags = Mythos::MYTHOS_BIND_RENDER_TARGET | Mythos::MYTHOS_BIND_SHADER_RESOURCE;
+	cubeDesc.cpuAccess = Mythos::MYTHOS_DEFAULT_ACCESS;
+	cubeDesc.format = Mythos::MYTHOS_FORMAT_8_FLOAT4;
+	cubeDesc.height = 512;
+	cubeDesc.width = 512;
+	cubeDesc.mipLevels = 1;
+	cubeDesc.sampleCount = 1;
+	cubeDesc.sampleQuality = 0;
+
+	BOOL success = mythos->CreateTextureCube(&cubeDesc, textures, "textureCube");
+	if (!success)
+	{
+		return -1;
+	}
+
+	success = mythos->CreateShaderResourceCube("textureCube", "skybox");
+	if (!success) {
+		return -1;
+	}
+
+	MyMatrices.World = World;
+	MyMatrices.View = freeCamera.GetCamera();
+	MyMatrices.Projection = freeCamera.GetProjection();
+	mythos->UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
+
+	mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
+
 	// Main message loop:
 	while (true)
 	{
@@ -221,6 +313,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		if (msg.message == WM_QUIT)
 			break;
+
+
 
 		freeCamera.GetCameraInput();
 		MyMatrices.View = freeCamera.GetCamera();
@@ -247,12 +341,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->RSSetState((ID3D11RasterizerState*)mythos->GetResource("simpleRasterizer")->GetData());
 
 		ID3D11Buffer* pixelConstantBuffers[] = { (ID3D11Buffer*)mythos->GetResource("cameraPositionBuffer")->GetData() };
-		ID3D11ShaderResourceView* srvs[] = { (ID3D11ShaderResourceView*)mythos->GetResource("iblResource")->GetData(), (ID3D11ShaderResourceView*)mythos->GetResource("cube")->GetData() };
+		ID3D11ShaderResourceView* srvs[] = { (ID3D11ShaderResourceView*)mythos->GetResource("skybox")->GetData() };
 		ID3D11SamplerState* samplers[] = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
-		
+
 		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("iblShader")->GetData(), nullptr, NULL);
 		mythos->GetContext()->PSSetConstantBuffers(0, 1, pixelConstantBuffers);
-		mythos->GetContext()->PSSetShaderResources(0, 2, srvs);
+		mythos->GetContext()->PSSetShaderResources(0, ARRAYSIZE(srvs), srvs);
 		mythos->GetContext()->PSSetSamplers(0, 1, samplers);
 
 		mythos->GetContext()->DrawIndexed(cube->m_TotalNumIndices, 0, 0);
