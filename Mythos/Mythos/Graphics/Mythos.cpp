@@ -752,7 +752,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateTexture2D(MythosTextureDescriptor* desc, const char* textureName)
+	BOOL Mythos::CreateTexture2D(MythosTextureDescriptor* desc, void* data, const char* textureName)
 	{
 		if (!NameAvailable(textureName))
 			return FALSE;
@@ -760,12 +760,126 @@ namespace Mythos
 		IMythosResource* texture2D = new MythosTexture2D();
 		D3D11_TEXTURE2D_DESC textureDesc;
 		ZeroMemory(&textureDesc, sizeof(textureDesc));
+		textureDesc.ArraySize = 1;
+		textureDesc.BindFlags = desc->bindFlags;
+		textureDesc.Format = (DXGI_FORMAT)GetFormat(desc->format);
+		textureDesc.MipLevels = desc->mipLevels;
+		textureDesc.MiscFlags = 0;
+		textureDesc.SampleDesc.Count = desc->sampleCount;
+		textureDesc.SampleDesc.Quality = desc->sampleQuality;
+		textureDesc.Height = desc->height;
+		textureDesc.Width = desc->width;
 
+		switch (desc->cpuAccess)
+		{
+		case MYTHOS_DEFAULT_ACCESS: {
+			textureDesc.CPUAccessFlags = 0;
+			textureDesc.Usage = D3D11_USAGE_DEFAULT;
+			break;
+		}
+		case MYTHOS_DYNAMIC_ACCESS: {
+			textureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			textureDesc.Usage = D3D11_USAGE_DYNAMIC;
+			break;
+		}
+		case MYTHOS_IMMUTABLE_ACCESS: {
+			textureDesc.CPUAccessFlags = 0;
+			textureDesc.Usage = D3D11_USAGE_IMMUTABLE;
+			break;
+		}
+		}
+
+		D3D11_SUBRESOURCE_DATA subData;
+		subData.pSysMem = data;
+
+		HRESULT hr = m_Creator.GetCreator()->CreateTexture2D(&textureDesc, &subData, (ID3D11Texture2D**)&texture2D->GetData());
+		if (FAILED(hr)) {
+			delete texture2D;
+			return FALSE;
+		}
 
 		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
 		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture2D));
 
 		return TRUE;
+	}
+
+	BOOL Mythos::CreateTextureCube(MythosTextureDescriptor* desc, void** data, const char* textureName) 
+	{
+		D3D11_TEXTURE2D_DESC textureDesc;
+		textureDesc.Height = desc->height;
+		textureDesc.Width = desc->width;
+
+		textureDesc.ArraySize = 6;
+		textureDesc.BindFlags = desc->bindFlags;
+		textureDesc.MipLevels = 1;
+		textureDesc.Format = (DXGI_FORMAT)GetFormat(desc->format);
+		textureDesc.SampleDesc.Count = desc->sampleCount;
+		textureDesc.SampleDesc.Quality = desc->sampleQuality;
+
+		textureDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+
+		D3D11_SUBRESOURCE_DATA subData[6];
+
+		switch (desc->cpuAccess)
+		{
+		case MYTHOS_DEFAULT_ACCESS: {
+			textureDesc.CPUAccessFlags = 0;
+			textureDesc.Usage = D3D11_USAGE_DEFAULT;
+			break;
+		}
+		case MYTHOS_DYNAMIC_ACCESS: {
+			textureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			textureDesc.Usage = D3D11_USAGE_DYNAMIC;
+			break;
+		}
+		case MYTHOS_IMMUTABLE_ACCESS: {
+			textureDesc.CPUAccessFlags = 0;
+			textureDesc.Usage = D3D11_USAGE_IMMUTABLE;
+			break;
+		}
+		}
+
+		struct VectorChar {
+			unsigned char x, y, z, w;
+		};
+
+		std::vector<VectorChar> d[6];
+
+		for (int cubeMapFaceIndex = 0; cubeMapFaceIndex < 6; ++cubeMapFaceIndex)
+		{
+			d[cubeMapFaceIndex].resize(desc->width * desc->height);
+
+			unsigned char* imageInfo = (unsigned char*)data[cubeMapFaceIndex];
+			int size = desc->width * desc->height * 4;
+
+			std::vector<VectorChar> image;
+			for (int i = 0; i < size; i += 4) {
+				image.push_back({ imageInfo[i], imageInfo[i + 1], imageInfo[i + 2], imageInfo[i + 3] });
+			}
+
+			for (int i = 0; i < image.size(); ++i) {
+				d[cubeMapFaceIndex][i] = image[i];
+			}
+
+			subData[cubeMapFaceIndex].pSysMem = &d[cubeMapFaceIndex][0];
+			subData[cubeMapFaceIndex].SysMemPitch = desc->width * 4;
+			subData[cubeMapFaceIndex].SysMemSlicePitch = 0;
+		}
+
+		IMythosResource* textureCube = new MythosTexture2D();
+		HRESULT hr = m_Creator.GetCreator()->CreateTexture2D(&textureDesc, &subData[0], (ID3D11Texture2D**)&textureCube->GetData());
+		if (FAILED(hr))
+		{
+			delete textureCube;
+			return FALSE;
+		}
+
+		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, textureCube));
+
+		return TRUE;
+
 	}
 
 	BOOL Mythos::CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName)
@@ -784,6 +898,37 @@ namespace Mythos
 		shaderDesc.Texture2D.MostDetailedMip = 0;
 		shaderDesc.Texture2D.MipLevels = 1;
 		shaderDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
+
+		IMythosResource* shaderResource = new MythosShaderResource();
+		HRESULT hr = m_Creator.GetCreator()->CreateShaderResourceView((ID3D11Texture2D*)texture->GetData(), &shaderDesc, (ID3D11ShaderResourceView**)&shaderResource->GetData());
+
+		if (FAILED(hr)) {
+			delete shaderResource;
+			return FALSE;
+		}
+
+		m_NamesToIndex.insert(std::make_pair(shaderResourceName, MYTHOS_RESOURCE_SHADER_RESOURCE));
+		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(shaderResourceName, shaderResource));
+
+		return TRUE;
+	}
+
+	BOOL Mythos::CreateShaderResourceCube(const char* cubeToBecomeResourceName, const char* shaderResourceName)
+	{
+		if (!NameAvailable(shaderResourceName))
+			return FALSE;
+
+		D3D11_TEXTURE2D_DESC textureDesc;
+
+		IMythosResource* texture = GetResource(cubeToBecomeResourceName);
+		((ID3D11Texture2D*)texture->GetData())->GetDesc(&textureDesc);
+
+		D3D11_SHADER_RESOURCE_VIEW_DESC shaderDesc;
+		ZeroMemory(&shaderDesc, sizeof(shaderDesc));
+		shaderDesc.Format = textureDesc.Format;
+		shaderDesc.TextureCube.MostDetailedMip = 0;
+		shaderDesc.TextureCube.MipLevels = textureDesc.MipLevels;
+		shaderDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
 
 		IMythosResource* shaderResource = new MythosShaderResource();
 		HRESULT hr = m_Creator.GetCreator()->CreateShaderResourceView((ID3D11Texture2D*)texture->GetData(), &shaderDesc, (ID3D11ShaderResourceView**)&shaderResource->GetData());
@@ -1093,6 +1238,9 @@ namespace Mythos
 		case MYTHOS_FORMAT_32_DEPTH:
 			formatType = DXGI_FORMAT_D32_FLOAT;
 			break;
+		case MYTHOS_FORMAT_8_FLOAT4:
+			formatType = DXGI_FORMAT_R8G8B8A8_UNORM;
+			break;
 		}
 		return formatType;
 	}
@@ -1141,6 +1289,8 @@ namespace Mythos
 		case MYTHOS_FORMAT_32_DEPTH:
 			formatSize = 4;
 			break;
+		case MYTHOS_FORMAT_8_FLOAT4:
+			formatSize = sizeof(char) * 4;
 		}
 		return formatSize;
 	}

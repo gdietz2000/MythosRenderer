@@ -148,6 +148,40 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreateShaderResource("ibl", "iblResource");
 		if (!success)
 			return -1;
+
+		Mythos::MythosTextureDescriptor texDesc;
+		texDesc.bindFlags = Mythos::MYTHOS_BIND_SHADER_RESOURCE;
+		texDesc.cpuAccess = Mythos::MYTHOS_DEFAULT_ACCESS;
+		texDesc.format = Mythos::MYTHOS_FORMAT_8_FLOAT4;
+		texDesc.height = 1;
+		texDesc.width = 1;
+		texDesc.mipLevels = 1;
+		texDesc.sampleCount = 1;
+		texDesc.sampleQuality = 0;
+
+		unsigned char** imageData = nullptr;
+		imageData = new unsigned char* [6];
+		for (int i = 0; i < 6; ++i) {
+			imageData[i] = new unsigned char[4];
+			std::fill(imageData[i], imageData[i] + 4, 255);
+		}
+		
+
+		success = mythos->CreateTextureCube(&texDesc, (void**)imageData, "textureCube");
+		if (!success) {
+			return -1;
+		}
+
+		for (int i = 0; i < 6; ++i) {
+			delete imageData[i];
+		}
+
+		delete imageData;
+
+		success = mythos->CreateShaderResourceCube("textureCube", "cube");
+		if (!success) {
+			return -1;
+		}
 	}
 
 	UINT strides[] = { sizeof(Mythos::MythosVertex) };
@@ -213,12 +247,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->GetContext()->RSSetState((ID3D11RasterizerState*)mythos->GetResource("simpleRasterizer")->GetData());
 
 		ID3D11Buffer* pixelConstantBuffers[] = { (ID3D11Buffer*)mythos->GetResource("cameraPositionBuffer")->GetData() };
-		ID3D11ShaderResourceView* srvs[] = { (ID3D11ShaderResourceView*)mythos->GetResource("iblResource")->GetData() };
+		ID3D11ShaderResourceView* srvs[] = { (ID3D11ShaderResourceView*)mythos->GetResource("iblResource")->GetData(), (ID3D11ShaderResourceView*)mythos->GetResource("cube")->GetData() };
 		ID3D11SamplerState* samplers[] = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
 		
 		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("iblShader")->GetData(), nullptr, NULL);
 		mythos->GetContext()->PSSetConstantBuffers(0, 1, pixelConstantBuffers);
-		mythos->GetContext()->PSSetShaderResources(0, 1, srvs);
+		mythos->GetContext()->PSSetShaderResources(0, 2, srvs);
 		mythos->GetContext()->PSSetSamplers(0, 1, samplers);
 
 		mythos->GetContext()->DrawIndexed(cube->m_TotalNumIndices, 0, 0);

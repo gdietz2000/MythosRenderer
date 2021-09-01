@@ -31,6 +31,7 @@ namespace Mythos
 		MYTHOS_RESOURCE_INPUT_LAYOUT,
 		MYTHOS_RESOURCE_RENDER_TARGET,
 		MYTHOS_RESOURCE_TEXTURE_2D,
+		MYTHOS_RESOURCE_TEXTURE_3D,
 		MYTHOS_RESOURCE_SHADER_RESOURCE,
 		MYTHOS_RESOURCE_TEXTURE_SAMPLER,
 		MYTHOS_RESOURCE_RASTERIZER,
@@ -84,12 +85,11 @@ namespace Mythos
 		void ClearRenderTarget(const char* renderTargetName);
 
 		BOOL CreateTexture2D(const wchar_t* filepath, const char* textureName);
-		BOOL CreateTexture2D(MythosTextureDescriptor* descriptor, const char* textureName);
-		
-		BOOL CreateTexture3D(const wchar_t* filepath, const char* textureName);
-		BOOL CreateTexture3D(MythosTextureDescriptor* descriptor, const char* textureName);
+		BOOL CreateTexture2D(MythosTextureDescriptor* descriptor, void* data, const char* textureName);
+		BOOL CreateTextureCube(MythosTextureDescriptor* descriptor, void** data, const char* textureName);
 
 		BOOL CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName);
+		BOOL CreateShaderResourceCube(const char* cubeToBecomeResourceName, const char* shaderResourceName);
 
 		BOOL CreateTextureSampler(const char* samplerName);
 		BOOL CreateTextureSampler(MythosSamplerDescriptor* descriptor, const char* samplerName);
