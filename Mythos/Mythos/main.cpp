@@ -106,10 +106,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			return -1;
 
 		success = mythos->CreatePixelShader(L"Assets/Shaders/IBLShader.hlsl", entryPoint, pixelShaderModel, "iblShader");
-		if (!success) 
+		if (!success)
 			return -1;
 
-		success = mythos->CreatePixelShader(L"Assets/Shaders/CubemapCreatorShader.hlsl", entryPoint, pixelShaderModel, "cubemapCreator");
+		success = mythos->CreatePixelShader(L"Assets/Shaders/EquirectangularToCubeMap.hlsl", entryPoint, pixelShaderModel, "cubemapCreator");
+		if (!success)
+			return -1;
+
+		success = mythos->CreatePixelShader(L"Assets/Shaders/IrradiencePreCompute.hlsl", entryPoint, pixelShaderModel, "irradiance");
 		if (!success)
 			return -1;
 
@@ -269,12 +273,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		mythos->Present();
 
-	}
-
-	std::vector<Mythos::IMythosResource*> textures;
-	for (int i = 0; i < 6; ++i) {
-
-		textures.push_back(mythos->GetResource(textureNames[i]));
 	}
 
 	Mythos::MythosTextureDescriptor cubeDesc;

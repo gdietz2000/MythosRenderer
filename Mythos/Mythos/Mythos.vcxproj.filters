@@ -162,7 +162,8 @@
     <FxCompile Include="Assets\Shaders\VertexShader.hlsl" />
     <FxCompile Include="Assets\Shaders\PixelShader.hlsl" />
     <FxCompile Include="Assets\Shaders\IBLShader.hlsl" />
-    <FxCompile Include="Assets\Shaders\CubemapCreatorShader.hlsl" />
+    <FxCompile Include="Assets\Shaders\EquirectangularToCubeMap.hlsl" />
+    <FxCompile Include="Assets\Shaders\IrradiencePreCompute.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Mathematics\README.md" />

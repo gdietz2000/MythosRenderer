@@ -1,3 +1,5 @@
+#include "PBRFunctions.hlsli"
+
 struct InputVertex
 {
     float4 position : SV_Position;
@@ -12,7 +14,6 @@ cbuffer CameraBuffer : register(b0)
     float4 cameraPosition;
 }
 
-//Texture2D cubeMap : register(t0);
 TextureCube cubeMap : register(t0);
 
 SamplerState SimpleSampler : register(s0);
@@ -31,6 +32,11 @@ float2 SampleSphericalMap(float3 v)
 
 float4 main(InputVertex v) : SV_TARGET
 {
-    //return cubeMap.Sample(SimpleSampler, v.uv);
-    return cubeMap.Sample(SimpleSampler, v.local);
+    float3 color = pow(cubeMap.Sample(SimpleSampler, v.local), GAMMA);
+    
+    color = color / (color + 1.0);
+    
+    color = pow(color, 1.0 / GAMMA);
+    
+    return float4(color, 1);
 }
