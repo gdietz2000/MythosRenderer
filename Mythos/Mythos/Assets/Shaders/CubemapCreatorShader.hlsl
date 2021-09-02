@@ -12,8 +12,7 @@ cbuffer CameraBuffer : register(b0)
     float4 cameraPosition;
 }
 
-//Texture2D cubeMap : register(t0);
-TextureCube cubeMap : register(t0);
+Texture2D equirectangularMap : register(t0);
 
 SamplerState SimpleSampler : register(s0);
 
@@ -31,6 +30,6 @@ float2 SampleSphericalMap(float3 v)
 
 float4 main(InputVertex v) : SV_TARGET
 {
-    //return cubeMap.Sample(SimpleSampler, v.uv);
-    return cubeMap.Sample(SimpleSampler, v.local);
+    float2 uv = SampleSphericalMap(normalize(v.local));
+    return equirectangularMap.Sample(SimpleSampler, uv);
 }

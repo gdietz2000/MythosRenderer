@@ -84,7 +84,7 @@ namespace Mythos
 
 		BOOL CreateTexture2D(const wchar_t* filepath, const char* textureName);
 		BOOL CreateTexture2D(MythosTextureDescriptor* descriptor, void* data, const char* textureName);
-		BOOL CreateTextureCube(MythosTextureDescriptor* descriptor, std::vector<IMythosResource*>& data, const char* textureName);
+		BOOL CreateTextureCube(MythosTextureDescriptor* descriptor, const char** namesOfTextures, const char* textureName);
 
 		BOOL CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName);
 		BOOL CreateShaderResourceCube(const char* cubeToBecomeResourceName, const char* shaderResourceName);
@@ -109,6 +109,9 @@ namespace Mythos
 		D3D11_VIEWPORT m_Viewport;
 
 		//Helper Function
+
+		void* GetTextureData(IMythosResource* input, UINT& rowPitch);
+
 		BOOL NameAvailable(const char* name);
 		UINT GetBindFlags(MythosBindFlags flag);
 		UINT GetFormat(MythosFormat format);

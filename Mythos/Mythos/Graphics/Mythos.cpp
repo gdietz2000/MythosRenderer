@@ -804,8 +804,9 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateTextureCube(MythosTextureDescriptor* desc, std::vector<IMythosResource*>& data, const char* textureName) 
+	BOOL Mythos::CreateTextureCube(MythosTextureDescriptor* desc, const char** namesOfTextures, const char* textureName) 
 	{
+		//Creating the Cube Map Texture Descriptor
 		D3D11_TEXTURE2D_DESC textureDesc;
 		textureDesc.Height = desc->height;
 		textureDesc.Width = desc->width;
@@ -819,7 +820,6 @@ namespace Mythos
 
 		textureDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 
-		D3D11_SUBRESOURCE_DATA subData[6];
 
 		switch (desc->cpuAccess)
 		{
@@ -840,28 +840,44 @@ namespace Mythos
 		}
 		}
 
-		struct VectorChar {
-			unsigned char x, y, z, w;
-		};
+		//Putting the pixel Data into the subresource data
+		D3D11_SUBRESOURCE_DATA subData[6];
 
-		std::vector<VectorChar> d[6];
-
+		ID3D11Texture2D* copies[6];
 
 		for (int cubeMapFaceIndex = 0; cubeMapFaceIndex < 6; ++cubeMapFaceIndex)
 		{
-			d[cubeMapFaceIndex].resize(desc->width * desc->height);
 
-			// fill with red color  
-			VectorChar red = { 255,255,0,255 };
+			D3D11_TEXTURE2D_DESC desc;
+			ID3D11Texture2D* texture = (ID3D11Texture2D*)GetResource(namesOfTextures[cubeMapFaceIndex])->GetData();
+			texture->GetDesc(&desc);
 
-			std::fill(
-				d[cubeMapFaceIndex].begin(),
-				d[cubeMapFaceIndex].end(),
-				red);
+			D3D11_TEXTURE2D_DESC desc2;
+			desc2.Width = desc.Width;
+			desc2.Height = desc.Height;
+			desc2.ArraySize = desc.ArraySize;
+			desc2.BindFlags = 0;
+			desc2.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+			desc2.Format = desc.Format;
+			desc2.MipLevels = desc.MipLevels;
+			desc2.MiscFlags = 0;
+			desc2.SampleDesc = desc.SampleDesc;
+			desc2.Usage = D3D11_USAGE_STAGING;
 
-			subData[cubeMapFaceIndex].pSysMem = &d[cubeMapFaceIndex][0];
-			subData[cubeMapFaceIndex].SysMemPitch = desc->width * 4;
+			HRESULT hr = m_Creator.GetCreator()->CreateTexture2D(&desc2, nullptr, &copies[cubeMapFaceIndex]);
+			if (FAILED(hr))
+				return -1;
+
+			m_Context.GetContext()->CopyResource(copies[cubeMapFaceIndex], texture);
+			D3D11_MAPPED_SUBRESOURCE mapInfo;
+
+			m_Context.GetContext()->Map(copies[cubeMapFaceIndex], 0, D3D11_MAP_READ, 0, &mapInfo);
+
+			subData[cubeMapFaceIndex].pSysMem = mapInfo.pData;
+			subData[cubeMapFaceIndex].SysMemPitch = mapInfo.RowPitch;
 			subData[cubeMapFaceIndex].SysMemSlicePitch = 0;
+
+			m_Context.GetContext()->Unmap(copies[cubeMapFaceIndex], 0);
 		}
 
 		IMythosResource* textureCube = new MythosTexture2D();
@@ -870,10 +886,14 @@ namespace Mythos
 		{
 			delete textureCube;
 			return FALSE;
-		}
+		};
 
 		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
 		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, textureCube));
+
+		for (int i = 0; i < 6; i++) {
+			copies[i]->Release();
+		}
 
 		return TRUE;
 
@@ -1181,6 +1201,7 @@ namespace Mythos
 
 		return nullptr;
 	}
+
 
 	BOOL Mythos::NameAvailable(const char* name)
 	{
