@@ -1,16 +1,8 @@
 struct InputVertex
 {
     float4 position : SV_Position;
-    float2 uv : UV;
-    float3 normal : NORMAL;
-    float3 world : WORLDPOS;
-    float3 local : LOCALPOS;
+    float4 local : LOCALPOS;
 };
-
-cbuffer CameraBuffer : register(b0)
-{
-    float4 cameraPosition;
-}
 
 Texture2D equirectangularMap : register(t0);
 
@@ -23,6 +15,7 @@ float2 SampleSphericalMap(float3 v)
     uv *= invAtan;
     uv += 0.5;
     
+    //DirectX has the uv origin set to bottom left, whereas other Renderers set the uv origin to top left, this calculation is needed for proper uvs
     uv.y = abs(1.0 - uv.y);
     
     return uv;
@@ -30,6 +23,6 @@ float2 SampleSphericalMap(float3 v)
 
 float4 main(InputVertex v) : SV_TARGET
 {
-    float2 uv = SampleSphericalMap(normalize(v.local));
+    float2 uv = SampleSphericalMap(normalize(v.local.xyz));
     return equirectangularMap.Sample(SimpleSampler, uv);
 }

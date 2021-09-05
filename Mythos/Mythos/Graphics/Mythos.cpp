@@ -8,6 +8,7 @@
 
 #include "Vector3.h"
 #include "Vector4.h"
+#include "Matrix4.h"
 
 #include "MythosBuffer.h"
 #include "MythosVertexShader.h"
@@ -1021,6 +1022,7 @@ namespace Mythos
 		samplerDesc.BorderColor[2] = desc->BorderColor.z;
 		samplerDesc.BorderColor[3] = desc->BorderColor.w;
 		samplerDesc.MaxAnisotropy = desc->MaxAnisotropy;
+		samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 		samplerDesc.MaxLOD = desc->MaxLOD;
 		samplerDesc.MinLOD = desc->MinLOD;
 		samplerDesc.MipLODBias = desc->MipLODBias;
@@ -1173,6 +1175,210 @@ namespace Mythos
 
 		importedModel->m_TotalNumIndices = totalNumIndices;
 		return importedModel;
+	}
+
+	BOOL Mythos::CreateSkyboxFromEquirectangularTexture(unsigned int width, unsigned int height, const wchar_t* equirectangularTextureFilepath, const char* textureCubeName)
+	{
+		Math::Matrix4 captureProjection = Math::Matrix4::PerspectiveFovLH(Math::radians(90.0f), 1.0f, 0.1f, 10.0);
+		Math::Matrix4 captureViews[] = {
+			Math::Matrix4::LookAtLH({0,0,0}, {-1.0,0.0,0.0}, {0,-1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {1.0,0.0,0.0}, {0,-1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,-1.0,0.0}, {0,0,-1}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,1.0,0.0}, {0,0,1}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,1.0}, {0,-1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,-1.0}, {0,-1,0})
+		};
+
+		const char* textureNames[] = {
+		"rtvTexture0",
+		"rtvTexture1",
+		"rtvTexture2",
+		"rtvTexture3",
+		"rtvTexture4",
+		"rtvTexture5"
+		};
+
+		const char* rtvNames[] = {
+			"cubemap0",
+			"cubemap1",
+			"cubemap2",
+			"cubemap3",
+			"cubemap4",
+			"cubemap5",
+		};
+
+		struct WVP
+		{
+			Math::Matrix4 World;
+			Math::Matrix4 View;
+			Math::Matrix4 Projection;
+		}MyMatrices;
+
+		BOOL success = CreateTexture2D(equirectangularTextureFilepath, "ibl");
+		if (!success)
+			return -1;
+
+		success = CreateShaderResource("ibl", "iblResource");
+		if (!success)
+			return -1;
+
+		UINT strides[] = { sizeof(MythosVertex) };
+		UINT offset[] = { 0 };
+
+		D3D11_VIEWPORT textureViewport;
+		textureViewport.Width = width;
+		textureViewport.Height = height;
+		textureViewport.TopLeftX = textureViewport.TopLeftY = 0;
+		textureViewport.MinDepth = 0; textureViewport.MaxDepth = 1;
+
+		GetContext()->RSSetViewports(1, &textureViewport);
+
+		for (int i = 0; i < 6; ++i)
+		{
+			MyMatrices.World = Math::Matrix4::Scale(-1);
+			MyMatrices.View = captureViews[i];
+			MyMatrices.Projection = captureProjection;
+			UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
+
+			GetContext()->OMSetRenderTargets(1, (ID3D11RenderTargetView**)&GetResource(rtvNames[i])->GetData(), nullptr);
+			GetContext()->RSSetViewports(1, &textureViewport);
+
+			GetContext()->IASetVertexBuffers(0, 1, (ID3D11Buffer**)&GetResource("vertexBuffer")->GetData(), strides, offset);
+			GetContext()->IASetIndexBuffer((ID3D11Buffer*)GetResource("indexBuffer")->GetData(), DXGI_FORMAT_R32_UINT, 0);
+
+
+			GetContext()->VSSetShader((ID3D11VertexShader*)GetResource("diffuseIBLVertex")->GetData(), nullptr, 0);
+			GetContext()->VSSetConstantBuffers(0, 1, (ID3D11Buffer**)&GetResource("constantBuffer")->GetData());
+			GetContext()->PSSetShader((ID3D11PixelShader*)GetResource("cubemapCreator")->GetData(), nullptr, 0);
+			GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource("iblResource")->GetData());
+			GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource("samplerState")->GetData());
+
+			GetContext()->DrawIndexed(36, 0, 0);
+
+			Present();
+
+		}
+
+		MythosTextureDescriptor cubeDesc;
+		cubeDesc.bindFlags = MYTHOS_BIND_RENDER_TARGET | MYTHOS_BIND_SHADER_RESOURCE;
+		cubeDesc.cpuAccess = MYTHOS_DEFAULT_ACCESS;
+		cubeDesc.format = MYTHOS_FORMAT_32_FLOAT4;
+		cubeDesc.width = width;
+		cubeDesc.height = height;
+		cubeDesc.mipLevels = 1;
+		cubeDesc.sampleCount = 1;
+		cubeDesc.sampleQuality = 0;
+
+		success = CreateTextureCube(&cubeDesc, textureNames, "textureCube");
+		if (!success)
+		{
+			return FALSE;
+		}
+
+		success = CreateShaderResourceCube("textureCube", textureCubeName);
+		if (!success) {
+			return FALSE;
+		}
+
+		return TRUE;
+	}
+
+	BOOL Mythos::ConvoluteSkybox(unsigned int width, unsigned int height, const char* textureCubeName, const char* convolutedTextureCubeName)
+	{
+		Math::Matrix4 captureProjection = Math::Matrix4::PerspectiveFovLH(Math::radians(90.0f), 1.0f, 0.1f, 10.0);
+		Math::Matrix4 captureViews[] = {
+			Math::Matrix4::LookAtLH({0,0,0}, {-1.0,0.0,0.0}, {0,-1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {1.0,0.0,0.0}, {0,-1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,-1.0,0.0}, {0,0,-1}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,1.0,0.0}, {0,0,1}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,1.0}, {0,-1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,-1.0}, {0,-1,0})
+		};
+
+		const char* textureNames[] = {
+		"rtvTexture6",
+		"rtvTexture7",
+		"rtvTexture8",
+		"rtvTexture9",
+		"rtvTexture10",
+		"rtvTexture11"
+		};
+
+		const char* rtvNames[] = {
+			"cubemap6",
+			"cubemap7",
+			"cubemap8",
+			"cubemap9",
+			"cubemap10",
+			"cubemap11",
+		};
+
+		struct WVP
+		{
+			Math::Matrix4 World;
+			Math::Matrix4 View;
+			Math::Matrix4 Projection;
+		}MyMatrices;
+
+		UINT strides[] = { sizeof(MythosVertex) };
+		UINT offset[] = { 0 };
+
+		D3D11_VIEWPORT textureViewport;
+		textureViewport.Width = width;
+		textureViewport.Height = height;
+		textureViewport.TopLeftX = textureViewport.TopLeftY = 0;
+		textureViewport.MinDepth = 0; textureViewport.MaxDepth = 1;
+
+		GetContext()->RSSetViewports(1, &textureViewport);
+
+		for (int i = 0; i < 6; ++i)
+		{
+			MyMatrices.World = Math::Matrix4::Scale(-1);
+			MyMatrices.View = captureViews[i];
+			MyMatrices.Projection = captureProjection;
+			UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
+
+			GetContext()->OMSetRenderTargets(1, (ID3D11RenderTargetView**)&GetResource(rtvNames[i])->GetData(), nullptr);
+			GetContext()->RSSetViewports(1, &textureViewport);
+
+			GetContext()->IASetVertexBuffers(0, 1, (ID3D11Buffer**)&GetResource("vertexBuffer")->GetData(), strides, offset);
+			GetContext()->IASetIndexBuffer((ID3D11Buffer*)GetResource("indexBuffer")->GetData(), DXGI_FORMAT_R32_UINT, 0);
+
+
+			GetContext()->VSSetShader((ID3D11VertexShader*)GetResource("diffuseIBLVertex")->GetData(), nullptr, 0);
+			GetContext()->VSSetConstantBuffers(0, 1, (ID3D11Buffer**)&GetResource("constantBuffer")->GetData());
+			GetContext()->PSSetShader((ID3D11PixelShader*)GetResource("diffuseIBLPixel")->GetData(), nullptr, 0);
+			GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource(textureCubeName)->GetData());
+			GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource("samplerState")->GetData());
+
+			GetContext()->DrawIndexed(36, 0, 0);
+
+			Present();
+
+		}
+
+		MythosTextureDescriptor cubeDesc;
+		cubeDesc.bindFlags = MYTHOS_BIND_RENDER_TARGET | MYTHOS_BIND_SHADER_RESOURCE;
+		cubeDesc.cpuAccess = MYTHOS_DEFAULT_ACCESS;
+		cubeDesc.format = MYTHOS_FORMAT_32_FLOAT4;
+		cubeDesc.width = width;
+		cubeDesc.height = height;
+		cubeDesc.mipLevels = 1;
+		cubeDesc.sampleCount = 1;
+		cubeDesc.sampleQuality = 0;
+
+		BOOL success = CreateTextureCube(&cubeDesc, textureNames, "convoCube");
+		if (!success)
+		{
+			return FALSE;
+		}
+
+		success = CreateShaderResourceCube("convoCube", convolutedTextureCubeName);
+		if (!success) {
+			return FALSE;
+		}
+
+		return TRUE;
 	}
 
 	IMythosResource* Mythos::GetResource(const char* name)

@@ -99,6 +99,10 @@ namespace Mythos
 
 		MythosModel* LoadMesh(const char* filepath);
 
+		//PBR Specific Functions
+		BOOL CreateSkyboxFromEquirectangularTexture(unsigned int width, unsigned int height, const wchar_t* equirectangularTextureFilepath, const char* textureCubeName);
+		BOOL ConvoluteSkybox(unsigned int width, unsigned int height, const char* textureCubeName, const char* convolutedTextureCubeName);
+
 		//GetResource will return a resource based off of the id given.
 		IMythosResource* GetResource(const char* name);
 		ID3D10Blob* GetShaderBlob(const char* name);
@@ -109,8 +113,6 @@ namespace Mythos
 		D3D11_VIEWPORT m_Viewport;
 
 		//Helper Function
-
-		void* GetTextureData(IMythosResource* input, UINT& rowPitch);
 
 		BOOL NameAvailable(const char* name);
 		UINT GetBindFlags(MythosBindFlags flag);

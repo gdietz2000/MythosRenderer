@@ -164,6 +164,7 @@
     <FxCompile Include="Assets\Shaders\IBLShader.hlsl" />
     <FxCompile Include="Assets\Shaders\EquirectangularToCubeMap.hlsl" />
     <FxCompile Include="Assets\Shaders\IrradiencePreCompute.hlsl" />
+    <FxCompile Include="Assets\Shaders\DiffuseIBLVertexShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Mathematics\README.md" />
