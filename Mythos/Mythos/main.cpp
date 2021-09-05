@@ -94,8 +94,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		const wchar_t* vertexShaderFilePath = L"Assets/Shaders/VertexShader.hlsl";
-		const wchar_t* pixelShaderFilePath = L"Assets/Shaders/PixelShader.hlsl";
+		const wchar_t* vertexShaderFilePath = L"Assets/Shaders/MainVertexShader.hlsl";
+		const wchar_t* pixelShaderFilePath = L"Assets/Shaders/PBRPixelShader.hlsl";
 		const char* entryPoint = "main";
 		const char* vertexShaderModel = "vs_4_0";
 		const char* pixelShaderModel = "ps_4_0";
