@@ -14,13 +14,15 @@ cbuffer CameraBuffer : register(b0)
     float4 cameraPosition;
 }
 
+TextureCube environementMap : register(t0);
+
 SamplerState SimpleSampler : register(s0);
 
 float4 main(InputVertex v) : SV_TARGET
 {
     float3 albedo = float3(1, 0, 0);
-    float metallic = 1.0;
-    float roughness = 0.1;
+    float metallic = 0.99;
+    float roughness = 1.0;
     
     float3 N = normalize(v.normal);
     float3 V = normalize(cameraPosition.xyz - v.world);
@@ -63,9 +65,14 @@ float4 main(InputVertex v) : SV_TARGET
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;
     }
     
-    float3 ambient = 0.03 * albedo;
+    float3 kS = fresnelSchlickRoughness(dot(N, V), F0, roughness);
+    float3 kD = 1.0 - kS;
+    float3 irradiance = pow(environementMap.Sample(SimpleSampler, v.normal).rgb, GAMMA);
+    float3 diffuse = irradiance * albedo;
+    float3 ambient = (kD * diffuse);
     
     float3 color = ambient + Lo;
+    
     
     //HDR tonemapping
     color = color / (color + 1.0);

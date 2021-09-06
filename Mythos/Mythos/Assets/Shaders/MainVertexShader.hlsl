@@ -26,13 +26,13 @@ cbuffer WVP : register(b0)
 OutputVertex main( TempVertex temp )
 {
     OutputVertex output = (OutputVertex) 0;
+    output.local = temp.position;
     output.position = float4(temp.position, 1);
-    output.local = output.position;
     output.position = mul(output.position, World);
     output.world = output.position.xyz;
     output.position = mul(output.position, View);
     output.position = mul(output.position, Projection);
     output.uv = temp.uv;
-    output.normal = mul(float4(temp.normal,1), World);
+    output.normal = mul(temp.normal, (float3x3)World);
 	return output;
 }

@@ -159,12 +159,12 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Assets\Shaders\VertexShader.hlsl" />
-    <FxCompile Include="Assets\Shaders\PixelShader.hlsl" />
     <FxCompile Include="Assets\Shaders\IBLShader.hlsl" />
     <FxCompile Include="Assets\Shaders\EquirectangularToCubeMap.hlsl" />
     <FxCompile Include="Assets\Shaders\IrradiencePreCompute.hlsl" />
     <FxCompile Include="Assets\Shaders\DiffuseIBLVertexShader.hlsl" />
+    <FxCompile Include="Assets\Shaders\MainVertexShader.hlsl" />
+    <FxCompile Include="Assets\Shaders\PBRPixelShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Mathematics\README.md" />

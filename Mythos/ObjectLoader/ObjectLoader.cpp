@@ -149,7 +149,9 @@ void ObjectLoader::CompactMeshData(ModelMesh* mesh)
 		std::pair<bool, int> foundVertex = std::make_pair(false, 0);
 		for (int j = 0; j < vertices.size(); ++j)
 		{
-			if (mesh->m_Vertices[i].m_Vertex == vertices[j].m_Vertex && mesh->m_Vertices[i].m_Uvs == vertices[j].m_Uvs) {
+			if (mesh->m_Vertices[i].m_Vertex == vertices[j].m_Vertex &&
+				mesh->m_Vertices[i].m_Uvs == vertices[j].m_Uvs &&
+				mesh->m_Vertices[i].m_Normals == vertices[j].m_Normals) {
 				foundVertex = std::make_pair(true, j);
 				break;
 			}

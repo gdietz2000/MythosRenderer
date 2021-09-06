@@ -4,9 +4,9 @@
 
 int main(int argc, char** argv)
 {
-	Model* newMesh = ObjectLoader::CreateMeshFromOBJ("Assets/Cube.obj");
+	Model* newMesh = ObjectLoader::CreateMeshFromOBJ("Assets/DesertEagle.obj");
 
-	std::ofstream exportFile = std::ofstream("Cube.txt", std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
+	std::ofstream exportFile = std::ofstream("DesertEagle.txt", std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
 	if (exportFile.is_open())
 	{
 		uint32_t modelCount = newMesh->m_Meshes.size();
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 
 	exportFile.close();
 
-	std::fstream file{ "Cube.txt", std::ios_base::in | std::ios_base::binary };
+	std::fstream file{ "DesertEagle.txt", std::ios_base::in | std::ios_base::binary };
 
 	if (!file.is_open())
 		return 0;
