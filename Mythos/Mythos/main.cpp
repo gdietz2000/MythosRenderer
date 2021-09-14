@@ -61,7 +61,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		success = mythos->CreateModelBuffers(deagle, "sphereVert", "sphereInd");
+		success = mythos->CreateModelBuffers(sphere, "sphereVert", "sphereInd");
+		if (!success)
+			return -1;
+
+		success = mythos->CreateModelBuffers(deagle, "deagleVert", "deagleInd");
 		if (!success)
 			return -1;
 
@@ -113,6 +117,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			return -1;
 
 		success = mythos->CreatePixelShader(pixelShaderFilePath, entryPoint, pixelShaderModel, "pixelShader");
+		if (!success)
+			return -1;
+		
+		success = mythos->CreatePixelShader(L"Assets/Shaders/SkyboxPixelShader.hlsl", entryPoint, pixelShaderModel, "skyboxShader");
 		if (!success)
 			return -1;
 
@@ -177,49 +185,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreateTextureSampler(&samplerDesc, "samplerState");
 		if (!success)
 			return -1;
-
-		const char* textureNames[] = {
-			"rtvTexture0",
-			"rtvTexture1",
-			"rtvTexture2",
-			"rtvTexture3",
-			"rtvTexture4",
-			"rtvTexture5",
-			"rtvTexture6",
-			"rtvTexture7",
-			"rtvTexture8",
-			"rtvTexture9",
-			"rtvTexture10",
-			"rtvTexture11"
-		};
-
-		const char* rtvNames[] = {
-			"cubemap0",
-			"cubemap1",
-			"cubemap2",
-			"cubemap3",
-			"cubemap4",
-			"cubemap5",
-			"cubemap6",
-			"cubemap7",
-			"cubemap8",
-			"cubemap9",
-			"cubemap10",
-			"cubemap11",
-		};
-
-		for (int i = 0; i < 6; ++i) {
-			success = mythos->CreateRenderTarget(wid, hei, textureNames[i], rtvNames[i]);
-			if (!success)
-				return -1;
-		}
-
-		for (int i = 6; i < 12; ++i) {
-			success = mythos->CreateRenderTarget(wid2, hei2, textureNames[i], rtvNames[i]);
-			if (!success)
-				return -1;
-		}
-
 	}
 
 	UINT strides[] = { sizeof(Mythos::MythosVertex) };
@@ -277,24 +242,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		rotation += 0.005;
 		freeCamera.GetCameraInput();
 		MyMatrices.View = freeCamera.GetCamera();
+		Math::Vector4 camPos = Math::Vector4(freeCamera.GetPosition(), 1);
+		mythos->UpdateMythosResource("cameraPositionBuffer", &camPos, sizeof(Math::Vector4));
 
 		ID3D11RenderTargetView* targets = { (ID3D11RenderTargetView*)mythos->GetResource("mainRenderTarget")->GetData() };
 		mythos->SetClearRenderTargetColor({ 0.075,0.075,0.075,1 });
 		mythos->ClearRenderTarget("mainRenderTarget");
 		mythos->ClearDepthBuffer("depthBuffer");
-		mythos->GetContext()->OMSetRenderTargets(1, &targets, (ID3D11DepthStencilView*)mythos->GetResource("depthBuffer")->GetData());
+		mythos->GetContext()->OMSetRenderTargets(1, &targets, nullptr);
 		mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
 
-		mythos->UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
-		Math::Vector4 camPos = Math::Vector4(freeCamera.GetPosition(), 1);
-		mythos->UpdateMythosResource("cameraPositionBuffer", &camPos, sizeof(Math::Vector4));
 
-		ID3D11Buffer* buffers[] = { (ID3D11Buffer*)mythos->GetResource("sphereVert")->GetData() };
+		mythos->GetContext()->OMSetRenderTargets(1, &targets, (ID3D11DepthStencilView*)mythos->GetResource("depthBuffer")->GetData());
+
+		mythos->UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
+
+		ID3D11Buffer* buffers[] = { (ID3D11Buffer*)mythos->GetResource("deagleVert")->GetData() };
 		ID3D11Buffer* constBuffers[] = { (ID3D11Buffer*)mythos->GetResource("constantBuffer")->GetData() };
 
 		mythos->GetContext()->IASetInputLayout((ID3D11InputLayout*)mythos->GetResource("inputLayout")->GetData());
 		mythos->GetContext()->IASetVertexBuffers(0, 1, buffers, strides, offset);
-		mythos->GetContext()->IASetIndexBuffer((ID3D11Buffer*)mythos->GetResource("sphereInd")->GetData(), DXGI_FORMAT_R32_UINT, 0);
+		mythos->GetContext()->IASetIndexBuffer((ID3D11Buffer*)mythos->GetResource("deagleInd")->GetData(), DXGI_FORMAT_R32_UINT, 0);
 		mythos->GetContext()->VSSetShader((ID3D11VertexShader*)mythos->GetResource("vertexShader")->GetData(), nullptr, NULL);
 		mythos->GetContext()->VSSetConstantBuffers(0, 1, constBuffers);
 		//mythos->GetContext()->RSSetState((ID3D11RasterizerState*)mythos->GetResource("simpleRasterizer")->GetData());

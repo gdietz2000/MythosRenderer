@@ -165,6 +165,7 @@
     <FxCompile Include="Assets\Shaders\DiffuseIBLVertexShader.hlsl" />
     <FxCompile Include="Assets\Shaders\MainVertexShader.hlsl" />
     <FxCompile Include="Assets\Shaders\PBRPixelShader.hlsl" />
+    <FxCompile Include="Assets\Shaders\SkyboxPixelShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Mathematics\README.md" />
