@@ -16,13 +16,19 @@ cbuffer CameraBuffer : register(b0)
 
 TextureCube environementMap : register(t0);
 
+Texture2D diffuseTexture : register(t1);
+Texture2D aoTexture : register(t2);
+Texture2D metalTexture : register(t3);
+Texture2D roughTexture : register(t4);
+
 SamplerState SimpleSampler : register(s0);
 
 float4 main(InputVertex v) : SV_TARGET
 {
-    float3 albedo = float3(1, 0, 0);
-    float metallic = 0.99;
-    float roughness = 1.0;
+    float3 albedo = pow(diffuseTexture.Sample(SimpleSampler, v.uv), GAMMA);
+    float ao = aoTexture.Sample(SimpleSampler, v.uv).r;
+    float metallic = metalTexture.Sample(SimpleSampler, v.uv).r;
+    float roughness = roughTexture.Sample(SimpleSampler, v.uv).r;
     
     float3 N = normalize(v.normal);
     float3 V = normalize(cameraPosition.xyz - v.world);
@@ -69,10 +75,9 @@ float4 main(InputVertex v) : SV_TARGET
     float3 kD = 1.0 - kS;
     float3 irradiance = pow(environementMap.Sample(SimpleSampler, v.normal).rgb, GAMMA);
     float3 diffuse = irradiance * albedo;
-    float3 ambient = (kD * diffuse);
+    float3 ambient = (kD * diffuse) * ao;
     
     float3 color = ambient + Lo;
-    
     
     //HDR tonemapping
     color = color / (color + 1.0);

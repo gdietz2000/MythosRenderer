@@ -900,6 +900,25 @@ namespace Mythos
 
 	}
 
+	BOOL Mythos::CreateShaderResource(const wchar_t* filepath, const char* shaderResourceName)
+	{
+		if (!NameAvailable(shaderResourceName))
+			return FALSE;
+
+		IMythosResource* resource = new MythosShaderResource();
+		HRESULT hr = DirectX::CreateDDSTextureFromFile(m_Creator.GetCreator(), filepath, nullptr, (ID3D11ShaderResourceView**)&resource->GetData());
+		if (FAILED(hr))
+		{
+			delete resource;
+			return FALSE;
+		}
+
+		m_NamesToIndex.insert(std::make_pair(shaderResourceName, MYTHOS_RESOURCE_SHADER_RESOURCE));
+		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(shaderResourceName, resource));
+
+		return TRUE;
+	}
+
 	BOOL Mythos::CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName)
 	{
 		if (!NameAvailable(shaderResourceName))
@@ -958,6 +977,48 @@ namespace Mythos
 
 		m_NamesToIndex.insert(std::make_pair(shaderResourceName, MYTHOS_RESOURCE_SHADER_RESOURCE));
 		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(shaderResourceName, shaderResource));
+
+		return TRUE;
+	}
+
+	BOOL Mythos::CreateTexture2DAndShaderResource(const wchar_t* filepath, const char* textureName, const char* shaderResourceName) 
+	{
+		if (textureName)
+			if (!NameAvailable(textureName))
+				return FALSE;
+
+		if (shaderResourceName)
+			if (!NameAvailable(shaderResourceName))
+				return FALSE;
+
+		IMythosResource* texture = new MythosTexture2D();
+		IMythosResource* resource = new MythosShaderResource();
+		HRESULT hr = DirectX::CreateDDSTextureFromFile(m_Creator.GetCreator(), filepath, (ID3D11Resource**)&texture->GetData(), (ID3D11ShaderResourceView**)&resource->GetData());
+		if (FAILED(hr)) {
+			delete texture;
+			delete resource;
+			return FALSE;
+		}
+
+		if (textureName)
+		{
+			m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
+			m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture));
+		}
+		else {
+			texture->SafeRelease();
+			delete texture;
+		}
+
+		if (shaderResourceName)
+		{
+			m_NamesToIndex.insert(std::make_pair(shaderResourceName, MYTHOS_RESOURCE_SHADER_RESOURCE));
+			m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(shaderResourceName, resource));
+		}
+		else {
+			resource->SafeRelease();
+			delete resource;
+		}
 
 		return TRUE;
 	}

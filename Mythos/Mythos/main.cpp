@@ -151,6 +151,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
+		success = mythos->CreateShaderResource(L"Assets/Textures/Deagle_BaseColor.dds", "deagleDiffuse");
+		if (!success)
+			return -1;
+		
+		success = mythos->CreateShaderResource(L"Assets/Textures/Deagle_Ambientocculsion.dds", "deagleAO");
+		if (!success)
+			return -1;
+
+		success = mythos->CreateShaderResource(L"Assets/Textures/Deagle_Metallic.dds", "deagleMetal");
+		if (!success)
+			return -1;
+		
+		success = mythos->CreateShaderResource(L"Assets/Textures/Deagle_Roughness.dds", "deagleRough");
+		if (!success)
+			return -1;
+
 		Mythos::MythosSamplerDescriptor samplerDesc;
 		samplerDesc.AddressMode = Mythos::MYTHOS_TEXTURE_ADDRESS_WRAP;
 		samplerDesc.BorderColor = Math::Vector4(1, 1, 1, 1);
@@ -285,7 +301,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		ID3D11Buffer* pixelConstantBuffers[] = { (ID3D11Buffer*)mythos->GetResource("cameraPositionBuffer")->GetData() };
 		ID3D11SamplerState* samplers[] = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
-		ID3D11ShaderResourceView* srvs[] = { (ID3D11ShaderResourceView*)mythos->GetResource("convoluted")->GetData() };
+		ID3D11ShaderResourceView* srvs[] = 
+		{
+			(ID3D11ShaderResourceView*)mythos->GetResource("convoluted")->GetData(),
+			(ID3D11ShaderResourceView*)mythos->GetResource("deagleDiffuse")->GetData(),
+			(ID3D11ShaderResourceView*)mythos->GetResource("deagleAO")->GetData(),
+			(ID3D11ShaderResourceView*)mythos->GetResource("deagleMetal")->GetData(),
+			(ID3D11ShaderResourceView*)mythos->GetResource("deagleRough")->GetData(),
+		};
 
 		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
 		mythos->GetContext()->PSSetShaderResources(0, ARRAYSIZE(srvs), srvs);
