@@ -805,7 +805,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateTextureCube(MythosTextureDescriptor* desc, const void** textures, const char* textureName)
+	BOOL Mythos::CreateTextureCube(MythosTextureDescriptor* desc, IMythosResource** textures, const char* textureName)
 	{
 		//Creating the Cube Map Texture Descriptor
 		D3D11_TEXTURE2D_DESC textureDesc;
@@ -850,7 +850,7 @@ namespace Mythos
 		{
 
 			D3D11_TEXTURE2D_DESC desc;
-			ID3D11Texture2D* texture = (ID3D11Texture2D*)textures[cubeMapFaceIndex];
+			ID3D11Texture2D* texture = (ID3D11Texture2D*)textures[cubeMapFaceIndex]->GetData();
 			texture->GetDesc(&desc);
 
 			D3D11_TEXTURE2D_DESC desc2;
@@ -900,7 +900,7 @@ namespace Mythos
 
 	}
 
-	BOOL Mythos::CreateTextureCube(MythosTextureDescriptor* desc, const char** namesOfTextures, const char* textureName) 
+	BOOL Mythos::CreateTextureCube(MythosTextureDescriptor* desc, const char** namesOfTextures, const char* textureName)
 	{
 		//Creating the Cube Map Texture Descriptor
 		D3D11_TEXTURE2D_DESC textureDesc;
@@ -1076,7 +1076,7 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateTexture2DAndShaderResource(const wchar_t* filepath, const char* textureName, const char* shaderResourceName) 
+	BOOL Mythos::CreateTexture2DAndShaderResource(const wchar_t* filepath, const char* textureName, const char* shaderResourceName)
 	{
 		if (textureName)
 			if (!NameAvailable(textureName))
@@ -1364,7 +1364,7 @@ namespace Mythos
 			6,4,5,
 			1,3,7,
 			0,2,3,
-			5,0,1
+			4,0,1
 		};
 
 		ID3D11Buffer* vertexBuffer = nullptr;
@@ -1388,7 +1388,7 @@ namespace Mythos
 		HRESULT hr = GetCreator()->CreateBuffer(&vDesc, &subData, &vertexBuffer);
 		if (FAILED(hr))
 			return FALSE;
-		
+
 		subData.pSysMem = indices;
 
 		hr = GetCreator()->CreateBuffer(&iDesc, &subData, &indexBuffer);
@@ -1396,10 +1396,24 @@ namespace Mythos
 			return FALSE;
 
 		//=========================================================================
+		//Create Input Layout======================================================
+		//=========================================================================
+
+		D3D11_INPUT_ELEMENT_DESC layout[] = {
+			{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0}
+		};
+
+		ID3D11InputLayout* inputLayout;
+
+		ID3D10Blob* blob = GetShaderBlob("diffuseIBLVertex");
+		GetCreator()->CreateInputLayout(layout, 1, blob->GetBufferPointer(), blob->GetBufferSize(), &inputLayout);
+		GetContext()->IASetInputLayout(inputLayout);
+
+		//=========================================================================
 		//Render Targets and Camera Projections====================================
 		//=========================================================================
 
-		ID3D11Texture2D* textures[6] = {
+		IMythosResource* textures[6] = {
 			nullptr,
 			nullptr,
 			nullptr,
@@ -1439,13 +1453,14 @@ namespace Mythos
 
 		for (int i = 0; i < 6; ++i)
 		{
-			hr = GetCreator()->CreateTexture2D(&textureDesc, nullptr, &textures[i]);
+			textures[i] = new MythosTexture2D();
+			hr = GetCreator()->CreateTexture2D(&textureDesc, nullptr, (ID3D11Texture2D**)&textures[i]->GetData());
 			if (FAILED(hr)) {
 				return FALSE;
 			}
 
 
-			hr = GetCreator()->CreateRenderTargetView(textures[i], &renderDesc, &rtvs[i]);
+			hr = GetCreator()->CreateRenderTargetView((ID3D11Texture2D*)textures[i]->GetData(), &renderDesc, &rtvs[i]);
 			if (FAILED(hr)) {
 				return FALSE;
 			}
@@ -1491,6 +1506,15 @@ namespace Mythos
 
 		GetContext()->RSSetViewports(1, &textureViewport);
 
+		GetContext()->IASetVertexBuffers(0, 1, &vertexBuffer, strides, offset);
+		GetContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+		GetContext()->VSSetShader((ID3D11VertexShader*)GetResource("diffuseIBLVertex")->GetData(), nullptr, 0);
+		GetContext()->VSSetConstantBuffers(0, 1, (ID3D11Buffer**)&GetResource("constantBuffer")->GetData());
+		GetContext()->PSSetShader((ID3D11PixelShader*)GetResource("cubemapCreator")->GetData(), nullptr, 0);
+		GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource("iblResource")->GetData());
+		GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource("samplerState")->GetData());
+
 		for (int i = 0; i < 6; ++i)
 		{
 			MyMatrices.World = Math::Matrix4::Scale(-1);
@@ -1499,22 +1523,11 @@ namespace Mythos
 			UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
 
 			GetContext()->OMSetRenderTargets(1, &rtvs[i], nullptr);
-			GetContext()->RSSetViewports(1, &textureViewport);
-
-			GetContext()->IASetVertexBuffers(0, 1, &vertexBuffer, strides, offset);
-			GetContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-			GetContext()->VSSetShader((ID3D11VertexShader*)GetResource("diffuseIBLVertex")->GetData(), nullptr, 0);
-			GetContext()->VSSetConstantBuffers(0, 1, (ID3D11Buffer**)&GetResource("constantBuffer")->GetData());
-			GetContext()->PSSetShader((ID3D11PixelShader*)GetResource("cubemapCreator")->GetData(), nullptr, 0);
-			GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource("iblResource")->GetData());
-			GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource("samplerState")->GetData());
 
 			GetContext()->DrawIndexed(36, 0, 0);
-
-			Present();
-
 		}
+
+		Present();
 
 		//=========================================================================
 		//Converting the rendered targets into a cube map
@@ -1530,7 +1543,7 @@ namespace Mythos
 		cubeDesc.sampleCount = 1;
 		cubeDesc.sampleQuality = 0;
 
-		success = CreateTextureCube(&cubeDesc, (const void**)&textures, "textureCube");
+		success = CreateTextureCube(&cubeDesc, textures, "textureCube");
 		if (!success)
 		{
 			return FALSE;
@@ -1548,9 +1561,12 @@ namespace Mythos
 		vertexBuffer->Release();
 		indexBuffer->Release();
 
+		inputLayout->Release();
+
 		for (int i = 0; i < 6; ++i)
 		{
-			textures[i]->Release();
+			textures[i]->SafeRelease();
+			delete textures[i];
 			rtvs[i]->Release();
 		}
 
@@ -1588,7 +1604,7 @@ namespace Mythos
 			6,4,5,
 			1,3,7,
 			0,2,3,
-			5,0,1
+			4,0,1
 		};
 
 		ID3D11Buffer* vertexBuffer = nullptr;
@@ -1623,22 +1639,22 @@ namespace Mythos
 		//Render Targets and Camera Projections====================================
 		//=========================================================================
 
-		ID3D11Texture2D* textures[6] = {
+		IMythosResource* textures[] = {
 			nullptr,
 			nullptr,
 			nullptr,
 			nullptr,
 			nullptr,
-			nullptr
+			nullptr,
 		};
 
-		ID3D11RenderTargetView* rtvs[6] = {
+		ID3D11RenderTargetView* rtvs[] = {
 			nullptr,
 			nullptr,
 			nullptr,
 			nullptr,
 			nullptr,
-			nullptr
+			nullptr,
 		};
 
 		D3D11_TEXTURE2D_DESC textureDesc;
@@ -1663,13 +1679,14 @@ namespace Mythos
 
 		for (int i = 0; i < 6; ++i)
 		{
-			hr = GetCreator()->CreateTexture2D(&textureDesc, nullptr, &textures[i]);
+			textures[i] = new MythosTexture2D();
+			HRESULT hr = GetCreator()->CreateTexture2D(&textureDesc, nullptr, (ID3D11Texture2D**)&textures[i]->GetData());
 			if (FAILED(hr)) {
 				return FALSE;
 			}
 
 
-			hr = GetCreator()->CreateRenderTargetView(textures[i], &renderDesc, &rtvs[i]);
+			hr = GetCreator()->CreateRenderTargetView((ID3D11Texture2D*)textures[i]->GetData(), &renderDesc, &rtvs[i]);
 			if (FAILED(hr)) {
 				return FALSE;
 			}
@@ -1707,6 +1724,15 @@ namespace Mythos
 
 		GetContext()->RSSetViewports(1, &textureViewport);
 
+		GetContext()->IASetVertexBuffers(0, 1, &vertexBuffer, strides, offset);
+		GetContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+		GetContext()->VSSetShader((ID3D11VertexShader*)GetResource("diffuseIBLVertex")->GetData(), nullptr, 0);
+		GetContext()->VSSetConstantBuffers(0, 1, (ID3D11Buffer**)&GetResource("constantBuffer")->GetData());
+		GetContext()->PSSetShader((ID3D11PixelShader*)GetResource("diffuseIBLPixel")->GetData(), nullptr, 0);
+		GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource(textureCubeName)->GetData());
+		GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource("samplerState")->GetData());
+
 		for (int i = 0; i < 6; ++i)
 		{
 			MyMatrices.World = Math::Matrix4::Scale(-1);
@@ -1715,22 +1741,11 @@ namespace Mythos
 			UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
 
 			GetContext()->OMSetRenderTargets(1, &rtvs[i], nullptr);
-			GetContext()->RSSetViewports(1, &textureViewport);
-
-			GetContext()->IASetVertexBuffers(0, 1, &vertexBuffer, strides, offset);
-			GetContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-			GetContext()->VSSetShader((ID3D11VertexShader*)GetResource("diffuseIBLVertex")->GetData(), nullptr, 0);
-			GetContext()->VSSetConstantBuffers(0, 1, (ID3D11Buffer**)&GetResource("constantBuffer")->GetData());
-			GetContext()->PSSetShader((ID3D11PixelShader*)GetResource("diffuseIBLPixel")->GetData(), nullptr, 0);
-			GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource(textureCubeName)->GetData());
-			GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource("samplerState")->GetData());
 
 			GetContext()->DrawIndexed(36, 0, 0);
-
-			Present();
-
 		}
+
+		Present();
 
 		MythosTextureDescriptor cubeDesc;
 		cubeDesc.bindFlags = MYTHOS_BIND_RENDER_TARGET | MYTHOS_BIND_SHADER_RESOURCE;
@@ -1742,7 +1757,7 @@ namespace Mythos
 		cubeDesc.sampleCount = 1;
 		cubeDesc.sampleQuality = 0;
 
-		BOOL success = CreateTextureCube(&cubeDesc, (const void**)textures, "convoCube");
+		BOOL success = CreateTextureCube(&cubeDesc, textures, "convoCube");
 		if (!success)
 		{
 			return FALSE;
@@ -1758,7 +1773,8 @@ namespace Mythos
 
 		for (int i = 0; i < 6; ++i)
 		{
-			textures[i]->Release();
+			textures[i]->SafeRelease();
+			delete textures[i];
 			rtvs[i]->Release();
 		}
 

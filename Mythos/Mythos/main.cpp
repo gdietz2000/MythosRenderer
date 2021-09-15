@@ -50,7 +50,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	Mythos::MythosModel* cube = mythos->LoadMesh("Assets/Models/Cube.txt");
 
 	unsigned int wid = 512, hei = 512;
-	unsigned int wid2 = 32, hei2 = 32;
+	unsigned int wid2 = 64, hei2 = 64;
 
 	if (windowsWindow.GetWindow())
 	{
@@ -121,10 +121,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			return -1;
 		
 		success = mythos->CreatePixelShader(L"Assets/Shaders/SkyboxPixelShader.hlsl", entryPoint, pixelShaderModel, "skyboxShader");
-		if (!success)
-			return -1;
-
-		success = mythos->CreatePixelShader(L"Assets/Shaders/IBLShader.hlsl", entryPoint, pixelShaderModel, "iblShader");
 		if (!success)
 			return -1;
 
