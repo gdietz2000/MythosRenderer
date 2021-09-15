@@ -207,7 +207,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mythos->SetTopology(Mythos::MYTHOS_TRIANGLE_LIST);
 	mythos->GetContext()->IASetInputLayout((ID3D11InputLayout*)mythos->GetResource("inputLayout")->GetData());
 
-	mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Newport_Loft.dds", "skybox");
+	mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Arches_PineTree.dds", "skybox");
 	mythos->ConvoluteSkybox(wid2, hei2, "skybox", "convoluted");
 
 	//MyMatrices.World = Matrix4::Scale(10) * Matrix4::RotateY(PI / -2);
