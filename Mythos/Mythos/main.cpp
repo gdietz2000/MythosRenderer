@@ -50,7 +50,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	Mythos::MythosModel* cube = mythos->LoadMesh("Assets/Models/Cube.txt");
 
 	unsigned int wid = 512, hei = 512;
-	unsigned int wid2 = 64, hei2 = 64;
+	unsigned int wid2 = 32, hei2 = 32;
 
 	if (windowsWindow.GetWindow())
 	{
@@ -119,7 +119,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreatePixelShader(pixelShaderFilePath, entryPoint, pixelShaderModel, "pixelShader");
 		if (!success)
 			return -1;
-		
+
 		success = mythos->CreatePixelShader(L"Assets/Shaders/SkyboxPixelShader.hlsl", entryPoint, pixelShaderModel, "skyboxShader");
 		if (!success)
 			return -1;
@@ -158,7 +158,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreateShaderResource(L"Assets/Textures/Deagle_BaseColor.dds", "deagleDiffuse");
 		if (!success)
 			return -1;
-		
+
 		success = mythos->CreateShaderResource(L"Assets/Textures/Deagle_Ambientocculsion.dds", "deagleAO");
 		if (!success)
 			return -1;
@@ -166,7 +166,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreateShaderResource(L"Assets/Textures/Deagle_Metallic.dds", "deagleMetal");
 		if (!success)
 			return -1;
-		
+
 		success = mythos->CreateShaderResource(L"Assets/Textures/Deagle_Roughness.dds", "deagleRough");
 		if (!success)
 			return -1;
@@ -182,9 +182,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 	}
-
-	UINT strides[] = { sizeof(Mythos::MythosVertex) };
-	UINT offset[] = { 0 };
 
 	Vector3 Eye = { 0,0,-10 };
 	Vector3 Target = { 0,0,1 };
@@ -207,7 +204,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mythos->SetTopology(Mythos::MYTHOS_TRIANGLE_LIST);
 	mythos->GetContext()->IASetInputLayout((ID3D11InputLayout*)mythos->GetResource("inputLayout")->GetData());
 
-	mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Arches_PineTree.dds", "skybox");
+	mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/HDRI.dds", "skybox");
 	mythos->ConvoluteSkybox(wid2, hei2, "skybox", "convoluted");
 
 	//MyMatrices.World = Matrix4::Scale(10) * Matrix4::RotateY(PI / -2);
@@ -234,8 +231,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (msg.message == WM_QUIT)
 			break;
 
-		MyMatrices.World = Matrix4::RotateY(rotation);
-		rotation += 0.005;
+
 		freeCamera.GetCameraInput();
 		MyMatrices.View = freeCamera.GetCamera();
 		Math::Vector4 camPos = Math::Vector4(freeCamera.GetPosition(), 1);
@@ -245,41 +241,81 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		mythos->SetClearRenderTargetColor({ 0.075,0.075,0.075,1 });
 		mythos->ClearRenderTarget("mainRenderTarget");
 		mythos->ClearDepthBuffer("depthBuffer");
-		mythos->GetContext()->OMSetRenderTargets(1, &targets, nullptr);
 		mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
 
+		UINT strides[] = { sizeof(Mythos::MythosVertex) };
+		UINT offset[] = { 0 };
 
-		mythos->GetContext()->OMSetRenderTargets(1, &targets, (ID3D11DepthStencilView*)mythos->GetResource("depthBuffer")->GetData());
-
-		mythos->UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
-
-		ID3D11Buffer* buffers[] = { (ID3D11Buffer*)mythos->GetResource("deagleVert")->GetData() };
-		ID3D11Buffer* constBuffers[] = { (ID3D11Buffer*)mythos->GetResource("constantBuffer")->GetData() };
-
-		mythos->GetContext()->IASetInputLayout((ID3D11InputLayout*)mythos->GetResource("inputLayout")->GetData());
-		mythos->GetContext()->IASetVertexBuffers(0, 1, buffers, strides, offset);
-		mythos->GetContext()->IASetIndexBuffer((ID3D11Buffer*)mythos->GetResource("deagleInd")->GetData(), DXGI_FORMAT_R32_UINT, 0);
-		mythos->GetContext()->VSSetShader((ID3D11VertexShader*)mythos->GetResource("vertexShader")->GetData(), nullptr, NULL);
-		mythos->GetContext()->VSSetConstantBuffers(0, 1, constBuffers);
-		//mythos->GetContext()->RSSetState((ID3D11RasterizerState*)mythos->GetResource("simpleRasterizer")->GetData());
-
-		ID3D11Buffer* pixelConstantBuffers[] = { (ID3D11Buffer*)mythos->GetResource("cameraPositionBuffer")->GetData() };
-		ID3D11SamplerState* samplers[] = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
-		ID3D11ShaderResourceView* srvs[] = 
 		{
-			(ID3D11ShaderResourceView*)mythos->GetResource("convoluted")->GetData(),
-			(ID3D11ShaderResourceView*)mythos->GetResource("deagleDiffuse")->GetData(),
-			(ID3D11ShaderResourceView*)mythos->GetResource("deagleAO")->GetData(),
-			(ID3D11ShaderResourceView*)mythos->GetResource("deagleMetal")->GetData(),
-			(ID3D11ShaderResourceView*)mythos->GetResource("deagleRough")->GetData(),
-		};
+			MyMatrices.World = Matrix4::Scale(1,1,-1) * Matrix4::Translate(freeCamera.GetPosition());
+			mythos->UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
 
-		mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
-		mythos->GetContext()->PSSetShaderResources(0, ARRAYSIZE(srvs), srvs);
-		mythos->GetContext()->PSSetConstantBuffers(0, 1, pixelConstantBuffers);
-		mythos->GetContext()->PSSetSamplers(0, 1, samplers);
+			mythos->GetContext()->OMSetRenderTargets(1, &targets, nullptr);
 
-		mythos->GetContext()->DrawIndexed(deagle->m_TotalNumIndices, 0, 0);
+			ID3D11Buffer* buffers[] = { (ID3D11Buffer*)mythos->GetResource("vertexBuffer")->GetData() };
+			ID3D11Buffer* constBuffers[] = { (ID3D11Buffer*)mythos->GetResource("constantBuffer")->GetData() };
+
+			mythos->GetContext()->IASetInputLayout((ID3D11InputLayout*)mythos->GetResource("inputLayout")->GetData());
+			mythos->GetContext()->IASetVertexBuffers(0, 1, buffers, strides, offset);
+			mythos->GetContext()->IASetIndexBuffer((ID3D11Buffer*)mythos->GetResource("indexBuffer")->GetData(), DXGI_FORMAT_R32_UINT, 0);
+
+			mythos->GetContext()->VSSetShader((ID3D11VertexShader*)mythos->GetResource("vertexShader")->GetData(), nullptr, NULL);
+			mythos->GetContext()->VSSetConstantBuffers(0, 1, constBuffers);
+
+			ID3D11Buffer* pixelConstantBuffers[] = { (ID3D11Buffer*)mythos->GetResource("cameraPositionBuffer")->GetData() };
+			ID3D11SamplerState* samplers[] = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
+			ID3D11ShaderResourceView* srvs[] =
+			{
+				(ID3D11ShaderResourceView*)mythos->GetResource("skybox")->GetData(),
+				(ID3D11ShaderResourceView*)mythos->GetResource("deagleDiffuse")->GetData(),
+				(ID3D11ShaderResourceView*)mythos->GetResource("deagleAO")->GetData(),
+				(ID3D11ShaderResourceView*)mythos->GetResource("deagleMetal")->GetData(),
+				(ID3D11ShaderResourceView*)mythos->GetResource("deagleRough")->GetData(),
+			};
+
+			mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("skyboxShader")->GetData(), nullptr, NULL);
+			mythos->GetContext()->PSSetShaderResources(0, ARRAYSIZE(srvs), srvs);
+			mythos->GetContext()->PSSetConstantBuffers(0, 1, pixelConstantBuffers);
+			mythos->GetContext()->PSSetSamplers(0, 1, samplers);
+
+			mythos->GetContext()->DrawIndexed(cube->m_TotalNumIndices, 0, 0);
+		}
+
+		{
+			mythos->GetContext()->OMSetRenderTargets(1, &targets, (ID3D11DepthStencilView*)mythos->GetResource("depthBuffer")->GetData());
+
+			MyMatrices.World = Matrix4::RotateY(rotation);
+			rotation += 0.005;
+			mythos->UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
+
+			ID3D11Buffer* buffers[] = { (ID3D11Buffer*)mythos->GetResource("deagleVert")->GetData() };
+			ID3D11Buffer* constBuffers[] = { (ID3D11Buffer*)mythos->GetResource("constantBuffer")->GetData() };
+
+			mythos->GetContext()->IASetInputLayout((ID3D11InputLayout*)mythos->GetResource("inputLayout")->GetData());
+			mythos->GetContext()->IASetVertexBuffers(0, 1, buffers, strides, offset);
+			mythos->GetContext()->IASetIndexBuffer((ID3D11Buffer*)mythos->GetResource("deagleInd")->GetData(), DXGI_FORMAT_R32_UINT, 0);
+
+			mythos->GetContext()->VSSetShader((ID3D11VertexShader*)mythos->GetResource("vertexShader")->GetData(), nullptr, NULL);
+			mythos->GetContext()->VSSetConstantBuffers(0, 1, constBuffers);
+
+			ID3D11Buffer* pixelConstantBuffers[] = { (ID3D11Buffer*)mythos->GetResource("cameraPositionBuffer")->GetData() };
+			ID3D11SamplerState* samplers[] = { (ID3D11SamplerState*)mythos->GetResource("samplerState")->GetData() };
+			ID3D11ShaderResourceView* srvs[] =
+			{
+				(ID3D11ShaderResourceView*)mythos->GetResource("convoluted")->GetData(),
+				(ID3D11ShaderResourceView*)mythos->GetResource("deagleDiffuse")->GetData(),
+				(ID3D11ShaderResourceView*)mythos->GetResource("deagleAO")->GetData(),
+				(ID3D11ShaderResourceView*)mythos->GetResource("deagleMetal")->GetData(),
+				(ID3D11ShaderResourceView*)mythos->GetResource("deagleRough")->GetData(),
+			};
+
+			mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
+			mythos->GetContext()->PSSetShaderResources(0, ARRAYSIZE(srvs), srvs);
+			mythos->GetContext()->PSSetConstantBuffers(0, 1, pixelConstantBuffers);
+			mythos->GetContext()->PSSetSamplers(0, 1, samplers);
+
+			mythos->GetContext()->DrawIndexed(deagle->m_TotalNumIndices, 0, 0);
+		}
 
 		mythos->Present();
 	}

@@ -26,10 +26,7 @@ float4 main(InputVertex v) : SV_TARGET
         for (float theta = 0.0; theta < 0.5 * PI; theta += sampleDelta)
         {
             float3 tangentSample = float3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
-            float3 sampleVector = tangentSample.x * right + tangentSample.y * up + tangentSample.z * normal;
-            
-            //DirectX has the uv origin set to bottom left, whereas other Renderers set the uv origin to top left, this calculation is needed for proper uvs
-            sampleVector.z = -sampleVector.z;
+            float3 sampleVector = tangentSample.x * right + tangentSample.y * up + tangentSample.z * normal; 
             
             irradiance += samplerCube.Sample(SimpleSampler, sampleVector.xyz).rgb * cos(theta) * sin(theta);
             nrSamples++;

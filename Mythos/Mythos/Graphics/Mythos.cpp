@@ -1468,12 +1468,12 @@ namespace Mythos
 
 		Math::Matrix4 captureProjection = Math::Matrix4::PerspectiveFovLH(Math::radians(90.0f), 1.0f, 0.1f, 10.0);
 		Math::Matrix4 captureViews[] = {
-			Math::Matrix4::LookAtLH({0,0,0}, {-1.0,0.0,0.0}, {0,-1,0}),
-			Math::Matrix4::LookAtLH({0,0,0}, {1.0,0.0,0.0}, {0,-1,0}),
-			Math::Matrix4::LookAtLH({0,0,0}, {0.0,-1.0,0.0}, {0,0,-1}),
-			Math::Matrix4::LookAtLH({0,0,0}, {0.0,1.0,0.0}, {0,0,1}),
-			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,1.0}, {0,-1,0}),
-			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,-1.0}, {0,-1,0})
+			Math::Matrix4::LookAtLH({0,0,0}, {1.0,0.0,0.0}, {0,1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {-1.0,0.0,0.0}, {0,1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,1.0,0.0}, {0,0,-1}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,-1.0,0.0}, {0,0,1}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,1.0}, {0,1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,-1.0}, {0,1,0})
 		};
 
 		struct WVP
@@ -1515,19 +1515,20 @@ namespace Mythos
 		GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource("iblResource")->GetData());
 		GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource("samplerState")->GetData());
 
+		MyMatrices.World = Math::Matrix4::Scale(1, 1, -1);
+		MyMatrices.Projection = captureProjection;
+
 		for (int i = 0; i < 6; ++i)
 		{
-			MyMatrices.World = Math::Matrix4::Scale(-1);
 			MyMatrices.View = captureViews[i];
-			MyMatrices.Projection = captureProjection;
 			UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
 
 			GetContext()->OMSetRenderTargets(1, &rtvs[i], nullptr);
 
 			GetContext()->DrawIndexed(36, 0, 0);
+			Present();
 		}
 
-		Present();
 
 		//=========================================================================
 		//Converting the rendered targets into a cube map
@@ -1694,12 +1695,12 @@ namespace Mythos
 
 		Math::Matrix4 captureProjection = Math::Matrix4::PerspectiveFovLH(Math::radians(90.0f), 1.0f, 0.1f, 10.0);
 		Math::Matrix4 captureViews[] = {
-			Math::Matrix4::LookAtLH({0,0,0}, {-1.0,0.0,0.0}, {0,-1,0}),
-			Math::Matrix4::LookAtLH({0,0,0}, {1.0,0.0,0.0}, {0,-1,0}),
-			Math::Matrix4::LookAtLH({0,0,0}, {0.0,-1.0,0.0}, {0,0,-1}),
-			Math::Matrix4::LookAtLH({0,0,0}, {0.0,1.0,0.0}, {0,0,1}),
-			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,1.0}, {0,-1,0}),
-			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,-1.0}, {0,-1,0})
+			Math::Matrix4::LookAtLH({0,0,0}, {1.0,0.0,0.0}, {0,1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {-1.0,0.0,0.0}, {0,1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,1.0,0.0}, {0,0,-1}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,-1.0,0.0}, {0,0,1}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,1.0}, {0,1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,-1.0}, {0,1,0})
 		};
 
 		struct WVP
@@ -1733,11 +1734,12 @@ namespace Mythos
 		GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource(textureCubeName)->GetData());
 		GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource("samplerState")->GetData());
 
+		MyMatrices.World = Math::Matrix4::Scale(1, 1, -1);
+		MyMatrices.Projection = captureProjection;
+
 		for (int i = 0; i < 6; ++i)
 		{
-			MyMatrices.World = Math::Matrix4::Scale(-1);
 			MyMatrices.View = captureViews[i];
-			MyMatrices.Projection = captureProjection;
 			UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
 
 			GetContext()->OMSetRenderTargets(1, &rtvs[i], nullptr);

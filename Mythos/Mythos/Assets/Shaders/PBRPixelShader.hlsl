@@ -73,11 +73,11 @@ float4 main(InputVertex v) : SV_TARGET
     
     float3 kS = fresnelSchlickRoughness(dot(N, V), F0, roughness);
     float3 kD = 1.0 - kS;
-    float3 irradiance = pow(environementMap.Sample(SimpleSampler, v.normal).rgb, GAMMA);
+    float3 irradiance = pow(environementMap.Sample(SimpleSampler, N).rgb, GAMMA);
     float3 diffuse = irradiance * albedo;
     float3 ambient = (kD * diffuse) * ao;
     
-    float3 color = ambient + Lo;
+    float3 color = ambient; // + Lo;
     
     //HDR tonemapping
     color = color / (color + 1.0);
