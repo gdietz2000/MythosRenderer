@@ -95,6 +95,12 @@ namespace Math
 		return Vector3(x / rhs.x, y / rhs.y, z / rhs.z);
 	}
 
+	Vector3& Vector3::operator=(const Vector3& other)
+	{
+		memcpy(this->comp, other.comp, sizeof(Vector3));
+		return *this;
+	}
+
 	float Vector3::operator[](int index) {
 		return comp[index];
 	}

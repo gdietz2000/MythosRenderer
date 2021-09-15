@@ -5,6 +5,8 @@
 #include "../include/Matrix3.h"
 #include "../include/Matrix4.h"
 
+#include <algorithm>
+
 namespace Math
 {
 	const Quaternion Quaternion::Identity = Quaternion(0, 0, 0, 1);
@@ -57,6 +59,12 @@ namespace Math
 
 	Quaternion Quaternion::operator*=(float scalar) {
 		return *this = *this * scalar;
+	}
+
+	Quaternion& Quaternion::operator=(const Quaternion& other)
+	{
+		memcpy(this->comp, other.comp, sizeof(Quaternion));
+		return *this;
 	}
 
 	bool Quaternion::operator==(const Quaternion& other) const {

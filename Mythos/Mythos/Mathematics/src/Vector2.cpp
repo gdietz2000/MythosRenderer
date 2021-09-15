@@ -1,5 +1,7 @@
 #include "../include/Vector2.h"
 
+#include <algorithm>
+
 namespace Math
 {
 	//Static types
@@ -89,6 +91,12 @@ namespace Math
 
 	float Vector2::operator[](int index) const {
 		return comp[index];
+	}
+
+	Vector2& Vector2::operator=(const Vector2& other)
+	{
+		memcpy(this->comp, other.comp, sizeof(Vector2));
+		return *this;
 	}
 
 	bool Vector2::operator==(float value) const {

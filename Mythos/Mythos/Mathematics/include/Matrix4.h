@@ -46,6 +46,8 @@ namespace Math {
 		Matrix4 operator*(float);
 		Vector4 operator*(const Vector4&);
 
+		Matrix4& operator=(const Matrix4&);
+
 		bool operator==(const Matrix4&);
 		bool operator!=(const Matrix4&);
 

@@ -38,6 +38,8 @@ namespace Math {
 		Matrix2 operator-(const Matrix2&);
 		Matrix2 operator*(const Matrix2&);
 
+		Matrix2& operator=(const Matrix2&);
+
 		bool operator==(const Matrix2&);
 		bool operator!=(const Matrix2&);
 

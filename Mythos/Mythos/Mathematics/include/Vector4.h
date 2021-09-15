@@ -41,9 +41,10 @@ namespace Math
 		Vector4 operator/(const Vector4&);
 		Vector4 operator/(const Vector4&) const;
 
-		Vector4& operator=(const Vector4&) = default;
 		float operator[](int index);
 		float operator[](int index) const;
+
+		Vector4& operator=(const Vector4&);
 
 		bool operator==(float) const;
 		bool operator!=(float) const;

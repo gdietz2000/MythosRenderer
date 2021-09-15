@@ -1,6 +1,8 @@
 #include "../include/Mathematics.h"
 #include "../include/Matrix2.h"
 
+#include <algorithm>
+
 namespace Math {
 
 	const Matrix2 Matrix2::Zero = Matrix2();
@@ -58,6 +60,12 @@ namespace Math {
 			a * rhs.b + b * rhs.d,
 			c * rhs.a + d * rhs.c,
 			c * rhs.b + d * rhs.d);
+	}
+
+	Matrix2& Matrix2::operator=(const Matrix2& other)
+	{
+		memcpy(this->mat, other.mat, sizeof(Matrix2));
+		return *this;
 	}
 
 	bool Matrix2::operator==(const Matrix2& other) {

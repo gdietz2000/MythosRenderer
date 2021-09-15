@@ -39,9 +39,10 @@ namespace Math
 		Vector2 operator/(const Vector2&);
 		Vector2 operator/(const Vector2&) const;
 
-		Vector2& operator=(const Vector2&) = default;
 		float operator[](int index);
 		float operator[](int index) const;
+
+		Vector2& operator=(const Vector2&);
 
 		bool operator==(float) const;
 		bool operator!=(float) const;

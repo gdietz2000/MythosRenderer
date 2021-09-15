@@ -100,6 +100,12 @@ namespace Math
 		return comp[index];
 	}
 
+	Vector4& Vector4::operator=(const Vector4& other)
+	{
+		memcpy(this->comp, other.comp, sizeof(Vector4));
+		return *this;
+	}
+
 	bool Vector4::operator==(float scalar) const {
 		return x == scalar && y == scalar && z == scalar && w == scalar ? true : false;
 	}

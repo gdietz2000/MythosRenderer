@@ -120,6 +120,12 @@ namespace Math
 			rhs.x * row3.x + rhs.y * row3.y + rhs.z * row3.z + rhs.w * row3.w);
 	}
 
+	Matrix4& Matrix4::operator=(const Matrix4& other)
+	{
+		memcpy(this->mat, other.mat, sizeof(Matrix4));
+		return *this;
+	}
+
 	bool Matrix4::operator==(const Matrix4& other) {
 		for (int i = 0; i < 16; i++)
 			if (!almost_equal(mat[i], other.mat[i], 5))

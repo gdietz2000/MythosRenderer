@@ -33,6 +33,8 @@ namespace Math
 		Quaternion operator*(float rhs) const;
 		Quaternion operator*=(float rhs);
 
+		Quaternion& operator=(const Quaternion&);
+
 		bool operator==(const Quaternion& other) const;
 		bool operator!=(const Quaternion& other) const;
 

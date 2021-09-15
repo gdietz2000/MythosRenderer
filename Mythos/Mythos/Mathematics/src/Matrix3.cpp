@@ -97,6 +97,12 @@ namespace Math
 			rhs.x * mat[6] + rhs.y * mat[7] + rhs.z * mat[8]);
 	}
 
+	Matrix3& Matrix3::operator=(const Matrix3& other)
+	{
+		memcpy(this->mat, other.mat, sizeof(Matrix3));
+		return *this;
+	}
+
 	bool Matrix3::operator==(const Matrix3& other) {
 		for (int i = 0; i < 9; i++)
 			if (!almost_equal(mat[i], other.mat[i], 5))
