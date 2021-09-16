@@ -165,6 +165,9 @@
     <FxCompile Include="Assets\Shaders\MainVertexShader.hlsl" />
     <FxCompile Include="Assets\Shaders\PBRPixelShader.hlsl" />
     <FxCompile Include="Assets\Shaders\SkyboxPixelShader.hlsl" />
+    <FxCompile Include="Assets\Shaders\PrefilterEnvironment.hlsl" />
+    <FxCompile Include="Assets\Shaders\BRDF_LUT.hlsl" />
+    <FxCompile Include="Assets\Shaders\TextureVertexShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Mathematics\README.md" />

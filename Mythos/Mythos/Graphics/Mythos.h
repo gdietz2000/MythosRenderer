@@ -83,12 +83,15 @@ namespace Mythos
 		void ClearRenderTarget(const char* renderTargetName);
 
 		BOOL CreateTexture2D(const wchar_t* filepath, const char* textureName);
+		BOOL CreateTexture2D(MythosTextureDescriptor* descriptor, IMythosResource* texture, const char* textureName);
 		BOOL CreateTexture2D(MythosTextureDescriptor* descriptor, void* data, const char* textureName);
+
 		BOOL CreateTextureCube(MythosTextureDescriptor* descriptor, IMythosResource** textures, const char* textureName);
 		BOOL CreateTextureCube(MythosTextureDescriptor* descriptor, const char** namesOfTextures, const char* textureName);
 
 		BOOL CreateShaderResource(const wchar_t* filepath, const char* shaderResourceName);
 		BOOL CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName);
+		BOOL CreateShaderResource(IMythosResource* texture, const char* shaderResourceName);
 		BOOL CreateShaderResourceCube(const char* cubeToBecomeResourceName, const char* shaderResourceName);
 
 		BOOL CreateTexture2DAndShaderResource(const wchar_t* filepath, const char* textureName, const char* shaderResourceName);
@@ -106,6 +109,8 @@ namespace Mythos
 		//PBR Specific Functions
 		BOOL CreateSkyboxFromEquirectangularTexture(unsigned int width, unsigned int height, const wchar_t* equirectangularTextureFilepath, const char* textureCubeName);
 		BOOL ConvoluteSkybox(unsigned int width, unsigned int height, const char* textureCubeName, const char* convolutedTextureCubeName);
+		BOOL CreatePrefilteredEnvironment(unsigned int width, unsigned int height, const char* textureCubeName, const char* prefilteredTextureCubeName);
+		BOOL CreateBRDFTexture(unsigned int width, unsigned int height, const char* brdfTextureName);
 
 		//GetResource will return a resource based off of the id given.
 		IMythosResource* GetResource(const char* name);

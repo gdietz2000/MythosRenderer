@@ -753,6 +753,14 @@ namespace Mythos
 		return TRUE;
 	}
 
+	BOOL Mythos::CreateTexture2D(MythosTextureDescriptor* descriptor, IMythosResource* texture, const char* textureName)
+	{
+		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture));
+
+		return TRUE;
+	}
+
 	BOOL Mythos::CreateTexture2D(MythosTextureDescriptor* desc, void* data, const char* textureName)
 	{
 		if (!NameAvailable(textureName))
@@ -814,13 +822,12 @@ namespace Mythos
 
 		textureDesc.ArraySize = 6;
 		textureDesc.BindFlags = GetBindFlags((MythosBindFlags)desc->bindFlags);
-		textureDesc.MipLevels = 1;
+		textureDesc.MipLevels = desc->mipLevels;
 		textureDesc.Format = (DXGI_FORMAT)GetFormat(desc->format);
 		textureDesc.SampleDesc.Count = desc->sampleCount;
 		textureDesc.SampleDesc.Quality = desc->sampleQuality;
 
-		textureDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
-
+		textureDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE | D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
 		switch (desc->cpuAccess)
 		{
@@ -861,7 +868,7 @@ namespace Mythos
 			desc2.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 			desc2.Format = desc.Format;
 			desc2.MipLevels = desc.MipLevels;
-			desc2.MiscFlags = 0;
+			desc2.MiscFlags = desc.MiscFlags;
 			desc2.SampleDesc = desc.SampleDesc;
 			desc2.Usage = D3D11_USAGE_STAGING;
 
@@ -876,7 +883,7 @@ namespace Mythos
 
 			subData[cubeMapFaceIndex].pSysMem = mapInfo.pData;
 			subData[cubeMapFaceIndex].SysMemPitch = mapInfo.RowPitch;
-			subData[cubeMapFaceIndex].SysMemSlicePitch = 0;
+			subData[cubeMapFaceIndex].SysMemSlicePitch = mapInfo.DepthPitch;
 
 			m_Context.GetContext()->Unmap(copies[cubeMapFaceIndex], 0);
 		}
@@ -1033,6 +1040,37 @@ namespace Mythos
 
 		IMythosResource* shaderResource = new MythosShaderResource();
 		HRESULT hr = m_Creator.GetCreator()->CreateShaderResourceView((ID3D11Texture2D*)texture->GetData(), &shaderDesc, (ID3D11ShaderResourceView**)&shaderResource->GetData());
+
+		if (FAILED(hr)) {
+			delete shaderResource;
+			return FALSE;
+		}
+
+		m_NamesToIndex.insert(std::make_pair(shaderResourceName, MYTHOS_RESOURCE_SHADER_RESOURCE));
+		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(shaderResourceName, shaderResource));
+
+		return TRUE;
+	}
+
+	BOOL Mythos::CreateShaderResource(IMythosResource* texture, const char* shaderResourceName)
+	{
+		if (!NameAvailable(shaderResourceName))
+			return FALSE;
+
+		D3D11_TEXTURE2D_DESC textureDesc;
+
+		ID3D11Texture2D* tex = (ID3D11Texture2D*)texture->GetData();
+		tex->GetDesc(&textureDesc);
+
+		D3D11_SHADER_RESOURCE_VIEW_DESC shaderDesc;
+		ZeroMemory(&shaderDesc, sizeof(shaderDesc));
+		shaderDesc.Format = textureDesc.Format;
+		shaderDesc.TextureCube.MostDetailedMip = 0;
+		shaderDesc.TextureCube.MipLevels = textureDesc.MipLevels;
+		shaderDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+
+		IMythosResource* shaderResource = new MythosShaderResource();
+		HRESULT hr = m_Creator.GetCreator()->CreateShaderResourceView(tex, &shaderDesc, (ID3D11ShaderResourceView**)&shaderResource->GetData());
 
 		if (FAILED(hr)) {
 			delete shaderResource;
@@ -1782,6 +1820,426 @@ namespace Mythos
 
 		return TRUE;
 	}
+
+	BOOL Mythos::CreatePrefilteredEnvironment(unsigned int width, unsigned int height, const char* textureCubeName, const char* prefilteredTextureCubeName)
+	{
+		//=========================================================================
+		//Must Create a Skybox=====================================================
+		//=========================================================================
+
+		Math::Vector3 cubeVerts[8] =
+		{
+			{1,1,-1},
+			{1,-1,-1},
+			{1,1,1,},
+			{1,-1,1},
+			{-1,1,-1},
+			{-1,-1,-1},
+			{-1,1,1},
+			{-1,-1,1}
+		};
+
+		unsigned int indices[36] =
+		{
+			4,2,0,
+			2,7,3,
+			6,5,7,
+			1,7,5,
+			0,3,1,
+			4,1,5,
+			4,6,2,
+			2,6,7,
+			6,4,5,
+			1,3,7,
+			0,2,3,
+			4,0,1
+		};
+
+		ID3D11Buffer* vertexBuffer = nullptr;
+		ID3D11Buffer* indexBuffer = nullptr;
+		ID3D11Buffer* constantBuffer = nullptr;
+
+		D3D11_BUFFER_DESC vDesc, iDesc, cDesc;
+		ZeroMemory(&vDesc, sizeof(vDesc));
+		vDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		vDesc.ByteWidth = sizeof(Math::Vector3) * 8;
+		vDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		ZeroMemory(&iDesc, sizeof(iDesc));
+		iDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		iDesc.ByteWidth = sizeof(unsigned int) * 36;
+		iDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		D3D11_SUBRESOURCE_DATA subData;
+		ZeroMemory(&subData, sizeof(subData));
+		subData.pSysMem = cubeVerts;
+
+		HRESULT hr = GetCreator()->CreateBuffer(&vDesc, &subData, &vertexBuffer);
+		if (FAILED(hr))
+			return FALSE;
+
+		subData.pSysMem = indices;
+
+		hr = GetCreator()->CreateBuffer(&iDesc, &subData, &indexBuffer);
+		if (FAILED(hr))
+			return FALSE;
+
+		//=========================================================================
+		//Create a cosntant buffer that passes the roughness value=================
+		//=========================================================================
+
+		ZeroMemory(&cDesc, sizeof(cDesc));
+		cDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cDesc.ByteWidth = sizeof(Math::Vector4);
+		cDesc.Usage = D3D11_USAGE_DYNAMIC;
+		cDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+		hr = GetCreator()->CreateBuffer(&cDesc, nullptr, &constantBuffer);
+		if (FAILED(hr))
+			return FALSE;
+
+		//=========================================================================
+		//Render Targets and Camera Projections====================================
+		//=========================================================================
+
+		IMythosResource* textures[] = {
+			nullptr,
+			nullptr,
+			nullptr,
+			nullptr,
+			nullptr,
+			nullptr,
+		};
+
+		ID3D11RenderTargetView* rtvs[] = {
+			nullptr,
+			nullptr,
+			nullptr,
+			nullptr,
+			nullptr,
+			nullptr,
+		};
+
+		D3D11_TEXTURE2D_DESC textureDesc;
+		ZeroMemory(&textureDesc, sizeof(textureDesc));
+		D3D11_RENDER_TARGET_VIEW_DESC renderDesc;
+		ZeroMemory(&renderDesc, sizeof(renderDesc));
+
+		textureDesc.ArraySize = 1;
+		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		textureDesc.Height = height;
+		textureDesc.Width = width;
+		textureDesc.MipLevels = 1;
+		textureDesc.MiscFlags = 0;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		renderDesc.Format = textureDesc.Format;
+		renderDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		renderDesc.Texture2D.MipSlice = 0;
+
+		for (int i = 0; i < 6; ++i)
+		{
+			textures[i] = new MythosTexture2D();
+			HRESULT hr = GetCreator()->CreateTexture2D(&textureDesc, nullptr, (ID3D11Texture2D**)&textures[i]->GetData());
+			if (FAILED(hr)) {
+				return FALSE;
+			}
+
+
+			hr = GetCreator()->CreateRenderTargetView((ID3D11Texture2D*)textures[i]->GetData(), &renderDesc, &rtvs[i]);
+			if (FAILED(hr)) {
+				return FALSE;
+			}
+		}
+
+		Math::Matrix4 captureProjection = Math::Matrix4::PerspectiveFovLH(Math::radians(90.0f), 1.0f, 0.1f, 10.0);
+		Math::Matrix4 captureViews[] = {
+			Math::Matrix4::LookAtLH({0,0,0}, {1.0,0.0,0.0}, {0,1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {-1.0,0.0,0.0}, {0,1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,1.0,0.0}, {0,0,-1}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,-1.0,0.0}, {0,0,1}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,1.0}, {0,1,0}),
+			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,-1.0}, {0,1,0})
+		};
+
+		struct WVP
+		{
+			Math::Matrix4 World;
+			Math::Matrix4 View;
+			Math::Matrix4 Projection;
+		}MyMatrices;
+
+		//=========================================================================
+		//Rendering the Skybox out based on width and height specified=============
+		//=========================================================================
+
+		UINT strides[] = { sizeof(Math::Vector3) };
+		UINT offset[] = { 0 };
+
+		GetContext()->IASetVertexBuffers(0, 1, &vertexBuffer, strides, offset);
+		GetContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+		GetContext()->VSSetShader((ID3D11VertexShader*)GetResource("diffuseIBLVertex")->GetData(), nullptr, 0);
+		GetContext()->VSSetConstantBuffers(0, 1, (ID3D11Buffer**)&GetResource("constantBuffer")->GetData());
+		GetContext()->PSSetShader((ID3D11PixelShader*)GetResource("prefilterShader")->GetData(), nullptr, 0);
+		GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource(textureCubeName)->GetData());
+		GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource("samplerState")->GetData());
+
+		MyMatrices.World = Math::Matrix4::Scale(1, 1, -1);
+		MyMatrices.Projection = captureProjection;
+
+		//Create 5 mip levels
+		unsigned int maxMipLevels = 5;
+		for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
+		{
+			unsigned int mipWidth = width * pow(0.5, mip);
+			unsigned int mipHeight = height * pow(0.5, mip);
+
+			D3D11_VIEWPORT textureViewport;
+			textureViewport.Width = mipWidth;
+			textureViewport.Height = mipHeight;
+			textureViewport.TopLeftX = textureViewport.TopLeftY = 0;
+			textureViewport.MinDepth = 0; textureViewport.MaxDepth = 1;
+
+			GetContext()->RSSetViewports(1, &textureViewport);
+			float roughness = (float)mip / (float)(maxMipLevels - 1);
+
+			D3D11_MAPPED_SUBRESOURCE gpuBuffer;
+			GetContext()->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &gpuBuffer);
+			memcpy(gpuBuffer.pData, &Math::Vector4(roughness), sizeof(Math::Vector4));
+			GetContext()->Unmap(constantBuffer, 0);
+
+			for (int i = 0; i < 6; ++i)
+			{
+				MyMatrices.View = captureViews[i];
+				UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
+
+				GetContext()->PSSetConstantBuffers(0, 1, &constantBuffer);
+
+				GetContext()->OMSetRenderTargets(1, &rtvs[i], nullptr);
+
+				GetContext()->DrawIndexed(36, 0, 0);
+			}
+		}
+
+		Present();
+
+		MythosTextureDescriptor cubeDesc;
+		cubeDesc.bindFlags = MYTHOS_BIND_RENDER_TARGET | MYTHOS_BIND_SHADER_RESOURCE;
+		cubeDesc.cpuAccess = MYTHOS_DEFAULT_ACCESS;
+		cubeDesc.format = MYTHOS_FORMAT_32_FLOAT4;
+		cubeDesc.width = width;
+		cubeDesc.height = height;
+		cubeDesc.mipLevels = 1;
+		cubeDesc.sampleCount = 1;
+		cubeDesc.sampleQuality = 0;
+
+		BOOL success = CreateTextureCube(&cubeDesc, textures, "prefilteredCube");
+		if (!success)
+		{
+			return FALSE;
+		}
+
+		success = CreateShaderResourceCube("prefilteredCube", prefilteredTextureCubeName);
+		if (!success) {
+			return FALSE;
+		}
+
+		vertexBuffer->Release();
+		indexBuffer->Release();
+		constantBuffer->Release();
+
+		for (int i = 0; i < 6; ++i)
+		{
+			textures[i]->SafeRelease();
+			delete textures[i];
+			rtvs[i]->Release();
+		}
+
+		return TRUE;
+	}
+
+	BOOL Mythos::CreateBRDFTexture(unsigned int width, unsigned int height, const char* brdfTextureName)
+	{
+		//=========================================================================
+		//Create a Plane===========================================================
+		//=========================================================================
+
+		struct PlaneVertex
+		{
+			Math::Vector3 pos;
+			Math::Vector2 tex;
+		};
+
+		PlaneVertex vertices[] =
+		{
+			{{1,1,1}, {1,0}},
+			{{-1,1,1}, {0,0}},
+			{{1,-1,1}, {1,1}},
+			{{-1,-1,1}, {0,1}},
+		};
+
+		unsigned int indices[] = {
+			0,2,1,
+			2,3,1
+		};
+
+		ID3D11Buffer* vertexBuffer = nullptr;
+		ID3D11Buffer* indexBuffer = nullptr;
+
+		D3D11_BUFFER_DESC vDesc, iDesc;
+		ZeroMemory(&vDesc, sizeof(vDesc));
+		vDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		vDesc.ByteWidth = sizeof(PlaneVertex) * 4;
+		vDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		ZeroMemory(&iDesc, sizeof(iDesc));
+		iDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		iDesc.ByteWidth = sizeof(unsigned int) * 6;
+		iDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		D3D11_SUBRESOURCE_DATA subData;
+		ZeroMemory(&subData, sizeof(subData));
+		subData.pSysMem = vertices;
+
+		HRESULT hr = GetCreator()->CreateBuffer(&vDesc, &subData, &vertexBuffer);
+		if (FAILED(hr))
+			return FALSE;
+
+		subData.pSysMem = indices;
+
+		hr = GetCreator()->CreateBuffer(&iDesc, &subData, &indexBuffer);
+		if (FAILED(hr))
+			return FALSE;
+
+		//=========================================================================
+		//Create Input Layout======================================================
+		//=========================================================================
+
+		D3D11_INPUT_ELEMENT_DESC layout[] = {
+			{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+			{"UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0}
+		};
+
+		ID3D11InputLayout* inputLayout;
+
+		ID3D10Blob* blob = GetShaderBlob("textureVertex");
+		GetCreator()->CreateInputLayout(layout, 2, blob->GetBufferPointer(), blob->GetBufferSize(), &inputLayout);
+		GetContext()->IASetInputLayout(inputLayout);
+
+		//=========================================================================
+		//Render Targets and Camera Projections====================================
+		//=========================================================================
+
+		IMythosResource* texture = nullptr;
+		ID3D11RenderTargetView* rtv = nullptr;
+
+		D3D11_TEXTURE2D_DESC textureDesc;
+		ZeroMemory(&textureDesc, sizeof(textureDesc));
+		D3D11_RENDER_TARGET_VIEW_DESC renderDesc;
+		ZeroMemory(&renderDesc, sizeof(renderDesc));
+
+		textureDesc.ArraySize = 1;
+		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.Format = DXGI_FORMAT_R16G16_FLOAT;
+		textureDesc.Height = height;
+		textureDesc.Width = width;
+		textureDesc.MipLevels = 1;
+		textureDesc.MiscFlags = 0;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		renderDesc.Format = textureDesc.Format;
+		renderDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		renderDesc.Texture2D.MipSlice = 0;
+
+		texture = new MythosTexture2D();
+		hr = GetCreator()->CreateTexture2D(&textureDesc, nullptr, (ID3D11Texture2D**)&texture->GetData());
+		if (FAILED(hr)) {
+			return FALSE;
+		}
+
+		hr = GetCreator()->CreateRenderTargetView((ID3D11Texture2D*)texture->GetData(), &renderDesc, &rtv);
+		if (FAILED(hr)) {
+			return FALSE;
+		}
+
+		Math::Matrix4 captureProjection = Math::Matrix4::PerspectiveFovLH(Math::radians(90.0f), 1.0f, 0.1f, 10.0);
+		Math::Matrix4 captureViews = Math::Matrix4::LookAtLH({ 0,0,0 }, { 0.0,0.0,1.0 }, { 0,1,0 });
+
+		struct WVP
+		{
+			Math::Matrix4 World;
+			Math::Matrix4 View;
+			Math::Matrix4 Projection;
+		}MyMatrices;
+
+		//=========================================================================
+		//Rendering the Skybox out based on width and height specified
+		//=========================================================================
+
+		UINT strides[] = { sizeof(PlaneVertex) };
+		UINT offset[] = { 0 };
+
+		D3D11_VIEWPORT textureViewport;
+		textureViewport.Width = width;
+		textureViewport.Height = height;
+		textureViewport.TopLeftX = textureViewport.TopLeftY = 0;
+		textureViewport.MinDepth = 0; textureViewport.MaxDepth = 1;
+
+		GetContext()->RSSetViewports(1, &textureViewport);
+
+		GetContext()->IASetVertexBuffers(0, 1, &vertexBuffer, strides, offset);
+		GetContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+		GetContext()->VSSetShader((ID3D11VertexShader*)GetResource("textureVertex")->GetData(), nullptr, 0);
+		GetContext()->VSSetConstantBuffers(0, 1, (ID3D11Buffer**)&GetResource("constantBuffer")->GetData());
+		GetContext()->PSSetShader((ID3D11PixelShader*)GetResource("brdf_lut")->GetData(), nullptr, 0);
+		GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource("iblResource")->GetData());
+		GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource("samplerState")->GetData());
+
+		//MyMatrices.World = Math::Matrix4::Scale(1, 1, -1);
+		MyMatrices.World = Math::Matrix4::Identity;
+		MyMatrices.View = captureViews;
+		MyMatrices.Projection = captureProjection;
+
+		UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
+
+		//GetContext()->OMSetRenderTargets(1, (ID3D11RenderTargetView**)&GetResource("mainRenderTarget")->GetData(), nullptr);
+		GetContext()->OMSetRenderTargets(1, &rtv, nullptr);
+
+		GetContext()->DrawIndexed(6, 0, 0);
+		Present();
+
+		//=========================================================================
+		//Converting the rendered targets into shader resource
+		//=========================================================================
+
+		BOOL success = CreateShaderResource(texture, brdfTextureName);
+		if (!success) {
+			return FALSE;
+		}
+
+		//=========================================================================
+		//Clean up upon completion
+		//=========================================================================
+
+		vertexBuffer->Release();
+		indexBuffer->Release();
+
+		inputLayout->Release();
+
+		texture->SafeRelease();
+		delete texture;
+		rtv->Release();
+
+		return TRUE;
+	}
+
 
 	IMythosResource* Mythos::GetResource(const char* name)
 	{

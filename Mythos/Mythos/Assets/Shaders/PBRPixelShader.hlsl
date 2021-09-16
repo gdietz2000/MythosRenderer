@@ -14,12 +14,14 @@ cbuffer CameraBuffer : register(b0)
     float4 cameraPosition;
 }
 
-TextureCube environementMap : register(t0);
+TextureCube convolutedMap : register(t0);
+TextureCube environmentMap : register(t1);
+Texture2D brdf : register(t2);
 
-Texture2D diffuseTexture : register(t1);
-Texture2D aoTexture : register(t2);
-Texture2D metalTexture : register(t3);
-Texture2D roughTexture : register(t4);
+Texture2D diffuseTexture : register(t3);
+Texture2D aoTexture : register(t4);
+Texture2D metalTexture : register(t5);
+Texture2D roughTexture : register(t6);
 
 SamplerState SimpleSampler : register(s0);
 
@@ -71,13 +73,23 @@ float4 main(InputVertex v) : SV_TARGET
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;
     }
     
-    float3 kS = fresnelSchlickRoughness(dot(N, V), F0, roughness);
+    float3 F = fresnelSchlickRoughness(dot(N, V), F0, roughness);
+    float3 kS = F;
     float3 kD = 1.0 - kS;
-    float3 irradiance = pow(environementMap.Sample(SimpleSampler, N).rgb, GAMMA);
+    float3 irradiance = pow(convolutedMap.Sample(SimpleSampler, N).rgb, GAMMA);
     float3 diffuse = irradiance * albedo;
-    float3 ambient = (kD * diffuse) * ao;
+   
+    float3 R = reflect(-V, N);
+    //Indirect specular reflections
+    const float MAX_REFLECTION_LOD = 4.0;
     
-    float3 color = ambient; // + Lo;
+    float3 prefilteredColor = pow(environmentMap.SampleLevel(SimpleSampler, R, roughness * MAX_REFLECTION_LOD).rgb, GAMMA);
+    float2 envBRDF = brdf.Sample(SimpleSampler, float2(max(dot(N, V), 0.0), roughness)).rg;
+    float3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+    
+    float3 ambient = (kD * diffuse + specular) * ao;
+    
+    float3 color = ambient + Lo;
     
     //HDR tonemapping
     color = color / (color + 1.0);
