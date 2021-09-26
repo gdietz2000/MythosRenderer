@@ -168,6 +168,7 @@
     <FxCompile Include="Assets\Shaders\PrefilterEnvironment.hlsl" />
     <FxCompile Include="Assets\Shaders\BRDF_LUT.hlsl" />
     <FxCompile Include="Assets\Shaders\TextureVertexShader.hlsl" />
+    <FxCompile Include="Assets\Shaders\Color.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Mathematics\README.md" />

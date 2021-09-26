@@ -122,8 +122,8 @@ namespace Mythos
 		MythosAddressMode AddressMode;
 		Math::Vector4 BorderColor;
 		unsigned int MaxAnisotropy;
-		unsigned int MaxLOD;
-		unsigned int MinLOD;
+		float MaxLOD;
+		float MinLOD;
 		float MipLODBias;
 	};
 }

@@ -1216,9 +1216,11 @@ namespace Mythos
 		samplerDesc.BorderColor[2] = desc->BorderColor.z;
 		samplerDesc.BorderColor[3] = desc->BorderColor.w;
 		samplerDesc.MaxAnisotropy = desc->MaxAnisotropy;
+		samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
 		samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-		samplerDesc.MaxLOD = desc->MaxLOD;
 		samplerDesc.MinLOD = desc->MinLOD;
+		samplerDesc.MaxLOD = desc->MaxLOD;
+		samplerDesc.MaxAnisotropy = desc->MaxAnisotropy;
 		samplerDesc.MipLODBias = desc->MipLODBias;
 
 		IMythosResource* samplerState = new MythosTextureSampler();
@@ -2236,6 +2238,329 @@ namespace Mythos
 		texture->SafeRelease();
 		delete texture;
 		rtv->Release();
+
+		return TRUE;
+	}
+
+	BOOL Mythos::GenerateMippedTextureOfDifferentColors(unsigned int width, unsigned int height, const char* mippedName) {
+		//=========================================================================
+		//Create a Plane===========================================================
+		//=========================================================================
+
+		struct PlaneVertex
+		{
+			Math::Vector3 pos;
+			Math::Vector2 tex;
+		};
+
+		PlaneVertex vertices[] =
+		{
+			{{1,1,1}, {1,0}},
+			{{-1,1,1}, {0,0}},
+			{{1,-1,1}, {1,1}},
+			{{-1,-1,1}, {0,1}},
+		};
+
+		unsigned int indices[] = {
+			0,2,1,
+			2,3,1
+		};
+
+		ID3D11Buffer* vertexBuffer = nullptr;
+		ID3D11Buffer* indexBuffer = nullptr;
+		ID3D11Buffer* constantBuffer = nullptr;
+
+		D3D11_BUFFER_DESC vDesc, iDesc, cDesc;
+		ZeroMemory(&vDesc, sizeof(vDesc));
+		vDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		vDesc.ByteWidth = sizeof(PlaneVertex) * 4;
+		vDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		ZeroMemory(&iDesc, sizeof(iDesc));
+		iDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		iDesc.ByteWidth = sizeof(unsigned int) * 6;
+		iDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		ZeroMemory(&cDesc, sizeof(cDesc));
+		cDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cDesc.ByteWidth = sizeof(Math::Vector4);
+		cDesc.Usage = D3D11_USAGE_DYNAMIC;
+		cDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+		D3D11_SUBRESOURCE_DATA subData;
+		ZeroMemory(&subData, sizeof(subData));
+		subData.pSysMem = vertices;
+
+		HRESULT hr = GetCreator()->CreateBuffer(&vDesc, &subData, &vertexBuffer);
+		if (FAILED(hr))
+			return FALSE;
+
+		subData.pSysMem = indices;
+
+		hr = GetCreator()->CreateBuffer(&iDesc, &subData, &indexBuffer);
+		if (FAILED(hr))
+			return FALSE;
+
+		hr = GetCreator()->CreateBuffer(&cDesc, nullptr, &constantBuffer);
+		if (FAILED(hr))
+			return FALSE;
+
+		//=========================================================================
+		//Create Input Layout======================================================
+		//=========================================================================
+
+		D3D11_INPUT_ELEMENT_DESC layout[] = {
+			{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+			{"UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0}
+		};
+
+		ID3D11InputLayout* inputLayout;
+
+		ID3D10Blob* blob = GetShaderBlob("textureVertex");
+		GetCreator()->CreateInputLayout(layout, 2, blob->GetBufferPointer(), blob->GetBufferSize(), &inputLayout);
+		GetContext()->IASetInputLayout(inputLayout);
+
+		//=========================================================================
+		//Render Targets and Camera Projections====================================
+		//=========================================================================
+
+		D3D11_TEXTURE2D_DESC textureDesc;
+		ZeroMemory(&textureDesc, sizeof(textureDesc));
+		D3D11_RENDER_TARGET_VIEW_DESC renderDesc;
+		ZeroMemory(&renderDesc, sizeof(renderDesc));
+
+		textureDesc.ArraySize = 1;
+		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		textureDesc.Width = width;
+		textureDesc.Height = height;
+		textureDesc.MipLevels = 1;
+		textureDesc.MiscFlags = 0;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		renderDesc.Format = textureDesc.Format;
+		renderDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		renderDesc.Texture2D.MipSlice = 0;
+
+		IMythosResource* textures[] = {
+			nullptr,
+			nullptr,
+			nullptr,
+			nullptr,
+			nullptr,
+		};
+
+		ID3D11RenderTargetView* rtvs[] = {
+			nullptr,
+			nullptr,
+			nullptr,
+			nullptr,
+			nullptr,
+		};
+
+		for (int i = 0; i < 5; ++i) {
+
+			unsigned int mipWidth = width * std::pow(0.5, i);
+			unsigned int mipHeight = height * std::pow(0.5, i);
+
+			textureDesc.Width = mipWidth;
+			textureDesc.Height = mipHeight;
+
+			textures[i] = new MythosTexture2D();
+			hr = GetCreator()->CreateTexture2D(&textureDesc, nullptr, (ID3D11Texture2D**)&textures[i]->GetData());
+			if (FAILED(hr)) {
+				return FALSE;
+			}
+
+
+			hr = GetCreator()->CreateRenderTargetView((ID3D11Texture2D*)textures[i]->GetData(), &renderDesc, &rtvs[i]);
+			if (FAILED(hr)) {
+				return FALSE;
+			}
+		}
+
+		Math::Matrix4 captureProjection = Math::Matrix4::PerspectiveFovLH(Math::radians(90.0f), 1.0f, 0.1f, 10.0);
+		Math::Matrix4 captureViews = Math::Matrix4::LookAtLH({ 0,0,0 }, { 0.0,0.0,1.0 }, { 0,1,0 });
+
+		struct WVP
+		{
+			Math::Matrix4 World;
+			Math::Matrix4 View;
+			Math::Matrix4 Projection;
+		}MyMatrices;
+
+		//=========================================================================
+		//Rendering the Skybox out based on width and height specified
+		//=========================================================================
+
+		UINT strides[] = { sizeof(PlaneVertex) };
+		UINT offset[] = { 0 };
+
+		Math::Vector4 colors[] = {
+			{1,0,0,1},
+			{1,1,0,1},
+			{0,1,0,1},
+			{0,1,1,1},
+			{0,0,1,1}
+		};
+
+		GetContext()->IASetVertexBuffers(0, 1, &vertexBuffer, strides, offset);
+		GetContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+		GetContext()->VSSetShader((ID3D11VertexShader*)GetResource("textureVertex")->GetData(), nullptr, 0);
+		GetContext()->VSSetConstantBuffers(0, 1, (ID3D11Buffer**)&GetResource("constantBuffer")->GetData());
+		GetContext()->PSSetShader((ID3D11PixelShader*)GetResource("color")->GetData(), nullptr, 0);
+		GetContext()->PSSetConstantBuffers(0, 1, &constantBuffer);
+
+		MyMatrices.World = Math::Matrix4::Identity;
+		MyMatrices.View = captureViews;
+		MyMatrices.Projection = captureProjection;
+
+		UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
+
+		//GetContext()->OMSetRenderTargets(1, (ID3D11RenderTargetView**)&GetResource("mainRenderTarget")->GetData(), nullptr);
+		//GetContext()->OMSetRenderTargets(1, &rtv, nullptr);
+
+		int maxMipLevels = 5;
+
+		for (int mip = 0; mip < maxMipLevels; ++mip) {
+			unsigned int mipWidth = width * std::pow(0.5, mip);
+			unsigned int mipHeight = height * std::pow(0.5, mip);
+
+			D3D11_VIEWPORT textureViewport;
+			textureViewport.Width = mipWidth;
+			textureViewport.Height = mipHeight;
+			textureViewport.TopLeftX = textureViewport.TopLeftY = 0;
+			textureViewport.MinDepth = 0; textureViewport.MaxDepth = 1;
+
+			GetContext()->RSSetViewports(1, &textureViewport);
+
+			GetContext()->OMSetRenderTargets(1, &rtvs[mip], nullptr);
+
+			D3D11_MAPPED_SUBRESOURCE gpuBuffer;
+			m_Context.GetContext()->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &gpuBuffer);
+			memcpy(gpuBuffer.pData, &colors[mip], sizeof(Math::Vector4));
+			m_Context.GetContext()->Unmap(constantBuffer, 0);
+
+			GetContext()->DrawIndexed(6, 0, 0);
+			Present();
+		}
+
+		//=========================================================================
+		//Converting the rendered targets into shader resource
+		//=========================================================================
+
+		//BOOL success = CreateShaderResource(texture, mippedName);
+		//if (!success) {
+		//	return FALSE;
+		//}
+
+		BOOL success = CombineTexture2DsAsMips(width, height, textures, maxMipLevels, "combinedTexture");
+		if (!success)
+			return FALSE;
+
+		success = CreateShaderResource(GetResource("combinedTexture"), "combinedResource");
+		if (!success)
+			return FALSE;
+
+		//=========================================================================
+		//Clean up upon completion
+		//=========================================================================
+
+		vertexBuffer->Release();
+		indexBuffer->Release();
+		constantBuffer->Release();
+
+		inputLayout->Release();
+
+		for (int i = 0; i < 5; ++i) {
+			textures[i]->SafeRelease();
+			delete textures[i];
+			rtvs[i]->Release();
+		}
+
+		return TRUE;
+	}
+
+	BOOL Mythos::CombineTexture2DsAsMips(unsigned int width, unsigned int height, IMythosResource** textures, int numMips, const char* combinedTextureName)
+	{
+		//Creating the Cube Map Texture Descriptor
+		D3D11_TEXTURE2D_DESC textureDesc;
+		textureDesc.Height = height;
+		textureDesc.Width = width;
+
+		textureDesc.ArraySize = 1;
+		textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.MipLevels = numMips;
+		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.SampleDesc.Quality = 0;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+		textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
+		D3D11_SUBRESOURCE_DATA* subData = new D3D11_SUBRESOURCE_DATA[numMips];
+
+		ID3D11Texture2D** copies= new ID3D11Texture2D*[numMips];
+
+		for (int mipLevel = 0; mipLevel < numMips; ++mipLevel)
+		{
+			D3D11_TEXTURE2D_DESC desc;
+			ID3D11Texture2D* texture = (ID3D11Texture2D*)textures[mipLevel]->GetData();
+			texture->GetDesc(&desc);
+
+			D3D11_TEXTURE2D_DESC desc2;
+			memcpy(&desc2, &desc, sizeof(desc));
+			desc2.BindFlags = 0;
+			desc2.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+			desc2.Usage = D3D11_USAGE_STAGING;
+
+			HRESULT hr = GetCreator()->CreateTexture2D(&desc2, nullptr, &copies[mipLevel]);
+			if (FAILED(hr))
+				return FALSE;
+
+			GetContext()->CopyResource(copies[mipLevel], texture);
+
+			D3D11_MAPPED_SUBRESOURCE mapInfo;
+			m_Context.GetContext()->Map(copies[mipLevel], 0, D3D11_MAP_READ, 0, &mapInfo);
+
+			subData[mipLevel].pSysMem = mapInfo.pData;
+			subData[mipLevel].SysMemPitch = mapInfo.RowPitch;
+			subData[mipLevel].SysMemSlicePitch = mapInfo.DepthPitch;
+
+			m_Context.GetContext()->Unmap(copies[mipLevel], 0);
+		}
+
+		D3D11_TEXTURE2D_DESC newDesc;
+		ZeroMemory(&newDesc, sizeof(newDesc));
+		newDesc.ArraySize = 1;
+		newDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+		newDesc.MipLevels = numMips;
+		newDesc.MiscFlags = 0;
+		newDesc.CPUAccessFlags = 0;
+		newDesc.Usage = D3D11_USAGE_DEFAULT;
+		newDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		newDesc.Width = width;
+		newDesc.Height = height;
+		newDesc.SampleDesc.Count = 1;
+
+		IMythosResource* combinedTexture = new MythosTexture2D();
+		HRESULT hr = GetCreator()->CreateTexture2D(&newDesc, &subData[0], (ID3D11Texture2D**)&combinedTexture->GetData());
+		if (FAILED(hr))
+			return FALSE;
+
+		m_NamesToIndex.insert(std::make_pair(combinedTextureName, MYTHOS_RESOURCE_SHADER_RESOURCE));
+		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(combinedTextureName, combinedTexture));
+
+		//CLEAN UP
+		for (int i = 0; i < numMips; ++i) {
+			copies[i]->Release();
+		}
+		
+		delete[] subData;
+		delete[] copies;
 
 		return TRUE;
 	}

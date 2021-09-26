@@ -23,10 +23,15 @@ Texture2D aoTexture : register(t4);
 Texture2D metalTexture : register(t5);
 Texture2D roughTexture : register(t6);
 
+Texture2D level0 : register(t7);
+//Texture2D level1: register(t8);
+
 SamplerState SimpleSampler : register(s0);
 
 float4 main(InputVertex v) : SV_TARGET
 {
+    return level0.SampleLevel(SimpleSampler, float2(0, 0), 4);
+    
     float3 albedo = pow(diffuseTexture.Sample(SimpleSampler, v.uv), GAMMA);
     float ao = aoTexture.Sample(SimpleSampler, v.uv).r;
     float metallic = metalTexture.Sample(SimpleSampler, v.uv).r;

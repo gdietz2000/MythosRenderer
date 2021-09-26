@@ -19,6 +19,10 @@ using namespace Math;
 
 #include <crtdbg.h>
 #define ENABLE_LEAK_DETECTION() _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF)
+#pragma warning(disable:4996)
+
+#include <iostream>
+#include <chrono>
 
 struct WVP {
 	Matrix4 World;
@@ -143,6 +147,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreatePixelShader(L"Assets/Shaders/BRDF_LUT.hlsl", entryPoint, pixelShaderModel, "brdf_lut");
 		if (!success)
 			return -1;
+		
+		success = mythos->CreatePixelShader(L"Assets/Shaders/Color.hlsl", entryPoint, pixelShaderModel, "color");
+		if (!success)
+			return -1;
 
 		Mythos::MythosInputElement layoutDesc[] = {
 			{"POSITION", 0, Mythos::MYTHOS_FORMAT_32_FLOAT3},
@@ -186,10 +194,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		Mythos::MythosSamplerDescriptor samplerDesc;
 		samplerDesc.AddressMode = Mythos::MYTHOS_TEXTURE_ADDRESS_WRAP;
 		samplerDesc.BorderColor = Math::Vector4(1, 1, 1, 1);
+		samplerDesc.MinLOD = -FLT_MAX;
+		samplerDesc.MaxLOD = FLT_MAX;
 		samplerDesc.MaxAnisotropy = 1;
-		samplerDesc.MaxLOD = 1;
-		samplerDesc.MinLOD = 0;
-		samplerDesc.MipLODBias = 1.0f;
+		samplerDesc.MipLODBias = 0.0f;
 		success = mythos->CreateTextureSampler(&samplerDesc, "samplerState");
 		if (!success)
 			return -1;
@@ -222,6 +230,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mythos->ConvoluteSkybox(wid2, hei2, "skybox", "convoluted");
 	//mythos->CreatePrefilteredEnvironment(128, 128, "skybox", "prefilteredEnvironment");
 	mythos->CreateBRDFTexture(512, 512, "brdfResource");
+	mythos->GenerateMippedTextureOfDifferentColors(512, 512, "coloredTexture");
 
 	//MyMatrices.World = Matrix4::Scale(10) * Matrix4::RotateY(PI / -2);
 	MyMatrices.View = freeCamera.GetCamera();
@@ -232,6 +241,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
 
 	float rotation = 0.0;
+
+	clock_t currentTicks, deltaTicks;
+	clock_t fps = 0;
 
 	// Main message loop:
 	while (true)
@@ -246,6 +258,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		if (msg.message == WM_QUIT)
 			break;
+
+		currentTicks = clock();
 
 		freeCamera.GetCameraInput();
 		MyMatrices.View = freeCamera.GetCamera();
@@ -320,6 +334,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				(ID3D11ShaderResourceView*)mythos->GetResource("deagleAO")->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource("deagleMetal")->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource("deagleRough")->GetData(),
+				(ID3D11ShaderResourceView*)mythos->GetResource("combinedResource")->GetData(),
 			};
 
 			mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
@@ -331,6 +346,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 
 		mythos->Present();
+
+		deltaTicks = clock() - currentTicks;
+		if (deltaTicks > 0)
+			fps = CLOCKS_PER_SEC / deltaTicks;
+		std::cout << fps << '\n';
 	}
 
 	delete mythos;

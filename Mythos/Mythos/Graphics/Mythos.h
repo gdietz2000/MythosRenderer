@@ -112,6 +112,10 @@ namespace Mythos
 		BOOL CreatePrefilteredEnvironment(unsigned int width, unsigned int height, const char* textureCubeName, const char* prefilteredTextureCubeName);
 		BOOL CreateBRDFTexture(unsigned int width, unsigned int height, const char* brdfTextureName);
 
+		BOOL GenerateMippedTextureOfDifferentColors(unsigned int width, unsigned int height, const char* mipTexture);
+
+		BOOL CombineTexture2DsAsMips(unsigned int width, unsigned int height, IMythosResource** textures, int numMips, const char* combinedTextureName);
+
 		//GetResource will return a resource based off of the id given.
 		IMythosResource* GetResource(const char* name);
 		ID3D10Blob* GetShaderBlob(const char* name);
