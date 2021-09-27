@@ -23,14 +23,11 @@ Texture2D aoTexture : register(t4);
 Texture2D metalTexture : register(t5);
 Texture2D roughTexture : register(t6);
 
-Texture2D level0 : register(t7);
-//Texture2D level1: register(t8);
-
 SamplerState SimpleSampler : register(s0);
 
 float4 main(InputVertex v) : SV_TARGET
-{
-    return level0.SampleLevel(SimpleSampler, float2(0, 0), 4);
+{    
+    //return test.SampleLevel(SimpleSampler, float2(0, 0), 1);
     
     float3 albedo = pow(diffuseTexture.Sample(SimpleSampler, v.uv), GAMMA);
     float ao = aoTexture.Sample(SimpleSampler, v.uv).r;
@@ -38,7 +35,7 @@ float4 main(InputVertex v) : SV_TARGET
     float roughness = roughTexture.Sample(SimpleSampler, v.uv).r;
     
     float3 N = normalize(v.normal);
-    float3 V = normalize(cameraPosition.xyz - v.world);
+    float3 V = normalize(cameraPosition.xyz - v.world);    
     
     float3 F0 = lerp(0.04, albedo, metallic);
     
@@ -51,7 +48,7 @@ float4 main(InputVertex v) : SV_TARGET
     };
     
     float3 Lo = 0.0;
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 1; ++i)
     {
         float3 L = normalize(lightPositions[i] - v.world);
         float3 H = normalize(V + L);
@@ -86,9 +83,9 @@ float4 main(InputVertex v) : SV_TARGET
    
     float3 R = reflect(-V, N);
     //Indirect specular reflections
-    const float MAX_REFLECTION_LOD = 4.0;
+    const float MAX_REFLECTION_LOD = 5.0;
     
-    float3 prefilteredColor = pow(environmentMap.SampleLevel(SimpleSampler, R, roughness * MAX_REFLECTION_LOD).rgb, GAMMA);
+    float3 prefilteredColor = pow(environmentMap.SampleLevel(SimpleSampler, R, 0 * MAX_REFLECTION_LOD).rgb, GAMMA);
     float2 envBRDF = brdf.Sample(SimpleSampler, float2(max(dot(N, V), 0.0), roughness)).rg;
     float3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
     

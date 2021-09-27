@@ -115,6 +115,7 @@ namespace Mythos
 		BOOL GenerateMippedTextureOfDifferentColors(unsigned int width, unsigned int height, const char* mipTexture);
 
 		BOOL CombineTexture2DsAsMips(unsigned int width, unsigned int height, IMythosResource** textures, int numMips, const char* combinedTextureName);
+		BOOL CombineTextureCubeMapAsMips(unsigned int width, unsigned int height, IMythosResource** textures, int numMips, const char* combinedCubeName);
 
 		//GetResource will return a resource based off of the id given.
 		IMythosResource* GetResource(const char* name);
@@ -126,11 +127,13 @@ namespace Mythos
 		D3D11_VIEWPORT m_Viewport;
 
 		//Helper Function
-
 		BOOL NameAvailable(const char* name);
 		UINT GetBindFlags(MythosBindFlags flag);
 		UINT GetFormat(MythosFormat format);
 		UINT GetFormatSize(MythosFormat format);
+
+		IMythosResource* CombineAsMips2D(unsigned int width, unsigned int height, IMythosResource** textures, int numMips);
+		IMythosResource* CombineAsMipsCube(unsigned int width, unsigned int height, IMythosResource** textures, int numMips);
 
 		/*Create a system where resources are seperated based on resource type ie:
 		Vertex Buffers

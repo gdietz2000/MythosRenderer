@@ -52,6 +52,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	Mythos::MythosModel* deagle = mythos->LoadMesh("Assets/Models/DesertEagle.txt");
 	Mythos::MythosModel* sphere = mythos->LoadMesh("Assets/Models/UvSphere.txt");
 	Mythos::MythosModel* cube = mythos->LoadMesh("Assets/Models/Cube.txt");
+	Mythos::MythosModel* plane = mythos->LoadMesh("Assets/Models/Plane.txt");
 
 	unsigned int wid = 512, hei = 512;
 	unsigned int wid2 = 32, hei2 = 32;
@@ -70,6 +71,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			return -1;
 
 		success = mythos->CreateModelBuffers(deagle, "deagleVert", "deagleInd");
+		if (!success)
+			return -1;
+		
+		success = mythos->CreateModelBuffers(plane, "planeVert", "planeInd");
 		if (!success)
 			return -1;
 
@@ -152,6 +157,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
+		success = mythos->CreatePixelShader(L"Assets/Shaders/TexturedObject.hlsl", entryPoint, pixelShaderModel, "textureShader");
+		if (!success)
+			return -1;
+
 		Mythos::MythosInputElement layoutDesc[] = {
 			{"POSITION", 0, Mythos::MYTHOS_FORMAT_32_FLOAT3},
 			{"UV", 0, Mythos::MYTHOS_FORMAT_32_FLOAT2},
@@ -194,7 +203,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		Mythos::MythosSamplerDescriptor samplerDesc;
 		samplerDesc.AddressMode = Mythos::MYTHOS_TEXTURE_ADDRESS_WRAP;
 		samplerDesc.BorderColor = Math::Vector4(1, 1, 1, 1);
-		samplerDesc.MinLOD = -FLT_MAX;
+		samplerDesc.MinLOD = 0;
 		samplerDesc.MaxLOD = FLT_MAX;
 		samplerDesc.MaxAnisotropy = 1;
 		samplerDesc.MipLODBias = 0.0f;
@@ -224,11 +233,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mythos->SetTopology(Mythos::MYTHOS_TRIANGLE_LIST);
 	mythos->GetContext()->IASetInputLayout((ID3D11InputLayout*)mythos->GetResource("inputLayout")->GetData());
 
-	mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Newport_Loft.dds", "skybox");
-	//mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Arches_PineTree.dds", "skybox");
+	//mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Newport_Loft.dds", "skybox");
+	mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Arches_PineTree.dds", "skybox");
 	//mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/HDRI.dds", "skybox");
 	mythos->ConvoluteSkybox(wid2, hei2, "skybox", "convoluted");
-	//mythos->CreatePrefilteredEnvironment(128, 128, "skybox", "prefilteredEnvironment");
+	mythos->CreatePrefilteredEnvironment(128, 128, "skybox", "prefilteredEnvironment");
 	mythos->CreateBRDFTexture(512, 512, "brdfResource");
 	mythos->GenerateMippedTextureOfDifferentColors(512, 512, "coloredTexture");
 
@@ -276,7 +285,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		UINT offset[] = { 0 };
 
 		{
-			MyMatrices.World = Matrix4::Scale(1,1,-1) * Matrix4::Translate(freeCamera.GetPosition());
+			MyMatrices.World = Matrix4::Scale(1, 1, -1) * Matrix4::Translate(freeCamera.GetPosition());
 			mythos->UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
 
 			mythos->GetContext()->OMSetRenderTargets(1, &targets, nullptr);
@@ -328,7 +337,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			ID3D11ShaderResourceView* srvs[] =
 			{
 				(ID3D11ShaderResourceView*)mythos->GetResource("convoluted")->GetData(),
-				(ID3D11ShaderResourceView*)mythos->GetResource("skybox")->GetData(),
+				(ID3D11ShaderResourceView*)mythos->GetResource("prefilteredEnvironment")->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource("brdfResource")->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource("deagleDiffuse")->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource("deagleAO")->GetData(),
@@ -357,6 +366,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	delete deagle;
 	delete sphere;
 	delete cube;
+	delete plane;
 
 	return (int)msg.wParam;
 }

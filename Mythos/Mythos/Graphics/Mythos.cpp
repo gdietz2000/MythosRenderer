@@ -1008,7 +1008,8 @@ namespace Mythos
 			return FALSE;
 
 		IMythosResource* resource = new MythosShaderResource();
-		HRESULT hr = DirectX::CreateDDSTextureFromFile(m_Creator.GetCreator(), filepath, nullptr, (ID3D11ShaderResourceView**)&resource->GetData());
+		HRESULT hr = DirectX::CreateDDSTextureFromFile(GetCreator(), filepath, nullptr, (ID3D11ShaderResourceView**)&resource->GetData());
+
 		if (FAILED(hr))
 		{
 			delete resource;
@@ -1872,6 +1873,12 @@ namespace Mythos
 		iDesc.ByteWidth = sizeof(unsigned int) * 36;
 		iDesc.Usage = D3D11_USAGE_DEFAULT;
 
+		ZeroMemory(&cDesc, sizeof(cDesc));
+		cDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cDesc.ByteWidth = sizeof(Math::Vector4);
+		cDesc.Usage = D3D11_USAGE_DYNAMIC;
+		cDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
 		D3D11_SUBRESOURCE_DATA subData;
 		ZeroMemory(&subData, sizeof(subData));
 		subData.pSysMem = cubeVerts;
@@ -1886,16 +1893,6 @@ namespace Mythos
 		if (FAILED(hr))
 			return FALSE;
 
-		//=========================================================================
-		//Create a cosntant buffer that passes the roughness value=================
-		//=========================================================================
-
-		ZeroMemory(&cDesc, sizeof(cDesc));
-		cDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		cDesc.ByteWidth = sizeof(Math::Vector4);
-		cDesc.Usage = D3D11_USAGE_DYNAMIC;
-		cDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
 		hr = GetCreator()->CreateBuffer(&cDesc, nullptr, &constantBuffer);
 		if (FAILED(hr))
 			return FALSE;
@@ -1904,23 +1901,10 @@ namespace Mythos
 		//Render Targets and Camera Projections====================================
 		//=========================================================================
 
-		IMythosResource* textures[] = {
-			nullptr,
-			nullptr,
-			nullptr,
-			nullptr,
-			nullptr,
-			nullptr,
-		};
+		int maxMipLevels = 5;
 
-		ID3D11RenderTargetView* rtvs[] = {
-			nullptr,
-			nullptr,
-			nullptr,
-			nullptr,
-			nullptr,
-			nullptr,
-		};
+		IMythosResource** textures = new IMythosResource * [6 * maxMipLevels];
+		ID3D11RenderTargetView** rtvs = new ID3D11RenderTargetView*[6 * maxMipLevels];
 
 		D3D11_TEXTURE2D_DESC textureDesc;
 		ZeroMemory(&textureDesc, sizeof(textureDesc));
@@ -1933,7 +1917,7 @@ namespace Mythos
 		textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 		textureDesc.Height = height;
 		textureDesc.Width = width;
-		textureDesc.MipLevels = 1;
+		textureDesc.MipLevels = maxMipLevels;
 		textureDesc.MiscFlags = 0;
 		textureDesc.SampleDesc.Count = 1;
 		textureDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -1942,7 +1926,7 @@ namespace Mythos
 		renderDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 		renderDesc.Texture2D.MipSlice = 0;
 
-		for (int i = 0; i < 6; ++i)
+		for (int i = 0; i < 6 * maxMipLevels; ++i)
 		{
 			textures[i] = new MythosTexture2D();
 			HRESULT hr = GetCreator()->CreateTexture2D(&textureDesc, nullptr, (ID3D11Texture2D**)&textures[i]->GetData());
@@ -1975,7 +1959,7 @@ namespace Mythos
 		}MyMatrices;
 
 		//=========================================================================
-		//Rendering the Skybox out based on width and height specified=============
+		//Rendering the Skybox out based on width and height specified
 		//=========================================================================
 
 		UINT strides[] = { sizeof(Math::Vector3) };
@@ -1993,59 +1977,43 @@ namespace Mythos
 		MyMatrices.World = Math::Matrix4::Scale(1, 1, -1);
 		MyMatrices.Projection = captureProjection;
 
-		//Create 5 mip levels
-		unsigned int maxMipLevels = 5;
-		for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
+		GetContext()->PSSetConstantBuffers(0, 1, &constantBuffer);
+
+		int index = 0;
+		for (int i = 0; i < 6; ++i)
 		{
-			unsigned int mipWidth = width * pow(0.5, mip);
-			unsigned int mipHeight = height * pow(0.5, mip);
-
-			D3D11_VIEWPORT textureViewport;
-			textureViewport.Width = mipWidth;
-			textureViewport.Height = mipHeight;
-			textureViewport.TopLeftX = textureViewport.TopLeftY = 0;
-			textureViewport.MinDepth = 0; textureViewport.MaxDepth = 1;
-
-			GetContext()->RSSetViewports(1, &textureViewport);
-			float roughness = (float)mip / (float)(maxMipLevels - 1);
-
-			D3D11_MAPPED_SUBRESOURCE gpuBuffer;
-			GetContext()->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &gpuBuffer);
-			memcpy(gpuBuffer.pData, &Math::Vector4(roughness), sizeof(Math::Vector4));
-			GetContext()->Unmap(constantBuffer, 0);
-
-			for (int i = 0; i < 6; ++i)
+			MyMatrices.View = captureViews[i];
+			UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
+			for (int mip = 0; mip < maxMipLevels; ++mip) 
 			{
-				MyMatrices.View = captureViews[i];
-				UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
+				D3D11_VIEWPORT textureViewport;
+				textureViewport.Width = width * pow(0.5, mip);
+				textureViewport.Height = height * pow(0.5, mip);
+				textureViewport.TopLeftX = textureViewport.TopLeftY = 0;
+				textureViewport.MinDepth = 0; textureViewport.MaxDepth = 1;
 
-				GetContext()->PSSetConstantBuffers(0, 1, &constantBuffer);
+				GetContext()->RSSetViewports(1, &textureViewport);
 
-				GetContext()->OMSetRenderTargets(1, &rtvs[i], nullptr);
+				float roughness = mip / (float)maxMipLevels;
+				D3D11_MAPPED_SUBRESOURCE gpuBuffer;
+				GetContext()->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &gpuBuffer);
+				memcpy(gpuBuffer.pData, &Math::Vector4(roughness), sizeof(Math::Vector4));
+				GetContext()->Unmap(constantBuffer, 0);
+
+				GetContext()->OMSetRenderTargets(1, &rtvs[index], nullptr);
 
 				GetContext()->DrawIndexed(36, 0, 0);
+				index++;
 			}
 		}
 
 		Present();
 
-		MythosTextureDescriptor cubeDesc;
-		cubeDesc.bindFlags = MYTHOS_BIND_RENDER_TARGET | MYTHOS_BIND_SHADER_RESOURCE;
-		cubeDesc.cpuAccess = MYTHOS_DEFAULT_ACCESS;
-		cubeDesc.format = MYTHOS_FORMAT_32_FLOAT4;
-		cubeDesc.width = width;
-		cubeDesc.height = height;
-		cubeDesc.mipLevels = 1;
-		cubeDesc.sampleCount = 1;
-		cubeDesc.sampleQuality = 0;
-
-		BOOL success = CreateTextureCube(&cubeDesc, textures, "prefilteredCube");
+		BOOL success = CombineTextureCubeMapAsMips(width, height, textures, maxMipLevels, "prefilteredTemp");
 		if (!success)
-		{
 			return FALSE;
-		}
 
-		success = CreateShaderResourceCube("prefilteredCube", prefilteredTextureCubeName);
+		success = CreateShaderResourceCube("prefilteredTemp", prefilteredTextureCubeName);
 		if (!success) {
 			return FALSE;
 		}
@@ -2054,12 +2022,15 @@ namespace Mythos
 		indexBuffer->Release();
 		constantBuffer->Release();
 
-		for (int i = 0; i < 6; ++i)
+		for (int i = 0; i < 6 * maxMipLevels; ++i)
 		{
 			textures[i]->SafeRelease();
 			delete textures[i];
 			rtvs[i]->Release();
 		}
+
+		delete[] textures;
+		delete[] rtvs;
 
 		return TRUE;
 	}
@@ -2486,81 +2457,24 @@ namespace Mythos
 
 	BOOL Mythos::CombineTexture2DsAsMips(unsigned int width, unsigned int height, IMythosResource** textures, int numMips, const char* combinedTextureName)
 	{
-		//Creating the Cube Map Texture Descriptor
-		D3D11_TEXTURE2D_DESC textureDesc;
-		textureDesc.Height = height;
-		textureDesc.Width = width;
-
-		textureDesc.ArraySize = 1;
-		textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-		textureDesc.MipLevels = numMips;
-		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		textureDesc.SampleDesc.Count = 1;
-		textureDesc.SampleDesc.Quality = 0;
-		textureDesc.CPUAccessFlags = 0;
-		textureDesc.Usage = D3D11_USAGE_DEFAULT;
-		textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-
-		D3D11_SUBRESOURCE_DATA* subData = new D3D11_SUBRESOURCE_DATA[numMips];
-
-		ID3D11Texture2D** copies= new ID3D11Texture2D*[numMips];
-
-		for (int mipLevel = 0; mipLevel < numMips; ++mipLevel)
-		{
-			D3D11_TEXTURE2D_DESC desc;
-			ID3D11Texture2D* texture = (ID3D11Texture2D*)textures[mipLevel]->GetData();
-			texture->GetDesc(&desc);
-
-			D3D11_TEXTURE2D_DESC desc2;
-			memcpy(&desc2, &desc, sizeof(desc));
-			desc2.BindFlags = 0;
-			desc2.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-			desc2.Usage = D3D11_USAGE_STAGING;
-
-			HRESULT hr = GetCreator()->CreateTexture2D(&desc2, nullptr, &copies[mipLevel]);
-			if (FAILED(hr))
-				return FALSE;
-
-			GetContext()->CopyResource(copies[mipLevel], texture);
-
-			D3D11_MAPPED_SUBRESOURCE mapInfo;
-			m_Context.GetContext()->Map(copies[mipLevel], 0, D3D11_MAP_READ, 0, &mapInfo);
-
-			subData[mipLevel].pSysMem = mapInfo.pData;
-			subData[mipLevel].SysMemPitch = mapInfo.RowPitch;
-			subData[mipLevel].SysMemSlicePitch = mapInfo.DepthPitch;
-
-			m_Context.GetContext()->Unmap(copies[mipLevel], 0);
-		}
-
-		D3D11_TEXTURE2D_DESC newDesc;
-		ZeroMemory(&newDesc, sizeof(newDesc));
-		newDesc.ArraySize = 1;
-		newDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-		newDesc.MipLevels = numMips;
-		newDesc.MiscFlags = 0;
-		newDesc.CPUAccessFlags = 0;
-		newDesc.Usage = D3D11_USAGE_DEFAULT;
-		newDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		newDesc.Width = width;
-		newDesc.Height = height;
-		newDesc.SampleDesc.Count = 1;
-
-		IMythosResource* combinedTexture = new MythosTexture2D();
-		HRESULT hr = GetCreator()->CreateTexture2D(&newDesc, &subData[0], (ID3D11Texture2D**)&combinedTexture->GetData());
-		if (FAILED(hr))
+		IMythosResource* combinedTexture = CombineAsMips2D(width, height, textures, numMips);
+		if (!combinedTexture)
 			return FALSE;
 
-		m_NamesToIndex.insert(std::make_pair(combinedTextureName, MYTHOS_RESOURCE_SHADER_RESOURCE));
-		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(combinedTextureName, combinedTexture));
+		m_NamesToIndex.insert(std::make_pair(combinedTextureName, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(combinedTextureName, combinedTexture));
 
-		//CLEAN UP
-		for (int i = 0; i < numMips; ++i) {
-			copies[i]->Release();
-		}
-		
-		delete[] subData;
-		delete[] copies;
+		return TRUE;
+	}
+
+	BOOL Mythos::CombineTextureCubeMapAsMips(unsigned int width, unsigned int height, IMythosResource** textures, int numMips, const char* combinedCubeName)
+	{
+		IMythosResource* combinedTexture = CombineAsMipsCube(width, height, textures, numMips);
+		if (!combinedTexture)
+			return FALSE;
+
+		m_NamesToIndex.insert(std::make_pair(combinedCubeName, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(combinedCubeName, combinedTexture));
 
 		return TRUE;
 	}
@@ -2717,5 +2631,140 @@ namespace Mythos
 			formatSize = sizeof(char) * 4;
 		}
 		return formatSize;
+	}
+	IMythosResource* Mythos::CombineAsMips2D(unsigned int width, unsigned int height, IMythosResource** textures, int numMips)
+	{
+		D3D11_SUBRESOURCE_DATA* subData = new D3D11_SUBRESOURCE_DATA[numMips];
+		ID3D11Texture2D** copies = new ID3D11Texture2D * [numMips];
+
+		for (int mipLevel = 0; mipLevel < numMips; ++mipLevel)
+		{
+			D3D11_TEXTURE2D_DESC desc;
+			ID3D11Texture2D* texture = (ID3D11Texture2D*)textures[mipLevel]->GetData();
+			texture->GetDesc(&desc);
+
+			D3D11_TEXTURE2D_DESC desc2;
+			memcpy(&desc2, &desc, sizeof(desc));
+			desc2.BindFlags = 0;
+			desc2.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+			desc2.Usage = D3D11_USAGE_STAGING;
+
+			HRESULT hr = GetCreator()->CreateTexture2D(&desc2, nullptr, &copies[mipLevel]);
+			if (FAILED(hr))
+				return FALSE;
+
+			GetContext()->CopyResource(copies[mipLevel], texture);
+
+			D3D11_MAPPED_SUBRESOURCE mapInfo;
+			m_Context.GetContext()->Map(copies[mipLevel], 0, D3D11_MAP_READ, 0, &mapInfo);
+
+			subData[mipLevel].pSysMem = mapInfo.pData;
+			subData[mipLevel].SysMemPitch = mapInfo.RowPitch;
+			subData[mipLevel].SysMemSlicePitch = mapInfo.DepthPitch;
+
+			m_Context.GetContext()->Unmap(copies[mipLevel], 0);
+		}
+
+		D3D11_TEXTURE2D_DESC newDesc;
+		ZeroMemory(&newDesc, sizeof(newDesc));
+		newDesc.ArraySize = 1;
+		newDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+		newDesc.MipLevels = numMips;
+		newDesc.MiscFlags = 0;
+		newDesc.CPUAccessFlags = 0;
+		newDesc.Usage = D3D11_USAGE_DEFAULT;
+		newDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		newDesc.Width = width;
+		newDesc.Height = height;
+		newDesc.SampleDesc.Count = 1;
+
+		IMythosResource* combinedTexture = new MythosTexture2D();
+		HRESULT hr = GetCreator()->CreateTexture2D(&newDesc, &subData[0], (ID3D11Texture2D**)&combinedTexture->GetData());
+
+		//CLEAN UP=========================
+		for (int i = 0; i < numMips; ++i) {
+			copies[i]->Release();
+		}
+		delete[] subData;
+		delete[] copies;
+		//CLEAN UP=========================
+
+		if (FAILED(hr)) {
+			delete combinedTexture;
+			return nullptr;
+		}
+
+		return combinedTexture;
+	}
+
+	IMythosResource* Mythos::CombineAsMipsCube(unsigned int width, unsigned int height, IMythosResource** textures, int numMips)
+	{
+		D3D11_SUBRESOURCE_DATA* subData = new D3D11_SUBRESOURCE_DATA[6 * numMips];
+		ID3D11Texture2D** copies = new ID3D11Texture2D * [6 * numMips];
+
+		for (int cubeMapFaceIndex = 0; cubeMapFaceIndex < 6 * numMips; ++cubeMapFaceIndex)
+		{
+			D3D11_TEXTURE2D_DESC desc;
+			ID3D11Texture2D* texture = (ID3D11Texture2D*)textures[cubeMapFaceIndex]->GetData();
+			texture->GetDesc(&desc);
+
+			D3D11_TEXTURE2D_DESC desc2;
+			desc2.Width = desc.Width;
+			desc2.Height = desc.Height;
+			desc2.ArraySize = desc.ArraySize;
+			desc2.BindFlags = 0;
+			desc2.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+			desc2.Format = desc.Format;
+			desc2.MipLevels = desc.MipLevels;
+			desc2.MiscFlags = desc.MiscFlags;
+			desc2.SampleDesc = desc.SampleDesc;
+			desc2.Usage = D3D11_USAGE_STAGING;
+
+			HRESULT hr = m_Creator.GetCreator()->CreateTexture2D(&desc2, nullptr, &copies[cubeMapFaceIndex]);
+			if (FAILED(hr))
+				return nullptr;
+
+			m_Context.GetContext()->CopyResource(copies[cubeMapFaceIndex], texture);
+			D3D11_MAPPED_SUBRESOURCE mapInfo;
+
+			m_Context.GetContext()->Map(copies[cubeMapFaceIndex], 0, D3D11_MAP_READ, 0, &mapInfo);
+
+			subData[cubeMapFaceIndex].pSysMem = mapInfo.pData;
+			subData[cubeMapFaceIndex].SysMemPitch = mapInfo.RowPitch;
+			subData[cubeMapFaceIndex].SysMemSlicePitch = mapInfo.DepthPitch;
+
+			m_Context.GetContext()->Unmap(copies[cubeMapFaceIndex], 0);
+		}
+
+		D3D11_TEXTURE2D_DESC newDesc;
+		ZeroMemory(&newDesc, sizeof(newDesc));
+		newDesc.ArraySize = 6;
+		newDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+		newDesc.MipLevels = numMips;
+		newDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+		newDesc.CPUAccessFlags = 0;
+		newDesc.Usage = D3D11_USAGE_DEFAULT;
+		newDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		newDesc.Width = width;
+		newDesc.Height = height;
+		newDesc.SampleDesc.Count = 1;
+
+		IMythosResource* combinedTexture = new MythosTexture2D();
+		HRESULT hr = GetCreator()->CreateTexture2D(&newDesc, &subData[0], (ID3D11Texture2D**)&combinedTexture->GetData());
+
+		//CLEAN UP=========================
+		for (int i = 0; i < 6 * numMips; ++i) {
+			copies[i]->Release();
+		}
+		delete[] subData;
+		delete[] copies;
+		//CLEAN UP=========================
+
+		if (FAILED(hr)) {
+			delete combinedTexture;
+			return nullptr;
+		}
+
+		return combinedTexture;
 	}
 }
