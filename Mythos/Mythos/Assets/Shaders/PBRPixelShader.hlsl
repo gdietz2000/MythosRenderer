@@ -27,8 +27,6 @@ SamplerState SimpleSampler : register(s0);
 
 float4 main(InputVertex v) : SV_TARGET
 {    
-    //return test.SampleLevel(SimpleSampler, float2(0, 0), 1);
-    
     float3 albedo = pow(diffuseTexture.Sample(SimpleSampler, v.uv), GAMMA);
     float ao = aoTexture.Sample(SimpleSampler, v.uv).r;
     float metallic = metalTexture.Sample(SimpleSampler, v.uv).r;
@@ -85,7 +83,7 @@ float4 main(InputVertex v) : SV_TARGET
     //Indirect specular reflections
     const float MAX_REFLECTION_LOD = 5.0;
     
-    float3 prefilteredColor = pow(environmentMap.SampleLevel(SimpleSampler, R, 0 * MAX_REFLECTION_LOD).rgb, GAMMA);
+    float3 prefilteredColor = pow(environmentMap.SampleLevel(SimpleSampler, R, roughness * MAX_REFLECTION_LOD).rgb, GAMMA);
     float2 envBRDF = brdf.Sample(SimpleSampler, float2(max(dot(N, V), 0.0), roughness)).rg;
     float3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
     
