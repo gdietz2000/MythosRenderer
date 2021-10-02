@@ -18,7 +18,7 @@ namespace Mythos
 		m_Projection = Math::Matrix4::PerspectiveFovLH(fov, aspectRatio, nearPlane, farPlane);
 	}
 
-	void MythosFreeroamCamera::GetCameraInput()
+	void MythosFreeroamCamera::GetCameraInput(float deltaTime)
 	{
 		float LocalX = 0, LocalZ = 0, GlobalY = 0, camYaw = 0, camPitch = 0;
 		//Movement Inputs
@@ -65,20 +65,23 @@ namespace Mythos
 		{
 			if (m_PitchClamp < 1.4f)
 			{
-				camPitch += 0.005f;
-				m_PitchClamp += 0.005f;
+				camPitch += 0.002f;
+				m_PitchClamp += 0.002f;
 			}
 		}
 
 		if (GetAsyncKeyState(VK_LEFT))
 		{
-			camYaw -= 0.005f;
+			camYaw -= 0.002f;
 		}
 
 		if (GetAsyncKeyState(VK_RIGHT))
 		{
-			camYaw += 0.005f;
+			camYaw += 0.002f;
 		}
+
+		camPitch *= deltaTime;
+		camYaw *= deltaTime;
 
 		m_Camera = m_Camera.Inverse();
 

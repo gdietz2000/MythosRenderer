@@ -35,6 +35,7 @@ float4 main(InputVertex v) : SV_TARGET
     
     float3 N = getNormalFromTexture(normalTexture, SimpleSampler, v.uv, v.normal, v.world);
     float3 V = normalize(cameraPosition.xyz - v.world);    
+    float3 R = reflect(-V, N);
     
     float3 F0 = lerp(0.04, albedo, metallic);
     
@@ -77,14 +78,15 @@ float4 main(InputVertex v) : SV_TARGET
     float3 F = fresnelSchlickRoughness(dot(N, V), F0, roughness);
     float3 kS = F;
     float3 kD = 1.0 - kS;
+    kD *= 1.0 - metallic;
+
     float3 irradiance = pow(convolutedMap.Sample(SimpleSampler, N).rgb, GAMMA);
     float3 diffuse = irradiance * albedo;
    
-    float3 R = reflect(-V, N);
     //Indirect specular reflections
-    const float MAX_REFLECTION_LOD = 5.0;
+    const float MAX_REFLECTION_LOD = 4.0;
     
-    float3 prefilteredColor = pow(environmentMap.SampleLevel(SimpleSampler, R, roughness * MAX_REFLECTION_LOD).rgb, GAMMA);
+    float3 prefilteredColor = environmentMap.SampleLevel(SimpleSampler, R, roughness * MAX_REFLECTION_LOD).rgb;
     float2 envBRDF = brdf.Sample(SimpleSampler, float2(max(dot(N, V), 0.0), roughness)).rg;
     float3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
     

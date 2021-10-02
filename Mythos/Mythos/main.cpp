@@ -242,7 +242,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mythos->ConvoluteSkybox(wid2, hei2, "skybox", "convoluted");
 	mythos->CreatePrefilteredEnvironment(128, 128, "skybox", "prefilteredEnvironment");
 	mythos->CreateBRDFTexture(wid2, hei2, "brdfResource");
-	mythos->GenerateMippedTextureOfDifferentColors(512, 512, "coloredTexture");
 
 	//MyMatrices.World = Matrix4::Scale(10) * Matrix4::RotateY(PI / -2);
 	MyMatrices.View = freeCamera.GetCamera();
@@ -253,13 +252,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
 
 	float rotation = 0.0;
+	float deltaTime = 0.0;
 
-	clock_t currentTicks, deltaTicks;
-	clock_t fps = 0;
+	std::chrono::steady_clock timer;
 
 	// Main message loop:
 	while (true)
 	{
+		auto start = timer.now();
+
 		PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE);
 
 		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -271,9 +272,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (msg.message == WM_QUIT)
 			break;
 
-		currentTicks = clock();
-
-		freeCamera.GetCameraInput();
+		freeCamera.GetCameraInput(deltaTime);
 		MyMatrices.View = freeCamera.GetCamera();
 		Math::Vector4 camPos = Math::Vector4(freeCamera.GetPosition(), 1);
 		mythos->UpdateMythosResource("cameraPositionBuffer", &camPos, sizeof(Math::Vector4));
@@ -322,7 +321,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			mythos->GetContext()->OMSetRenderTargets(1, &targets, (ID3D11DepthStencilView*)mythos->GetResource("depthBuffer")->GetData());
 
 			MyMatrices.World = Matrix4::RotateY(rotation);
-			rotation += 0.005;
+			rotation += 0.002 * deltaTime;
 			mythos->UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
 
 			ID3D11Buffer* buffers[] = { (ID3D11Buffer*)mythos->GetResource("deagleVert")->GetData() };
@@ -347,7 +346,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				(ID3D11ShaderResourceView*)mythos->GetResource("deagleNormal")->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource("deagleMetal")->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource("deagleRough")->GetData(),
-				(ID3D11ShaderResourceView*)mythos->GetResource("combinedResource")->GetData(),
 			};
 
 			mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource("pixelShader")->GetData(), nullptr, NULL);
@@ -360,10 +358,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		mythos->Present();
 
-		deltaTicks = clock() - currentTicks;
-		if (deltaTicks > 0)
-			fps = CLOCKS_PER_SEC / deltaTicks;
-		std::cout << fps << '\n';
+		auto end = timer.now();
+		deltaTime = deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+		float fps = 1.0 / deltaTime * 1000;
+
+		int zero = 0;
+		zero++;
 	}
 
 	delete mythos;
