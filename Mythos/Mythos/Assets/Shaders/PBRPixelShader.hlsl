@@ -20,8 +20,9 @@ Texture2D brdf : register(t2);
 
 Texture2D diffuseTexture : register(t3);
 Texture2D aoTexture : register(t4);
-Texture2D metalTexture : register(t5);
-Texture2D roughTexture : register(t6);
+Texture2D normalTexture : register(t5);
+Texture2D metalTexture : register(t6);
+Texture2D roughTexture : register(t7);
 
 SamplerState SimpleSampler : register(s0);
 
@@ -32,7 +33,7 @@ float4 main(InputVertex v) : SV_TARGET
     float metallic = metalTexture.Sample(SimpleSampler, v.uv).r;
     float roughness = roughTexture.Sample(SimpleSampler, v.uv).r;
     
-    float3 N = normalize(v.normal);
+    float3 N = getNormalFromTexture(normalTexture, SimpleSampler, v.uv, v.normal, v.world);
     float3 V = normalize(cameraPosition.xyz - v.world);    
     
     float3 F0 = lerp(0.04, albedo, metallic);

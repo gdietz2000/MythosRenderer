@@ -1,5 +1,23 @@
 #define PI 3.1415926535
-#define GAMMA 2.6
+#define GAMMA 2.2
+
+float3 getNormalFromTexture(Texture2D normalMap, SamplerState sample, float2 texCoords, float3 normal, float3 world)
+{
+    float3 tangentNormal = normalMap.Sample(sample, texCoords).xyz * 2.0 - 1.0;
+
+    float3 Q1 = ddx(world);
+    float3 Q2 = ddy(world);
+    float2 st1 = ddx(texCoords);
+    float2 st2 = ddy(texCoords);
+
+    float3 N = normalize(normal);
+    float3 T = normalize(Q1 * st2.x - Q2 * st1.x);
+    float3 B = -normalize(cross(N, T));
+    float3x3 TBN = float3x3(T, B, N);
+
+    return normalize(mul(tangentNormal, TBN));
+
+}
 
 float3 fresnelSchlick(float cosTheta, float3 F0)
 {

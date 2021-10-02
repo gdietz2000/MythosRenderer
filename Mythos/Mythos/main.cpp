@@ -59,7 +59,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	if (windowsWindow.GetWindow())
 	{
-
 		HRESULT hr;
 
 		BOOL success = mythos->CreateModelBuffers(cube, "vertexBuffer", "indexBuffer");
@@ -192,6 +191,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
+		success = mythos->CreateShaderResource(L"Assets/Textures/Deagle_Normal.dds", "deagleNormal");
+		if (!success)
+			return -1;
+		
 		success = mythos->CreateShaderResource(L"Assets/Textures/Deagle_Metallic.dds", "deagleMetal");
 		if (!success)
 			return -1;
@@ -233,12 +236,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mythos->SetTopology(Mythos::MYTHOS_TRIANGLE_LIST);
 	mythos->GetContext()->IASetInputLayout((ID3D11InputLayout*)mythos->GetResource("inputLayout")->GetData());
 
-	//mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Newport_Loft.dds", "skybox");
-	mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Arches_PineTree.dds", "skybox");
+	mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Newport_Loft.dds", "skybox");
+	//mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Arches_PineTree.dds", "skybox");
 	//mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/HDRI.dds", "skybox");
 	mythos->ConvoluteSkybox(wid2, hei2, "skybox", "convoluted");
 	mythos->CreatePrefilteredEnvironment(128, 128, "skybox", "prefilteredEnvironment");
-	mythos->CreateBRDFTexture(512, 512, "brdfResource");
+	mythos->CreateBRDFTexture(wid2, hei2, "brdfResource");
 	mythos->GenerateMippedTextureOfDifferentColors(512, 512, "coloredTexture");
 
 	//MyMatrices.World = Matrix4::Scale(10) * Matrix4::RotateY(PI / -2);
@@ -341,6 +344,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				(ID3D11ShaderResourceView*)mythos->GetResource("brdfResource")->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource("deagleDiffuse")->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource("deagleAO")->GetData(),
+				(ID3D11ShaderResourceView*)mythos->GetResource("deagleNormal")->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource("deagleMetal")->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource("deagleRough")->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource("combinedResource")->GetData(),
