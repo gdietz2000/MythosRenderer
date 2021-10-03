@@ -54,16 +54,16 @@ namespace Mythos
 
 		if (GetAsyncKeyState(VK_UP))
 		{
-			if (m_PitchClamp > -1.4f)
+			if (m_PitchClamp > -1.0f)
 			{
-				camPitch -= 0.005f;
-				m_PitchClamp -= 0.005f;
+				camPitch -= 0.002f;
+				m_PitchClamp -= 0.002f;
 			}
 		}
 
 		if (GetAsyncKeyState(VK_DOWN))
 		{
-			if (m_PitchClamp < 1.4f)
+			if (m_PitchClamp < 1.0f)
 			{
 				camPitch += 0.002f;
 				m_PitchClamp += 0.002f;
@@ -82,6 +82,14 @@ namespace Mythos
 
 		camPitch *= deltaTime;
 		camYaw *= deltaTime;
+
+		if (camPitch > 1.4f) {
+			camPitch = 1.4f;
+		}
+
+		if (camPitch < -1.4f) {
+			camPitch = -1.4f;
+		}
 
 		m_Camera = m_Camera.Inverse();
 
