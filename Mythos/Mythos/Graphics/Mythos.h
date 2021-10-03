@@ -10,9 +10,11 @@
 #include "MythosMesh.h"
 #include "MythosDescriptors.h"
 
+#include "MythosID.h"
+
 namespace Mythos
 {
-
+	//Resource Types for hashing
 	enum MythosResourceTypes
 	{
 		MYTHOS_RESOURCE_VERTEX_BUFFER = 0,
@@ -45,81 +47,79 @@ namespace Mythos
 		//Mythos will be creating the resources that will be used for rendering.
 		Mythos(void* window);
 		~Mythos();
-		//All of these are temporary
+		
 		inline ID3D11Device* GetCreator() { return m_Creator.GetCreator(); }
 		inline ID3D11DeviceContext* GetContext() { return m_Context.GetContext(); }
 		inline void Present() { m_SwapChain.GetSwapChain()->Present(0, 0); }
 		inline D3D11_VIEWPORT GetViewport() { return m_Viewport; }
 
-		BOOL CreateVertexBuffer(void* data, unsigned int byteSize, const char* name);
-		BOOL CreateVertexBuffer(MythosBufferDescriptor* descriptor, const char* name);
+		BOOL CreateVertexBuffer(void* data, unsigned int byteSize, MythosID& id);
+		BOOL CreateVertexBuffer(MythosBufferDescriptor* descriptor, MythosID& id);
 
-		BOOL CreateIndexBuffer(void* data, unsigned int byteSize, const char* name);
-		BOOL CreateIndexBuffer(MythosBufferDescriptor* descriptor, const char* name);
+		BOOL CreateIndexBuffer(void* data, unsigned int byteSize, MythosID& id);
+		BOOL CreateIndexBuffer(MythosBufferDescriptor* descriptor, MythosID& id);
 
-		BOOL CreateModelBuffers(MythosModel* object, const char* vertexName, const char* indexName);
+		BOOL CreateModelBuffers(MythosModel* object, MythosID& vertexID, MythosID& indexID);
 
-		BOOL CreateConstantBuffer(void* data, unsigned int byteSize, const char* name);
-		BOOL CreateConstantBuffer(MythosBufferDescriptor* descriptor, const char* name);
+		BOOL CreateConstantBuffer(void* data, unsigned int byteSize, MythosID& id);
+		BOOL CreateConstantBuffer(MythosBufferDescriptor* descriptor, MythosID& id);
 
-		BOOL CreateDepthBuffer(const char* depthTextureName, const char* depthBufferName);
+		BOOL CreateDepthBuffer(MythosID& textureID, MythosID& bufferID);
 
 		void SetClearDepthBufferValue(float clearValue);
-		void ClearDepthBuffer(const char* depthBufferName);
+		void ClearDepthBuffer(MythosID& bufferID);
 
-		BOOL CreateVertexShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
-		BOOL CreatePixelShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, const char* name);
+		BOOL CreateVertexShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, MythosID& id);
+		BOOL CreatePixelShader(const wchar_t* shaderFilePath, const char* shaderEntryPoint, const char* shaderModelType, MythosID& id);
 
-		BOOL CreateInputLayout(const MythosInputElement* elements, unsigned int numElements, const char* vertexShaderName, const char* inputLayoutName);
+		BOOL CreateInputLayout(const MythosInputElement* elements, unsigned int numElements, MythosID& vertexShaderID, MythosID& inputLayoutID);
 
-		BOOL CreateMainRenderTarget(const char* renderTargetName);
+		BOOL CreateMainRenderTarget(MythosID& mainRenderTargetID);
 
 		void SetTopology(MythosTopology topology);
 
-		BOOL CreateRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName);
-		BOOL CreateRenderTarget(MythosTextureDescriptor* descriptor, const char* textureName, const char* renderTargetName);
+		BOOL CreateRenderTarget(unsigned int width, unsigned int height, MythosID& textureID, MythosID& renderTargetID);
+		BOOL CreateRenderTarget(MythosTextureDescriptor* descriptor, MythosID& textureID, MythosID& renderTargetID);
 
 		void SetClearRenderTargetColor(Math::Vector4 clearColor);
-		void ClearRenderTarget(const char* renderTargetName);
+		void ClearRenderTarget(MythosID& renderTargetID);
 
-		BOOL CreateTexture2D(const wchar_t* filepath, const char* textureName);
-		BOOL CreateTexture2D(MythosTextureDescriptor* descriptor, IMythosResource* texture, const char* textureName);
-		BOOL CreateTexture2D(MythosTextureDescriptor* descriptor, void* data, const char* textureName);
+		BOOL CreateTexture2D(const wchar_t* filepath, MythosID& id);
+		BOOL CreateTexture2D(MythosTextureDescriptor* descriptor, IMythosResource* texture, MythosID& id);
+		BOOL CreateTexture2D(MythosTextureDescriptor* descriptor, void* data, MythosID& id);
 
-		BOOL CreateTextureCube(MythosTextureDescriptor* descriptor, IMythosResource** textures, const char* textureName);
-		BOOL CreateTextureCube(MythosTextureDescriptor* descriptor, const char** namesOfTextures, const char* textureName);
+		BOOL CreateTextureCube(MythosTextureDescriptor* descriptor, IMythosResource** textures, MythosID& id);
+		BOOL CreateTextureCube(MythosTextureDescriptor* descriptor, MythosID* listOfTextureIDs, MythosID& id);
 
-		BOOL CreateShaderResource(const wchar_t* filepath, const char* shaderResourceName);
-		BOOL CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName);
-		BOOL CreateShaderResource(IMythosResource* texture, const char* shaderResourceName);
-		BOOL CreateShaderResourceCube(const char* cubeToBecomeResourceName, const char* shaderResourceName);
+		BOOL CreateShaderResource(const wchar_t* filepath, MythosID& id);
+		BOOL CreateShaderResource(MythosID& textureToBecomeResourceID, MythosID& id);
+		BOOL CreateShaderResource(IMythosResource* texture, MythosID& id);
+		BOOL CreateShaderResourceCube(MythosID& cubeToBecomeResourceID, MythosID& id);
 
-		BOOL CreateTexture2DAndShaderResource(const wchar_t* filepath, const char* textureName, const char* shaderResourceName);
+		BOOL CreateTexture2DAndShaderResource(const wchar_t* filepath, MythosID& textureId, MythosID& resourceId);
 
-		BOOL CreateTextureSampler(const char* samplerName);
-		BOOL CreateTextureSampler(MythosSamplerDescriptor* descriptor, const char* samplerName);
+		BOOL CreateTextureSampler(MythosID& id);
+		BOOL CreateTextureSampler(MythosSamplerDescriptor* descriptor, MythosID& id);
 
-		BOOL CreateRasterizerState(const char* rasterizerName);
-		BOOL CreateRasterizerState(MythosRasterizerDescriptor* descriptor, const char* rasterizerName);
+		BOOL CreateRasterizerState(MythosID& id);
+		BOOL CreateRasterizerState(MythosRasterizerDescriptor* descriptor, MythosID& id);
 
-		BOOL UpdateMythosResource(const char* name, void* data, unsigned int byteSize);
+		BOOL UpdateMythosResource(MythosID& id, void* data, unsigned int byteSize);
 
 		MythosModel* LoadMesh(const char* filepath);
 
 		//PBR Specific Functions
-		BOOL CreateSkyboxFromEquirectangularTexture(unsigned int width, unsigned int height, const wchar_t* equirectangularTextureFilepath, const char* textureCubeName);
-		BOOL ConvoluteSkybox(unsigned int width, unsigned int height, const char* textureCubeName, const char* convolutedTextureCubeName);
-		BOOL CreatePrefilteredEnvironment(unsigned int width, unsigned int height, const char* textureCubeName, const char* prefilteredTextureCubeName);
-		BOOL CreateBRDFTexture(unsigned int width, unsigned int height, const char* brdfTextureName);
+		BOOL CreateSkyboxFromEquirectangularTexture(unsigned int width, unsigned int height, const wchar_t* equirectangularTextureFilepath, MythosID& id);
+		BOOL ConvoluteSkybox(unsigned int width, unsigned int height, MythosID& textureToConvoluteID, MythosID& convolutedID);
+		BOOL CreatePrefilteredEnvironment(unsigned int width, unsigned int height, MythosID& skyboxID, MythosID& prefilteredEnvironment);
+		BOOL CreateBRDFTexture(unsigned int width, unsigned int height, MythosID& brdfID);
 
-		BOOL GenerateMippedTextureOfDifferentColors(unsigned int width, unsigned int height, const char* mipTexture);
-
-		BOOL CombineTexture2DsAsMips(unsigned int width, unsigned int height, IMythosResource** textures, int numMips, const char* combinedTextureName);
-		BOOL CombineTextureCubeMapAsMips(unsigned int width, unsigned int height, IMythosResource** textures, int numMips, const char* combinedCubeName);
+		BOOL CombineTexture2DsAsMips(unsigned int width, unsigned int height, IMythosResource** textures, int numMips, MythosID& id);
+		BOOL CombineTextureCubeMapAsMips(unsigned int width, unsigned int height, IMythosResource** textures, int numMips, MythosID& id);
 
 		//GetResource will return a resource based off of the id given.
-		IMythosResource* GetResource(const char* name);
-		ID3D10Blob* GetShaderBlob(const char* name);
+		IMythosResource* GetResource(MythosID&);
+		ID3D10Blob* GetShaderBlob(MythosID&);
 	private:
 		MythosCreator m_Creator;
 		MythosContext m_Context;
@@ -127,7 +127,6 @@ namespace Mythos
 		D3D11_VIEWPORT m_Viewport;
 
 		//Helper Function
-		BOOL NameAvailable(const char* name);
 		UINT GetBindFlags(MythosBindFlags flag);
 		UINT GetFormat(MythosFormat format);
 		UINT GetFormatSize(MythosFormat format);
@@ -157,9 +156,9 @@ namespace Mythos
 
 		//Assuming you need to find a vertex buffer with the name "VB" using the Get Resource function 
 		//m_NamesToIndex will find the index the Vertex Buffers will be, which again can find the Resource
-		std::unordered_map<const char*, unsigned int> m_NamesToIndex;
-		std::vector<std::unordered_map<const char*, IMythosResource*>> m_Resources;
-		std::unordered_map<const char*, ID3D10Blob*> m_ShaderBlobs;
+		std::unordered_map<MythosID, unsigned int> m_NamesToIndex;
+		std::vector<std::unordered_map<MythosID, IMythosResource*>> m_Resources;
+		std::unordered_map<MythosID, ID3D10Blob*> m_ShaderBlobs;
 
 		//Storage for Models
 		std::unordered_map<unsigned int, MythosMesh*> m_MythosMeshes;

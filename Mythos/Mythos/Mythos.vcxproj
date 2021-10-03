@@ -170,6 +170,7 @@
     <ClInclude Include="Graphics\MythosSwapChain.h" />
     <ClInclude Include="Graphics\MythosTexture2D.h" />
     <ClInclude Include="Graphics\MythosTextureSampler.h" />
+    <ClInclude Include="Graphics\MythosID.h" />
     <ClInclude Include="Graphics\MythosVertexShader.h" />
     <ClInclude Include="Mathematics\include\Mathematics.h" />
     <ClInclude Include="Mathematics\include\Matrix2.h" />
@@ -187,6 +188,7 @@
     <ClCompile Include="Graphics\DDSTextureLoader.cpp" />
     <ClCompile Include="Graphics\Mythos.cpp" />
     <ClCompile Include="Graphics\MythosFreeroamCamera.cpp" />
+    <ClCompile Include="Graphics\MythosID.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mathematics\src\Matrix2.cpp" />
     <ClCompile Include="Mathematics\src\Matrix3.cpp" />

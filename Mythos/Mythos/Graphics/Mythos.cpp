@@ -65,7 +65,7 @@ namespace Mythos
 
 		for (int i = 0; i < MYTHOS_RESOURCE_COUNT; ++i)
 		{
-			m_Resources.push_back(std::unordered_map<const char*, IMythosResource*>());
+			m_Resources.push_back(std::unordered_map<MythosID, IMythosResource*>());
 		}
 
 		m_RenderTargetClearColor = Math::Vector4(0);
@@ -99,11 +99,8 @@ namespace Mythos
 		m_ShaderBlobs.clear();
 	}
 
-	BOOL Mythos::CreateVertexBuffer(void* data, unsigned int byteSize, const char* name)
+	BOOL Mythos::CreateVertexBuffer(void* data, unsigned int byteSize, MythosID& id)
 	{
-		if (!NameAvailable(name))
-			return FALSE;
-
 		D3D11_BUFFER_DESC vertexDesc;
 		ZeroMemory(&vertexDesc, sizeof(vertexDesc));
 		vertexDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -127,17 +124,15 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_VERTEX_BUFFER));
-		m_Resources[MYTHOS_RESOURCE_VERTEX_BUFFER].insert(std::make_pair(name, vertexBuffer));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_VERTEX_BUFFER));
+		m_Resources[MYTHOS_RESOURCE_VERTEX_BUFFER].insert(std::make_pair(id, vertexBuffer));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateVertexBuffer(MythosBufferDescriptor* desc, const char* name)
+	BOOL Mythos::CreateVertexBuffer(MythosBufferDescriptor* desc, MythosID& id)
 	{
-		if (!NameAvailable(name))
-			return FALSE;
-
 		D3D11_BUFFER_DESC vertexDesc;
 		ZeroMemory(&vertexDesc, sizeof(vertexDesc));
 		vertexDesc.ByteWidth = desc->byteSize;
@@ -181,18 +176,15 @@ namespace Mythos
 			return FALSE;
 		}
 
-
-		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_VERTEX_BUFFER));
-		m_Resources[MYTHOS_RESOURCE_VERTEX_BUFFER].insert(std::make_pair(name, vertexBuffer));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_VERTEX_BUFFER));
+		m_Resources[MYTHOS_RESOURCE_VERTEX_BUFFER].insert(std::make_pair(id, vertexBuffer));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateIndexBuffer(void* data, unsigned int byteSize, const char* name)
+	BOOL Mythos::CreateIndexBuffer(void* data, unsigned int byteSize, MythosID& id)
 	{
-		if (!NameAvailable(name))
-			return FALSE;
-
 		D3D11_BUFFER_DESC indexDesc;
 		ZeroMemory(&indexDesc, sizeof(indexDesc));
 		indexDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -219,17 +211,15 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_INDEX_BUFFER));
-		m_Resources[MYTHOS_RESOURCE_INDEX_BUFFER].insert(std::make_pair(name, indexBuffer));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_INDEX_BUFFER));
+		m_Resources[MYTHOS_RESOURCE_INDEX_BUFFER].insert(std::make_pair(id, indexBuffer));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateIndexBuffer(MythosBufferDescriptor* desc, const char* name)
+	BOOL Mythos::CreateIndexBuffer(MythosBufferDescriptor* desc, MythosID& id)
 	{
-		if (!NameAvailable(name))
-			return FALSE;
-
 		D3D11_BUFFER_DESC indexDesc;
 		ZeroMemory(&indexDesc, sizeof(indexDesc));
 		indexDesc.ByteWidth = desc->byteSize;
@@ -273,14 +263,14 @@ namespace Mythos
 			return FALSE;
 		}
 
-
-		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_INDEX_BUFFER));
-		m_Resources[MYTHOS_RESOURCE_INDEX_BUFFER].insert(std::make_pair(name, indexBuffer));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_INDEX_BUFFER));
+		m_Resources[MYTHOS_RESOURCE_INDEX_BUFFER].insert(std::make_pair(id, indexBuffer));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateModelBuffers(MythosModel* object, const char* vertexName, const char* indexName)
+	BOOL Mythos::CreateModelBuffers(MythosModel* object, MythosID& vertexID, MythosID& indexID)
 	{
 		std::vector<MythosVertex> vertices;
 		std::vector<int> indices;
@@ -300,7 +290,7 @@ namespace Mythos
 		vertexDesc.data = vertices.data();
 		vertexDesc.byteSize = sizeof(MythosVertex) * vertices.size();
 		vertexDesc.cpuAccess = MythosAccessability::MYTHOS_DEFAULT_ACCESS;
-		BOOL success = CreateVertexBuffer(&vertexDesc, vertexName);
+		BOOL success = CreateVertexBuffer(&vertexDesc, vertexID);
 		if (!success)
 			return FALSE;
 
@@ -308,18 +298,15 @@ namespace Mythos
 		indexDesc.data = indices.data();
 		indexDesc.byteSize = sizeof(int) * indices.size();
 		indexDesc.cpuAccess = MythosAccessability::MYTHOS_DEFAULT_ACCESS;
-		success = CreateIndexBuffer(&indexDesc, indexName);
+		success = CreateIndexBuffer(&indexDesc, indexID);
 		if (!success)
 			return FALSE;
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateConstantBuffer(void* data, unsigned int byteSize, const char* name)
+	BOOL Mythos::CreateConstantBuffer(void* data, unsigned int byteSize, MythosID& id)
 	{
-		if (!NameAvailable(name))
-			return FALSE;
-
 		D3D11_BUFFER_DESC constantDesc;
 		ZeroMemory(&constantDesc, sizeof(constantDesc));
 		constantDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -346,17 +333,15 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_CONSTANT_BUFFER));
-		m_Resources[MYTHOS_RESOURCE_CONSTANT_BUFFER].insert(std::make_pair(name, constantBuffer));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_CONSTANT_BUFFER));
+		m_Resources[MYTHOS_RESOURCE_CONSTANT_BUFFER].insert(std::make_pair(id, constantBuffer));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateConstantBuffer(MythosBufferDescriptor* desc, const char* name)
+	BOOL Mythos::CreateConstantBuffer(MythosBufferDescriptor* desc, MythosID& id)
 	{
-		if (!NameAvailable(name))
-			return FALSE;
-
 		D3D11_BUFFER_DESC constantDesc;
 		ZeroMemory(&constantDesc, sizeof(constantDesc));
 		constantDesc.ByteWidth = desc->byteSize;
@@ -400,17 +385,15 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_CONSTANT_BUFFER));
-		m_Resources[MYTHOS_RESOURCE_CONSTANT_BUFFER].insert(std::make_pair(name, constantBuffer));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_CONSTANT_BUFFER));
+		m_Resources[MYTHOS_RESOURCE_CONSTANT_BUFFER].insert(std::make_pair(id, constantBuffer));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateDepthBuffer(const char* depthTextureName, const char* depthBufferName)
+	BOOL Mythos::CreateDepthBuffer(MythosID& textureID, MythosID& bufferID)
 	{
-		if (!NameAvailable(depthTextureName) || !NameAvailable(depthBufferName))
-			return FALSE;
-
 		D3D11_TEXTURE2D_DESC zBufferDesc;
 		ZeroMemory(&zBufferDesc, sizeof(zBufferDesc));
 		zBufferDesc.ArraySize = 1;
@@ -441,11 +424,14 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(depthTextureName, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(depthTextureName, depthTexture));
+		textureID = MythosID();
+		bufferID = MythosID();
 
-		m_NamesToIndex.insert(std::make_pair(depthBufferName, MYTHOS_RESOURCE_DEPTH_BUFFER));
-		m_Resources[MYTHOS_RESOURCE_DEPTH_BUFFER].insert(std::make_pair(depthBufferName, depthBuffer));
+		m_NamesToIndex.insert(std::make_pair(textureID, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureID, depthTexture));
+
+		m_NamesToIndex.insert(std::make_pair(bufferID, MYTHOS_RESOURCE_DEPTH_BUFFER));
+		m_Resources[MYTHOS_RESOURCE_DEPTH_BUFFER].insert(std::make_pair(bufferID, depthBuffer));
 
 		return TRUE;
 	}
@@ -455,18 +441,15 @@ namespace Mythos
 		m_DepthBufferClearValue = value;
 	}
 
-	void Mythos::ClearDepthBuffer(const char* depthBufferName)
+	void Mythos::ClearDepthBuffer(MythosID& bufferID)
 	{
-		IMythosResource* depthBuffer = GetResource(depthBufferName);
+		IMythosResource* depthBuffer = GetResource(bufferID);
 		if (depthBuffer)
 			m_Context.GetContext()->ClearDepthStencilView((ID3D11DepthStencilView*)depthBuffer->GetData(), D3D11_CLEAR_DEPTH, m_DepthBufferClearValue, NULL);
 	}
 
-	BOOL Mythos::CreateVertexShader(const wchar_t* filePath, const char* entryPoint, const char* modelType, const char* name)
+	BOOL Mythos::CreateVertexShader(const wchar_t* filePath, const char* entryPoint, const char* modelType, MythosID& id)
 	{
-		if (!NameAvailable(name))
-			return FALSE;
-
 		ID3D10Blob* errorBlob;
 		ID3D10Blob* vertexBlob;
 
@@ -481,19 +464,16 @@ namespace Mythos
 			return FALSE;
 		}
 
-
-		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_VERTEX_SHADER));
-		m_Resources[MYTHOS_RESOURCE_VERTEX_SHADER].insert(std::make_pair(name, vertexShader));
-		m_ShaderBlobs.insert(std::make_pair(name, vertexBlob));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_VERTEX_SHADER));
+		m_Resources[MYTHOS_RESOURCE_VERTEX_SHADER].insert(std::make_pair(id, vertexShader));
+		m_ShaderBlobs.insert(std::make_pair(id, vertexBlob));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreatePixelShader(const wchar_t* filePath, const char* entryPoint, const char* modelType, const char* name)
+	BOOL Mythos::CreatePixelShader(const wchar_t* filePath, const char* entryPoint, const char* modelType, MythosID& id)
 	{
-		if (!NameAvailable(name))
-			return FALSE;
-
 		ID3D10Blob* errorBlob;
 		ID3D10Blob* pixelBlob;
 		HRESULT hr = D3DCompileFromFile(filePath, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint, modelType, NULL, NULL, &pixelBlob, &errorBlob);
@@ -507,18 +487,16 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(name, MYTHOS_RESOURCE_PIXEL_SHADER));
-		m_Resources[MYTHOS_RESOURCE_PIXEL_SHADER].insert(std::make_pair(name, pixelShader));
-		m_ShaderBlobs.insert(std::make_pair(name, pixelBlob));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_PIXEL_SHADER));
+		m_Resources[MYTHOS_RESOURCE_PIXEL_SHADER].insert(std::make_pair(id, pixelShader));
+		m_ShaderBlobs.insert(std::make_pair(id, pixelBlob));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateInputLayout(const MythosInputElement* elements, unsigned int numElements, const char* vertexShaderName, const char* inputLayoutName)
+	BOOL Mythos::CreateInputLayout(const MythosInputElement* elements, unsigned int numElements, MythosID& vertexShaderID, MythosID& inputLayoutID)
 	{
-		if (!NameAvailable(inputLayoutName))
-			return FALSE;
-
 		std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
 		int totalBytes = 0;
 		for (int i = 0; i < numElements; ++i)
@@ -537,7 +515,7 @@ namespace Mythos
 			inputElements.push_back(temp);
 		}
 
-		auto blob = GetShaderBlob(vertexShaderName);
+		auto blob = GetShaderBlob(vertexShaderID);
 		IMythosResource* inputLayout = new MythosInputLayout();
 
 		HRESULT hr = m_Creator.GetCreator()->CreateInputLayout(inputElements.data(), numElements, blob->GetBufferPointer(), blob->GetBufferSize(), (ID3D11InputLayout**)&inputLayout->GetData());
@@ -546,17 +524,15 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(inputLayoutName, MYTHOS_RESOURCE_INPUT_LAYOUT));
-		m_Resources[MYTHOS_RESOURCE_INPUT_LAYOUT].insert(std::make_pair(inputLayoutName, inputLayout));
+		inputLayoutID = MythosID();
+		m_NamesToIndex.insert(std::make_pair(inputLayoutID, MYTHOS_RESOURCE_INPUT_LAYOUT));
+		m_Resources[MYTHOS_RESOURCE_INPUT_LAYOUT].insert(std::make_pair(inputLayoutID, inputLayout));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateMainRenderTarget(const char* renderTargetName)
+	BOOL Mythos::CreateMainRenderTarget(MythosID& id)
 	{
-		if (!NameAvailable(renderTargetName))
-			return FALSE;
-
 		ID3D11Resource* backbuffer;
 		HRESULT hr = m_SwapChain.GetSwapChain()->GetBuffer(0, __uuidof(backbuffer), (void**)&backbuffer);
 
@@ -574,8 +550,9 @@ namespace Mythos
 
 		backbuffer->Release();
 
-		m_NamesToIndex.insert(std::make_pair(renderTargetName, MYTHOS_RESOURCE_RENDER_TARGET));
-		m_Resources[MYTHOS_RESOURCE_RENDER_TARGET].insert(std::make_pair(renderTargetName, renderTarget));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_RENDER_TARGET));
+		m_Resources[MYTHOS_RESOURCE_RENDER_TARGET].insert(std::make_pair(id, renderTarget));
 
 		return TRUE;
 	}
@@ -589,11 +566,8 @@ namespace Mythos
 			m_Context.GetContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	}
 
-	BOOL Mythos::CreateRenderTarget(unsigned int width, unsigned int height, const char* textureName, const char* renderTargetName)
+	BOOL Mythos::CreateRenderTarget(unsigned int width, unsigned int height, MythosID& textureID, MythosID& renderTargetID)
 	{
-		if (!NameAvailable(textureName) || !NameAvailable(renderTargetName))
-			return FALSE;
-
 		D3D11_TEXTURE2D_DESC textureDesc;
 		ZeroMemory(&textureDesc, sizeof(textureDesc));
 		D3D11_RENDER_TARGET_VIEW_DESC renderDesc;
@@ -633,20 +607,19 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture));
+		textureID = MythosID();
+		renderTargetID = MythosID();
+		m_NamesToIndex.insert(std::make_pair(textureID, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureID, texture));
 
-		m_NamesToIndex.insert(std::make_pair(renderTargetName, MYTHOS_RESOURCE_RENDER_TARGET));
-		m_Resources[MYTHOS_RESOURCE_RENDER_TARGET].insert(std::make_pair(renderTargetName, renderTarget));
+		m_NamesToIndex.insert(std::make_pair(renderTargetID, MYTHOS_RESOURCE_RENDER_TARGET));
+		m_Resources[MYTHOS_RESOURCE_RENDER_TARGET].insert(std::make_pair(renderTargetID, renderTarget));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateRenderTarget(MythosTextureDescriptor* desc, const char* textureName, const char* renderTargetName)
+	BOOL Mythos::CreateRenderTarget(MythosTextureDescriptor* desc, MythosID& textureID, MythosID& renderTargetID)
 	{
-		if (!NameAvailable(textureName) || !NameAvailable(renderTargetName))
-			return FALSE;
-
 		D3D11_TEXTURE2D_DESC textureDesc;
 		ZeroMemory(&textureDesc, sizeof(textureDesc));
 
@@ -713,11 +686,14 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture));
+		textureID = MythosID();
+		renderTargetID = MythosID();
 
-		m_NamesToIndex.insert(std::make_pair(renderTargetName, MYTHOS_RESOURCE_RENDER_TARGET));
-		m_Resources[MYTHOS_RESOURCE_RENDER_TARGET].insert(std::make_pair(renderTargetName, renderTarget));
+		m_NamesToIndex.insert(std::make_pair(textureID, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureID, texture));
+
+		m_NamesToIndex.insert(std::make_pair(renderTargetID, MYTHOS_RESOURCE_RENDER_TARGET));
+		m_Resources[MYTHOS_RESOURCE_RENDER_TARGET].insert(std::make_pair(renderTargetID, renderTarget));
 
 		return TRUE;
 	}
@@ -727,18 +703,15 @@ namespace Mythos
 		m_RenderTargetClearColor = clearColor;
 	}
 
-	void Mythos::ClearRenderTarget(const char* renderTargetName)
+	void Mythos::ClearRenderTarget(MythosID& id)
 	{
-		IMythosResource* renderTarget = GetResource(renderTargetName);
+		IMythosResource* renderTarget = GetResource(id);
 		if (renderTarget != nullptr)
 			m_Context.GetContext()->ClearRenderTargetView((ID3D11RenderTargetView*)renderTarget->GetData(), m_RenderTargetClearColor.comp);
 	}
 
-	BOOL Mythos::CreateTexture2D(const wchar_t* filepath, const char* textureName)
+	BOOL Mythos::CreateTexture2D(const wchar_t* filepath, MythosID& id)
 	{
-		if (!NameAvailable(textureName))
-			return FALSE;
-
 		IMythosResource* texture2D = new MythosTexture2D();
 		HRESULT hr = DirectX::CreateDDSTextureFromFile(m_Creator.GetCreator(), filepath, (ID3D11Resource**)&texture2D->GetData(), nullptr);
 		if (FAILED(hr))
@@ -747,25 +720,24 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture2D));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(id, texture2D));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateTexture2D(MythosTextureDescriptor* descriptor, IMythosResource* texture, const char* textureName)
+	BOOL Mythos::CreateTexture2D(MythosTextureDescriptor* descriptor, IMythosResource* texture, MythosID& id)
 	{
-		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(id, texture));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateTexture2D(MythosTextureDescriptor* desc, void* data, const char* textureName)
+	BOOL Mythos::CreateTexture2D(MythosTextureDescriptor* desc, void* data, MythosID& id)
 	{
-		if (!NameAvailable(textureName))
-			return FALSE;
-
 		IMythosResource* texture2D = new MythosTexture2D();
 		D3D11_TEXTURE2D_DESC textureDesc;
 		ZeroMemory(&textureDesc, sizeof(textureDesc));
@@ -807,13 +779,14 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture2D));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(id, texture2D));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateTextureCube(MythosTextureDescriptor* desc, IMythosResource** textures, const char* textureName)
+	BOOL Mythos::CreateTextureCube(MythosTextureDescriptor* desc, IMythosResource** textures, MythosID& id)
 	{
 		//Creating the Cube Map Texture Descriptor
 		D3D11_TEXTURE2D_DESC textureDesc;
@@ -896,8 +869,9 @@ namespace Mythos
 			return FALSE;
 		};
 
-		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_CUBE));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_CUBE].insert(std::make_pair(textureName, textureCube));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_CUBE));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_CUBE].insert(std::make_pair(id, textureCube));
 
 		for (int i = 0; i < 6; i++) {
 			copies[i]->Release();
@@ -907,7 +881,7 @@ namespace Mythos
 
 	}
 
-	BOOL Mythos::CreateTextureCube(MythosTextureDescriptor* desc, const char** namesOfTextures, const char* textureName)
+	BOOL Mythos::CreateTextureCube(MythosTextureDescriptor* desc, MythosID* listOfTextureIDs, MythosID& id)
 	{
 		//Creating the Cube Map Texture Descriptor
 		D3D11_TEXTURE2D_DESC textureDesc;
@@ -952,7 +926,7 @@ namespace Mythos
 		{
 
 			D3D11_TEXTURE2D_DESC desc;
-			ID3D11Texture2D* texture = (ID3D11Texture2D*)GetResource(namesOfTextures[cubeMapFaceIndex])->GetData();
+			ID3D11Texture2D* texture = (ID3D11Texture2D*)GetResource(listOfTextureIDs[cubeMapFaceIndex])->GetData();
 			texture->GetDesc(&desc);
 
 			D3D11_TEXTURE2D_DESC desc2;
@@ -991,8 +965,9 @@ namespace Mythos
 			return FALSE;
 		};
 
-		m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_CUBE));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_CUBE].insert(std::make_pair(textureName, textureCube));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_CUBE));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_CUBE].insert(std::make_pair(id, textureCube));
 
 		for (int i = 0; i < 6; i++) {
 			copies[i]->Release();
@@ -1002,11 +977,8 @@ namespace Mythos
 
 	}
 
-	BOOL Mythos::CreateShaderResource(const wchar_t* filepath, const char* shaderResourceName)
+	BOOL Mythos::CreateShaderResource(const wchar_t* filepath, MythosID& id)
 	{
-		if (!NameAvailable(shaderResourceName))
-			return FALSE;
-
 		IMythosResource* resource = new MythosShaderResource();
 		HRESULT hr = DirectX::CreateDDSTextureFromFile(GetCreator(), filepath, nullptr, (ID3D11ShaderResourceView**)&resource->GetData());
 
@@ -1016,20 +988,18 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(shaderResourceName, MYTHOS_RESOURCE_SHADER_RESOURCE));
-		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(shaderResourceName, resource));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_SHADER_RESOURCE));
+		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(id, resource));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateShaderResource(const char* textureToBecomeResourceName, const char* shaderResourceName)
+	BOOL Mythos::CreateShaderResource(MythosID& textureToBecomeResourceID, MythosID& id)
 	{
-		if (!NameAvailable(shaderResourceName))
-			return FALSE;
-
 		D3D11_TEXTURE2D_DESC textureDesc;
 
-		IMythosResource* texture = GetResource(textureToBecomeResourceName);
+		IMythosResource* texture = GetResource(textureToBecomeResourceID);
 		((ID3D11Texture2D*)texture->GetData())->GetDesc(&textureDesc);
 
 		D3D11_SHADER_RESOURCE_VIEW_DESC shaderDesc;
@@ -1047,17 +1017,15 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(shaderResourceName, MYTHOS_RESOURCE_SHADER_RESOURCE));
-		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(shaderResourceName, shaderResource));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_SHADER_RESOURCE));
+		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(id, shaderResource));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateShaderResource(IMythosResource* texture, const char* shaderResourceName)
+	BOOL Mythos::CreateShaderResource(IMythosResource* texture, MythosID& id)
 	{
-		if (!NameAvailable(shaderResourceName))
-			return FALSE;
-
 		D3D11_TEXTURE2D_DESC textureDesc;
 
 		ID3D11Texture2D* tex = (ID3D11Texture2D*)texture->GetData();
@@ -1078,20 +1046,18 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(shaderResourceName, MYTHOS_RESOURCE_SHADER_RESOURCE));
-		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(shaderResourceName, shaderResource));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_SHADER_RESOURCE));
+		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(id, shaderResource));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateShaderResourceCube(const char* cubeToBecomeResourceName, const char* shaderResourceName)
+	BOOL Mythos::CreateShaderResourceCube(MythosID& cubeToBecomeResourceID, MythosID& id)
 	{
-		if (!NameAvailable(shaderResourceName))
-			return FALSE;
-
 		D3D11_TEXTURE2D_DESC textureDesc;
 
-		IMythosResource* texture = GetResource(cubeToBecomeResourceName);
+		IMythosResource* texture = GetResource(cubeToBecomeResourceID);
 		((ID3D11Texture2D*)texture->GetData())->GetDesc(&textureDesc);
 
 		D3D11_SHADER_RESOURCE_VIEW_DESC shaderDesc;
@@ -1109,22 +1075,15 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(shaderResourceName, MYTHOS_RESOURCE_SHADER_RESOURCE));
-		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(shaderResourceName, shaderResource));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_SHADER_RESOURCE));
+		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(id, shaderResource));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateTexture2DAndShaderResource(const wchar_t* filepath, const char* textureName, const char* shaderResourceName)
+	BOOL Mythos::CreateTexture2DAndShaderResource(const wchar_t* filepath, MythosID& textureID, MythosID& resourceID)
 	{
-		if (textureName)
-			if (!NameAvailable(textureName))
-				return FALSE;
-
-		if (shaderResourceName)
-			if (!NameAvailable(shaderResourceName))
-				return FALSE;
-
 		IMythosResource* texture = new MythosTexture2D();
 		IMythosResource* resource = new MythosShaderResource();
 		HRESULT hr = DirectX::CreateDDSTextureFromFile(m_Creator.GetCreator(), filepath, (ID3D11Resource**)&texture->GetData(), (ID3D11ShaderResourceView**)&resource->GetData());
@@ -1134,34 +1093,21 @@ namespace Mythos
 			return FALSE;
 		}
 
-		if (textureName)
-		{
-			m_NamesToIndex.insert(std::make_pair(textureName, MYTHOS_RESOURCE_TEXTURE_2D));
-			m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureName, texture));
-		}
-		else {
-			texture->SafeRelease();
-			delete texture;
-		}
+		textureID = MythosID();
+		resourceID = MythosID();
 
-		if (shaderResourceName)
-		{
-			m_NamesToIndex.insert(std::make_pair(shaderResourceName, MYTHOS_RESOURCE_SHADER_RESOURCE));
-			m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(shaderResourceName, resource));
-		}
-		else {
-			resource->SafeRelease();
-			delete resource;
-		}
+		m_NamesToIndex.insert(std::make_pair(textureID, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureID, texture));
+
+		m_NamesToIndex.insert(std::make_pair(resourceID, MYTHOS_RESOURCE_SHADER_RESOURCE));
+		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(resourceID, resource));
+
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateTextureSampler(const char* samplerName)
+	BOOL Mythos::CreateTextureSampler(MythosID& id)
 	{
-		if (!NameAvailable(samplerName))
-			return FALSE;
-
 		D3D11_SAMPLER_DESC samplerDesc;
 		ZeroMemory(&samplerDesc, sizeof(samplerDesc));
 
@@ -1185,17 +1131,15 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(samplerName, MYTHOS_RESOURCE_TEXTURE_SAMPLER));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_SAMPLER].insert(std::make_pair(samplerName, samplerState));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_SAMPLER));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_SAMPLER].insert(std::make_pair(id, samplerState));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateTextureSampler(MythosSamplerDescriptor* desc, const char* samplerName)
+	BOOL Mythos::CreateTextureSampler(MythosSamplerDescriptor* desc, MythosID& id)
 	{
-		if (!NameAvailable(samplerName))
-			return FALSE;
-
 		D3D11_SAMPLER_DESC samplerDesc;
 		ZeroMemory(&samplerDesc, sizeof(samplerDesc));
 
@@ -1231,13 +1175,14 @@ namespace Mythos
 			return FALSE;
 		}
 
-		m_NamesToIndex.insert(std::make_pair(samplerName, MYTHOS_RESOURCE_TEXTURE_SAMPLER));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_SAMPLER].insert(std::make_pair(samplerName, samplerState));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_SAMPLER));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_SAMPLER].insert(std::make_pair(id, samplerState));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateRasterizerState(const char* rasterizerStateName)
+	BOOL Mythos::CreateRasterizerState(MythosID& id)
 	{
 		D3D11_RASTERIZER_DESC rasterDesc;
 		ZeroMemory(&rasterDesc, sizeof(rasterDesc));
@@ -1254,13 +1199,14 @@ namespace Mythos
 		}
 
 
-		m_NamesToIndex.insert(std::make_pair(rasterizerStateName, MYTHOS_RESOURCE_RASTERIZER));
-		m_Resources[MYTHOS_RESOURCE_RASTERIZER].insert(std::make_pair(rasterizerStateName, rasterState));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_RASTERIZER));
+		m_Resources[MYTHOS_RESOURCE_RASTERIZER].insert(std::make_pair(id, rasterState));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateRasterizerState(MythosRasterizerDescriptor* desc, const char* rasterizerStateName)
+	BOOL Mythos::CreateRasterizerState(MythosRasterizerDescriptor* desc, MythosID& id)
 	{
 		D3D11_RASTERIZER_DESC rasterDesc;
 		ZeroMemory(&rasterDesc, sizeof(rasterDesc));
@@ -1296,16 +1242,16 @@ namespace Mythos
 			return FALSE;
 		}
 
-
-		m_NamesToIndex.insert(std::make_pair(rasterizerStateName, MYTHOS_RESOURCE_RASTERIZER));
-		m_Resources[MYTHOS_RESOURCE_RASTERIZER].insert(std::make_pair(rasterizerStateName, rasterState));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_RASTERIZER));
+		m_Resources[MYTHOS_RESOURCE_RASTERIZER].insert(std::make_pair(id, rasterState));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::UpdateMythosResource(const char* name, void* data, unsigned int byteSize)
+	BOOL Mythos::UpdateMythosResource(MythosID& id, void* data, unsigned int byteSize)
 	{
-		IMythosResource* resource = m_Resources[m_NamesToIndex.find(name)->second].find(name)->second;
+		IMythosResource* resource = m_Resources[m_NamesToIndex.find(id)->second].find(id)->second;
 
 		if (!resource)
 			return FALSE;
@@ -1374,11 +1320,18 @@ namespace Mythos
 		return importedModel;
 	}
 
-	BOOL Mythos::CreateSkyboxFromEquirectangularTexture(unsigned int width, unsigned int height, const wchar_t* equirectangularTextureFilepath, const char* textureCubeName)
+	BOOL Mythos::CreateSkyboxFromEquirectangularTexture(unsigned int width, unsigned int height, const wchar_t* equirectangularTextureFilepath, MythosID& id)
 	{
 		//=========================================================================
 		//Must Create a Skybox=====================================================
 		//=========================================================================
+
+		struct WVP
+		{
+			Math::Matrix4 World;
+			Math::Matrix4 View;
+			Math::Matrix4 Projection;
+		}MyMatrices;
 
 		Math::Vector3 cubeVerts[8] =
 		{
@@ -1410,8 +1363,9 @@ namespace Mythos
 
 		ID3D11Buffer* vertexBuffer = nullptr;
 		ID3D11Buffer* indexBuffer = nullptr;
+		ID3D11Buffer* constantBuffer = nullptr;
 
-		D3D11_BUFFER_DESC vDesc, iDesc;
+		D3D11_BUFFER_DESC vDesc, iDesc, cDesc;
 		ZeroMemory(&vDesc, sizeof(vDesc));
 		vDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 		vDesc.ByteWidth = sizeof(Math::Vector3) * 8;
@@ -1421,6 +1375,12 @@ namespace Mythos
 		iDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 		iDesc.ByteWidth = sizeof(unsigned int) * 36;
 		iDesc.Usage = D3D11_USAGE_DEFAULT;
+		
+		ZeroMemory(&cDesc, sizeof(cDesc));
+		cDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cDesc.ByteWidth = sizeof(WVP);
+		cDesc.Usage = D3D11_USAGE_DYNAMIC;
+		cDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 		D3D11_SUBRESOURCE_DATA subData;
 		ZeroMemory(&subData, sizeof(subData));
@@ -1436,6 +1396,10 @@ namespace Mythos
 		if (FAILED(hr))
 			return FALSE;
 
+		hr = GetCreator()->CreateBuffer(&cDesc, nullptr, &constantBuffer);
+		if (FAILED(hr))
+			return FALSE;
+
 		//=========================================================================
 		//Create Input Layout======================================================
 		//=========================================================================
@@ -1446,7 +1410,14 @@ namespace Mythos
 
 		ID3D11InputLayout* inputLayout;
 
-		ID3D10Blob* blob = GetShaderBlob("diffuseIBLVertex");
+		MythosID vertexShaderID, pixelShaderID;
+		BOOL success = CreateVertexShader(L"Assets/Shaders/DiffuseIBLVertexShader.hlsl", "main", "vs_4_0", vertexShaderID);
+		if (!success)
+			return FALSE;
+		success = CreatePixelShader(L"Assets/Shaders/EquirectangularToCubeMap.hlsl", "main", "ps_4_0", pixelShaderID);
+		if (!success)
+			return FALSE;
+		ID3D10Blob* blob = GetShaderBlob(vertexShaderID);
 		GetCreator()->CreateInputLayout(layout, 1, blob->GetBufferPointer(), blob->GetBufferSize(), &inputLayout);
 		GetContext()->IASetInputLayout(inputLayout);
 
@@ -1517,24 +1488,30 @@ namespace Mythos
 			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,-1.0}, {0,1,0})
 		};
 
-		struct WVP
-		{
-			Math::Matrix4 World;
-			Math::Matrix4 View;
-			Math::Matrix4 Projection;
-		}MyMatrices;
-
 		//=========================================================================
 		//Create the Equirectangular Texture=======================================
 		//=========================================================================
 
-		BOOL success = CreateShaderResource(equirectangularTextureFilepath, "iblResource");
+		MythosID iblResourceID;
+		success = CreateShaderResource(equirectangularTextureFilepath, iblResourceID);
 		if (!success)
 			return -1;
 
 		//=========================================================================
 		//Rendering the Skybox out based on width and height specified
 		//=========================================================================
+
+		MythosID samplerStateID;
+		MythosSamplerDescriptor samplerDesc;
+		samplerDesc.AddressMode = MYTHOS_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.BorderColor = Math::Vector4(1, 1, 1, 1);
+		samplerDesc.MinLOD = 0;
+		samplerDesc.MaxLOD = FLT_MAX;
+		samplerDesc.MaxAnisotropy = 1;
+		samplerDesc.MipLODBias = 0.0f;
+		success = CreateTextureSampler(&samplerDesc, samplerStateID);
+		if (!success)
+			return -1;
 
 		UINT strides[] = { sizeof(Math::Vector3) };
 		UINT offset[] = { 0 };
@@ -1550,11 +1527,11 @@ namespace Mythos
 		GetContext()->IASetVertexBuffers(0, 1, &vertexBuffer, strides, offset);
 		GetContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-		GetContext()->VSSetShader((ID3D11VertexShader*)GetResource("diffuseIBLVertex")->GetData(), nullptr, 0);
-		GetContext()->VSSetConstantBuffers(0, 1, (ID3D11Buffer**)&GetResource("constantBuffer")->GetData());
-		GetContext()->PSSetShader((ID3D11PixelShader*)GetResource("cubemapCreator")->GetData(), nullptr, 0);
-		GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource("iblResource")->GetData());
-		GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource("samplerState")->GetData());
+		GetContext()->VSSetShader((ID3D11VertexShader*)GetResource(vertexShaderID)->GetData(), nullptr, 0);
+		GetContext()->VSSetConstantBuffers(0, 1, &constantBuffer);
+		GetContext()->PSSetShader((ID3D11PixelShader*)GetResource(pixelShaderID)->GetData(), nullptr, 0);
+		GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource(iblResourceID)->GetData());
+		GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource(samplerStateID)->GetData());
 
 		MyMatrices.World = Math::Matrix4::Scale(1, 1, -1);
 		MyMatrices.Projection = captureProjection;
@@ -1562,7 +1539,10 @@ namespace Mythos
 		for (int i = 0; i < 6; ++i)
 		{
 			MyMatrices.View = captureViews[i];
-			UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
+			D3D11_MAPPED_SUBRESOURCE gpuBuffer;
+			m_Context.GetContext()->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &gpuBuffer);
+			memcpy(gpuBuffer.pData, &MyMatrices, sizeof(WVP));
+			m_Context.GetContext()->Unmap(constantBuffer, 0);
 
 			GetContext()->OMSetRenderTargets(1, &rtvs[i], nullptr);
 
@@ -1585,13 +1565,14 @@ namespace Mythos
 		cubeDesc.sampleCount = 1;
 		cubeDesc.sampleQuality = 0;
 
-		success = CreateTextureCube(&cubeDesc, textures, "textureCube");
+		MythosID tempID = MythosID();
+		success = CreateTextureCube(&cubeDesc, textures, tempID);
 		if (!success)
 		{
 			return FALSE;
 		}
 
-		success = CreateShaderResourceCube("textureCube", textureCubeName);
+		success = CreateShaderResourceCube(tempID, id);
 		if (!success) {
 			return FALSE;
 		}
@@ -1602,6 +1583,7 @@ namespace Mythos
 
 		vertexBuffer->Release();
 		indexBuffer->Release();
+		constantBuffer->Release();
 
 		inputLayout->Release();
 
@@ -1615,11 +1597,18 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::ConvoluteSkybox(unsigned int width, unsigned int height, const char* textureCubeName, const char* convolutedTextureCubeName)
+	BOOL Mythos::ConvoluteSkybox(unsigned int width, unsigned int height, MythosID& textureToConvoluteID, MythosID& convolutedID)
 	{
 		//=========================================================================
 		//Must Create a Skybox=====================================================
 		//=========================================================================
+
+		struct WVP
+		{
+			Math::Matrix4 World;
+			Math::Matrix4 View;
+			Math::Matrix4 Projection;
+		}MyMatrices;
 
 		Math::Vector3 cubeVerts[8] =
 		{
@@ -1651,8 +1640,9 @@ namespace Mythos
 
 		ID3D11Buffer* vertexBuffer = nullptr;
 		ID3D11Buffer* indexBuffer = nullptr;
+		ID3D11Buffer* constantBuffer = nullptr;
 
-		D3D11_BUFFER_DESC vDesc, iDesc;
+		D3D11_BUFFER_DESC vDesc, iDesc, cDesc;
 		ZeroMemory(&vDesc, sizeof(vDesc));
 		vDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 		vDesc.ByteWidth = sizeof(Math::Vector3) * 8;
@@ -1662,6 +1652,12 @@ namespace Mythos
 		iDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 		iDesc.ByteWidth = sizeof(unsigned int) * 36;
 		iDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		ZeroMemory(&cDesc, sizeof(cDesc));
+		cDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cDesc.ByteWidth = sizeof(WVP);
+		cDesc.Usage = D3D11_USAGE_DYNAMIC;
+		cDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 		D3D11_SUBRESOURCE_DATA subData;
 		ZeroMemory(&subData, sizeof(subData));
@@ -1674,6 +1670,10 @@ namespace Mythos
 		subData.pSysMem = indices;
 
 		hr = GetCreator()->CreateBuffer(&iDesc, &subData, &indexBuffer);
+		if (FAILED(hr))
+			return FALSE;
+		
+		hr = GetCreator()->CreateBuffer(&cDesc, nullptr, &constantBuffer);
 		if (FAILED(hr))
 			return FALSE;
 
@@ -1734,6 +1734,26 @@ namespace Mythos
 			}
 		}
 
+		//=================================
+		//Input Layout
+		//=================================
+		D3D11_INPUT_ELEMENT_DESC layout[] = {
+			{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0}
+		};
+
+		ID3D11InputLayout* inputLayout;
+
+		MythosID vertexShaderID, pixelShaderID;
+		BOOL success = CreateVertexShader(L"Assets/Shaders/DiffuseIBLVertexShader.hlsl", "main", "vs_4_0", vertexShaderID);
+		if (!success)
+			return FALSE;
+		success = CreatePixelShader(L"Assets/Shaders/IrradiencePreCompute.hlsl", "main", "ps_4_0", pixelShaderID);
+		if (!success)
+			return FALSE;
+		ID3D10Blob* blob = GetShaderBlob(vertexShaderID);
+		GetCreator()->CreateInputLayout(layout, 1, blob->GetBufferPointer(), blob->GetBufferSize(), &inputLayout);
+		GetContext()->IASetInputLayout(inputLayout);
+
 		Math::Matrix4 captureProjection = Math::Matrix4::PerspectiveFovLH(Math::radians(90.0f), 1.0f, 0.1f, 10.0);
 		Math::Matrix4 captureViews[] = {
 			Math::Matrix4::LookAtLH({0,0,0}, {1.0,0.0,0.0}, {0,1,0}),
@@ -1744,12 +1764,17 @@ namespace Mythos
 			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,-1.0}, {0,1,0})
 		};
 
-		struct WVP
-		{
-			Math::Matrix4 World;
-			Math::Matrix4 View;
-			Math::Matrix4 Projection;
-		}MyMatrices;
+		MythosID samplerStateID;
+		MythosSamplerDescriptor samplerDesc;
+		samplerDesc.AddressMode = MYTHOS_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.BorderColor = Math::Vector4(1, 1, 1, 1);
+		samplerDesc.MinLOD = 0;
+		samplerDesc.MaxLOD = FLT_MAX;
+		samplerDesc.MaxAnisotropy = 1;
+		samplerDesc.MipLODBias = 0.0f;
+		success = CreateTextureSampler(&samplerDesc, samplerStateID);
+		if (!success)
+			return -1;
 
 		//=========================================================================
 		//Rendering the Skybox out based on width and height specified
@@ -1769,11 +1794,11 @@ namespace Mythos
 		GetContext()->IASetVertexBuffers(0, 1, &vertexBuffer, strides, offset);
 		GetContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-		GetContext()->VSSetShader((ID3D11VertexShader*)GetResource("diffuseIBLVertex")->GetData(), nullptr, 0);
-		GetContext()->VSSetConstantBuffers(0, 1, (ID3D11Buffer**)&GetResource("constantBuffer")->GetData());
-		GetContext()->PSSetShader((ID3D11PixelShader*)GetResource("diffuseIBLPixel")->GetData(), nullptr, 0);
-		GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource(textureCubeName)->GetData());
-		GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource("samplerState")->GetData());
+		GetContext()->VSSetShader((ID3D11VertexShader*)GetResource(vertexShaderID)->GetData(), nullptr, 0);
+		GetContext()->VSSetConstantBuffers(0, 1, &constantBuffer);
+		GetContext()->PSSetShader((ID3D11PixelShader*)GetResource(pixelShaderID)->GetData(), nullptr, 0);
+		GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource(textureToConvoluteID)->GetData());
+		GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource(samplerStateID)->GetData());
 
 		MyMatrices.World = Math::Matrix4::Scale(1, 1, -1);
 		MyMatrices.Projection = captureProjection;
@@ -1781,7 +1806,10 @@ namespace Mythos
 		for (int i = 0; i < 6; ++i)
 		{
 			MyMatrices.View = captureViews[i];
-			UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
+			D3D11_MAPPED_SUBRESOURCE gpuBuffer;
+			m_Context.GetContext()->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &gpuBuffer);
+			memcpy(gpuBuffer.pData, &MyMatrices, sizeof(WVP));
+			m_Context.GetContext()->Unmap(constantBuffer, 0);
 
 			GetContext()->OMSetRenderTargets(1, &rtvs[i], nullptr);
 
@@ -1800,19 +1828,23 @@ namespace Mythos
 		cubeDesc.sampleCount = 1;
 		cubeDesc.sampleQuality = 0;
 
-		BOOL success = CreateTextureCube(&cubeDesc, textures, "convoCube");
+		MythosID tempID;
+		success = CreateTextureCube(&cubeDesc, textures, tempID);
 		if (!success)
 		{
 			return FALSE;
 		}
 
-		success = CreateShaderResourceCube("convoCube", convolutedTextureCubeName);
+		success = CreateShaderResourceCube(tempID, convolutedID);
 		if (!success) {
 			return FALSE;
 		}
 
 		vertexBuffer->Release();
 		indexBuffer->Release();
+		constantBuffer->Release();
+
+		inputLayout->Release();
 
 		for (int i = 0; i < 6; ++i)
 		{
@@ -1824,11 +1856,18 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreatePrefilteredEnvironment(unsigned int width, unsigned int height, const char* textureCubeName, const char* prefilteredTextureCubeName)
+	BOOL Mythos::CreatePrefilteredEnvironment(unsigned int width, unsigned int height, MythosID& skyboxID, MythosID& prefilteredEnvironmentID)
 	{
 		//=========================================================================
 		//Must Create a Skybox=====================================================
 		//=========================================================================
+
+		struct WVP
+		{
+			Math::Matrix4 World;
+			Math::Matrix4 View;
+			Math::Matrix4 Projection;
+		}MyMatrices;
 
 		Math::Vector3 cubeVerts[8] =
 		{
@@ -1860,7 +1899,8 @@ namespace Mythos
 
 		ID3D11Buffer* vertexBuffer = nullptr;
 		ID3D11Buffer* indexBuffer = nullptr;
-		ID3D11Buffer* constantBuffer = nullptr;
+		ID3D11Buffer* vertexConstantBuffer = nullptr;
+		ID3D11Buffer* pixelConstantBuffer = nullptr;
 
 		D3D11_BUFFER_DESC vDesc, iDesc, cDesc;
 		ZeroMemory(&vDesc, sizeof(vDesc));
@@ -1875,7 +1915,7 @@ namespace Mythos
 
 		ZeroMemory(&cDesc, sizeof(cDesc));
 		cDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		cDesc.ByteWidth = sizeof(Math::Vector4);
+		cDesc.ByteWidth = sizeof(WVP);
 		cDesc.Usage = D3D11_USAGE_DYNAMIC;
 		cDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
@@ -1893,7 +1933,13 @@ namespace Mythos
 		if (FAILED(hr))
 			return FALSE;
 
-		hr = GetCreator()->CreateBuffer(&cDesc, nullptr, &constantBuffer);
+		hr = GetCreator()->CreateBuffer(&cDesc, nullptr, &vertexConstantBuffer);
+		if (FAILED(hr))
+			return FALSE;
+
+		cDesc.ByteWidth = sizeof(Math::Vector4);
+
+		hr = GetCreator()->CreateBuffer(&cDesc, nullptr, &pixelConstantBuffer);
 		if (FAILED(hr))
 			return FALSE;
 
@@ -1904,7 +1950,7 @@ namespace Mythos
 		int maxMipLevels = 5;
 
 		IMythosResource** textures = new IMythosResource * [6 * maxMipLevels];
-		ID3D11RenderTargetView** rtvs = new ID3D11RenderTargetView*[6 * maxMipLevels];
+		ID3D11RenderTargetView** rtvs = new ID3D11RenderTargetView * [6 * maxMipLevels];
 
 		D3D11_TEXTURE2D_DESC textureDesc;
 		ZeroMemory(&textureDesc, sizeof(textureDesc));
@@ -1951,12 +1997,37 @@ namespace Mythos
 			Math::Matrix4::LookAtLH({0,0,0}, {0.0,0.0,-1.0}, {0,1,0})
 		};
 
-		struct WVP
-		{
-			Math::Matrix4 World;
-			Math::Matrix4 View;
-			Math::Matrix4 Projection;
-		}MyMatrices;
+		//=================================
+		//Input Layout
+		//=================================
+		D3D11_INPUT_ELEMENT_DESC layout[] = {
+			{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0}
+		};
+
+		ID3D11InputLayout* inputLayout;
+
+		MythosID vertexShaderID, pixelShaderID;
+		BOOL success = CreateVertexShader(L"Assets/Shaders/DiffuseIBLVertexShader.hlsl", "main", "vs_4_0", vertexShaderID);
+		if (!success)
+			return FALSE;
+		success = CreatePixelShader(L"Assets/Shaders/PrefilterEnvironment.hlsl", "main", "ps_4_0", pixelShaderID);
+		if (!success)
+			return FALSE;
+		ID3D10Blob* blob = GetShaderBlob(vertexShaderID);
+		GetCreator()->CreateInputLayout(layout, 1, blob->GetBufferPointer(), blob->GetBufferSize(), &inputLayout);
+		GetContext()->IASetInputLayout(inputLayout);
+
+		MythosID samplerStateID;
+		MythosSamplerDescriptor samplerDesc;
+		samplerDesc.AddressMode = MYTHOS_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.BorderColor = Math::Vector4(1, 1, 1, 1);
+		samplerDesc.MinLOD = 0;
+		samplerDesc.MaxLOD = FLT_MAX;
+		samplerDesc.MaxAnisotropy = 1;
+		samplerDesc.MipLODBias = 0.0f;
+		success = CreateTextureSampler(&samplerDesc, samplerStateID);
+		if (!success)
+			return -1;
 
 		//=========================================================================
 		//Rendering the Skybox out based on width and height specified
@@ -1968,23 +2039,26 @@ namespace Mythos
 		GetContext()->IASetVertexBuffers(0, 1, &vertexBuffer, strides, offset);
 		GetContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-		GetContext()->VSSetShader((ID3D11VertexShader*)GetResource("diffuseIBLVertex")->GetData(), nullptr, 0);
-		GetContext()->VSSetConstantBuffers(0, 1, (ID3D11Buffer**)&GetResource("constantBuffer")->GetData());
-		GetContext()->PSSetShader((ID3D11PixelShader*)GetResource("prefilterShader")->GetData(), nullptr, 0);
-		GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource(textureCubeName)->GetData());
-		GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource("samplerState")->GetData());
+		GetContext()->VSSetShader((ID3D11VertexShader*)GetResource(vertexShaderID)->GetData(), nullptr, 0);
+		GetContext()->VSSetConstantBuffers(0, 1, &vertexConstantBuffer);
+		GetContext()->PSSetShader((ID3D11PixelShader*)GetResource(pixelShaderID)->GetData(), nullptr, 0);
+		GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource(skyboxID)->GetData());
+		GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource(samplerStateID)->GetData());
 
 		MyMatrices.World = Math::Matrix4::Scale(1, 1, -1);
 		MyMatrices.Projection = captureProjection;
 
-		GetContext()->PSSetConstantBuffers(0, 1, &constantBuffer);
+		GetContext()->PSSetConstantBuffers(0, 1, &pixelConstantBuffer);
 
 		int index = 0;
 		for (int i = 0; i < 6; ++i)
 		{
 			MyMatrices.View = captureViews[i];
-			UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
-			for (int mip = 0; mip < maxMipLevels; ++mip) 
+			D3D11_MAPPED_SUBRESOURCE gpuBuffer;
+			m_Context.GetContext()->Map(vertexConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &gpuBuffer);
+			memcpy(gpuBuffer.pData, &MyMatrices, sizeof(WVP));
+			m_Context.GetContext()->Unmap(vertexConstantBuffer, 0);
+			for (int mip = 0; mip < maxMipLevels; ++mip)
 			{
 				D3D11_VIEWPORT textureViewport;
 				textureViewport.Width = width * pow(0.5, mip);
@@ -1996,9 +2070,9 @@ namespace Mythos
 
 				float roughness = mip / (float)maxMipLevels;
 				D3D11_MAPPED_SUBRESOURCE gpuBuffer;
-				GetContext()->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &gpuBuffer);
+				GetContext()->Map(pixelConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &gpuBuffer);
 				memcpy(gpuBuffer.pData, &Math::Vector4(roughness), sizeof(Math::Vector4));
-				GetContext()->Unmap(constantBuffer, 0);
+				GetContext()->Unmap(pixelConstantBuffer, 0);
 
 				GetContext()->OMSetRenderTargets(1, &rtvs[index], nullptr);
 
@@ -2009,18 +2083,22 @@ namespace Mythos
 
 		Present();
 
-		BOOL success = CombineTextureCubeMapAsMips(width, height, textures, maxMipLevels, "prefilteredTemp");
+		MythosID tempID;
+		success = CombineTextureCubeMapAsMips(width, height, textures, maxMipLevels, tempID);
 		if (!success)
 			return FALSE;
 
-		success = CreateShaderResourceCube("prefilteredTemp", prefilteredTextureCubeName);
+		success = CreateShaderResourceCube(tempID, prefilteredEnvironmentID);
 		if (!success) {
 			return FALSE;
 		}
 
 		vertexBuffer->Release();
 		indexBuffer->Release();
-		constantBuffer->Release();
+		vertexConstantBuffer->Release();
+		pixelConstantBuffer->Release();
+
+		inputLayout->Release();
 
 		for (int i = 0; i < 6 * maxMipLevels; ++i)
 		{
@@ -2035,11 +2113,18 @@ namespace Mythos
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateBRDFTexture(unsigned int width, unsigned int height, const char* brdfTextureName)
+	BOOL Mythos::CreateBRDFTexture(unsigned int width, unsigned int height, MythosID& brdfID)
 	{
 		//=========================================================================
 		//Create a Plane===========================================================
 		//=========================================================================
+
+		struct WVP
+		{
+			Math::Matrix4 World;
+			Math::Matrix4 View;
+			Math::Matrix4 Projection;
+		}MyMatrices;
 
 		struct PlaneVertex
 		{
@@ -2062,8 +2147,9 @@ namespace Mythos
 
 		ID3D11Buffer* vertexBuffer = nullptr;
 		ID3D11Buffer* indexBuffer = nullptr;
+		ID3D11Buffer* constantBuffer = nullptr;
 
-		D3D11_BUFFER_DESC vDesc, iDesc;
+		D3D11_BUFFER_DESC vDesc, iDesc, cDesc;
 		ZeroMemory(&vDesc, sizeof(vDesc));
 		vDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 		vDesc.ByteWidth = sizeof(PlaneVertex) * 4;
@@ -2073,6 +2159,12 @@ namespace Mythos
 		iDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 		iDesc.ByteWidth = sizeof(unsigned int) * 6;
 		iDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		ZeroMemory(&cDesc, sizeof(cDesc));
+		cDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cDesc.ByteWidth = sizeof(WVP);
+		cDesc.Usage = D3D11_USAGE_DYNAMIC;
+		cDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 		D3D11_SUBRESOURCE_DATA subData;
 		ZeroMemory(&subData, sizeof(subData));
@@ -2087,6 +2179,10 @@ namespace Mythos
 		hr = GetCreator()->CreateBuffer(&iDesc, &subData, &indexBuffer);
 		if (FAILED(hr))
 			return FALSE;
+		
+		hr = GetCreator()->CreateBuffer(&cDesc, nullptr, &constantBuffer);
+		if (FAILED(hr))
+			return FALSE;
 
 		//=========================================================================
 		//Create Input Layout======================================================
@@ -2099,7 +2195,14 @@ namespace Mythos
 
 		ID3D11InputLayout* inputLayout;
 
-		ID3D10Blob* blob = GetShaderBlob("textureVertex");
+		MythosID vertexShaderID, pixelShaderID;
+		BOOL success = CreateVertexShader(L"Assets/Shaders/TextureVertexShader.hlsl", "main", "vs_4_0", vertexShaderID);
+		if (!success)
+			return FALSE;
+		success = CreatePixelShader(L"Assets/Shaders/BRDF_LUT.hlsl", "main", "ps_4_0", pixelShaderID);
+		if (!success)
+			return FALSE;
+		ID3D10Blob* blob = GetShaderBlob(vertexShaderID);
 		GetCreator()->CreateInputLayout(layout, 2, blob->GetBufferPointer(), blob->GetBufferSize(), &inputLayout);
 		GetContext()->IASetInputLayout(inputLayout);
 
@@ -2144,13 +2247,6 @@ namespace Mythos
 		Math::Matrix4 captureProjection = Math::Matrix4::PerspectiveFovLH(Math::radians(90.0f), 1.0f, 0.1f, 10.0);
 		Math::Matrix4 captureViews = Math::Matrix4::LookAtLH({ 0,0,0 }, { 0.0,0.0,1.0 }, { 0,1,0 });
 
-		struct WVP
-		{
-			Math::Matrix4 World;
-			Math::Matrix4 View;
-			Math::Matrix4 Projection;
-		}MyMatrices;
-
 		//=========================================================================
 		//Rendering the Skybox out based on width and height specified
 		//=========================================================================
@@ -2169,18 +2265,19 @@ namespace Mythos
 		GetContext()->IASetVertexBuffers(0, 1, &vertexBuffer, strides, offset);
 		GetContext()->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-		GetContext()->VSSetShader((ID3D11VertexShader*)GetResource("textureVertex")->GetData(), nullptr, 0);
-		GetContext()->VSSetConstantBuffers(0, 1, (ID3D11Buffer**)&GetResource("constantBuffer")->GetData());
-		GetContext()->PSSetShader((ID3D11PixelShader*)GetResource("brdf_lut")->GetData(), nullptr, 0);
-		GetContext()->PSSetShaderResources(0, 1, (ID3D11ShaderResourceView**)&GetResource("iblResource")->GetData());
-		GetContext()->PSSetSamplers(0, 1, (ID3D11SamplerState**)&GetResource("samplerState")->GetData());
+		GetContext()->VSSetShader((ID3D11VertexShader*)GetResource(vertexShaderID)->GetData(), nullptr, 0);
+		GetContext()->VSSetConstantBuffers(0, 1, &constantBuffer);
+		GetContext()->PSSetShader((ID3D11PixelShader*)GetResource(pixelShaderID)->GetData(), nullptr, 0);
 
 		//MyMatrices.World = Math::Matrix4::Scale(1, 1, -1);
 		MyMatrices.World = Math::Matrix4::Identity;
 		MyMatrices.View = captureViews;
 		MyMatrices.Projection = captureProjection;
 
-		UpdateMythosResource("constantBuffer", &MyMatrices, sizeof(WVP));
+		D3D11_MAPPED_SUBRESOURCE gpuBuffer;
+		GetContext()->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &gpuBuffer);
+		memcpy(gpuBuffer.pData, &MyMatrices, sizeof(WVP));
+		GetContext()->Unmap(constantBuffer, 0);
 
 		//GetContext()->OMSetRenderTargets(1, (ID3D11RenderTargetView**)&GetResource("mainRenderTarget")->GetData(), nullptr);
 		GetContext()->OMSetRenderTargets(1, &rtv, nullptr);
@@ -2192,7 +2289,7 @@ namespace Mythos
 		//Converting the rendered targets into shader resource
 		//=========================================================================
 
-		BOOL success = CreateShaderResource(texture, brdfTextureName);
+		success = CreateShaderResource(texture, brdfID);
 		if (!success) {
 			return FALSE;
 		}
@@ -2203,6 +2300,7 @@ namespace Mythos
 
 		vertexBuffer->Release();
 		indexBuffer->Release();
+		constantBuffer->Release();
 
 		inputLayout->Release();
 
@@ -2214,39 +2312,40 @@ namespace Mythos
 	}
 
 
-	BOOL Mythos::CombineTexture2DsAsMips(unsigned int width, unsigned int height, IMythosResource** textures, int numMips, const char* combinedTextureName)
+	BOOL Mythos::CombineTexture2DsAsMips(unsigned int width, unsigned int height, IMythosResource** textures, int numMips, MythosID& id)
 	{
 		IMythosResource* combinedTexture = CombineAsMips2D(width, height, textures, numMips);
 		if (!combinedTexture)
 			return FALSE;
 
-		m_NamesToIndex.insert(std::make_pair(combinedTextureName, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(combinedTextureName, combinedTexture));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_2D));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(id, combinedTexture));
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CombineTextureCubeMapAsMips(unsigned int width, unsigned int height, IMythosResource** textures, int numMips, const char* combinedCubeName)
+	BOOL Mythos::CombineTextureCubeMapAsMips(unsigned int width, unsigned int height, IMythosResource** textures, int numMips, MythosID& id)
 	{
 		IMythosResource* combinedTexture = CombineAsMipsCube(width, height, textures, numMips);
 		if (!combinedTexture)
 			return FALSE;
 
-		m_NamesToIndex.insert(std::make_pair(combinedCubeName, MYTHOS_RESOURCE_TEXTURE_CUBE));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_CUBE].insert(std::make_pair(combinedCubeName, combinedTexture));
+		id = MythosID();
+		m_NamesToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_CUBE));
+		m_Resources[MYTHOS_RESOURCE_TEXTURE_CUBE].insert(std::make_pair(id, combinedTexture));
 
 		return TRUE;
 	}
 
-
-	IMythosResource* Mythos::GetResource(const char* name)
+	IMythosResource* Mythos::GetResource(MythosID& id)
 	{
 
-		auto num = m_NamesToIndex.find(name);
+		auto num = m_NamesToIndex.find(id);
 		if (num != m_NamesToIndex.end())
 		{
 			unsigned int arrayIndex = num->second;
-			auto iter = m_Resources[arrayIndex].find(name);
+			auto iter = m_Resources[arrayIndex].find(id);
 			if (iter != m_Resources[arrayIndex].end())
 			{
 				return iter->second;
@@ -2256,24 +2355,14 @@ namespace Mythos
 		return nullptr;
 	}
 
-	ID3D10Blob* Mythos::GetShaderBlob(const char* name)
+	ID3D10Blob* Mythos::GetShaderBlob(MythosID& id)
 	{
-		auto iter = m_ShaderBlobs.find(name);
+		auto iter = m_ShaderBlobs.find(id);
 		if (iter != m_ShaderBlobs.end())
 			return iter->second;
 
 
 		return nullptr;
-	}
-
-
-	BOOL Mythos::NameAvailable(const char* name)
-	{
-		auto iter = m_NamesToIndex.find(name);
-		if (iter == m_NamesToIndex.end())
-			return TRUE;
-
-		return FALSE;
 	}
 
 	UINT Mythos::GetBindFlags(MythosBindFlags flags)
