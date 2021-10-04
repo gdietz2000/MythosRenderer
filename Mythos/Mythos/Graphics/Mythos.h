@@ -119,7 +119,10 @@ namespace Mythos
 
 		//GetResource will return a resource based off of the id given.
 		IMythosResource* GetResource(MythosID&);
+		void DeleteResource(MythosID&);
+
 		ID3D10Blob* GetShaderBlob(MythosID&);
+		void DeleteShaderBlob(MythosID&);
 	private:
 		MythosCreator m_Creator;
 		MythosContext m_Context;
@@ -154,13 +157,8 @@ namespace Mythos
 		Math::Vector4 m_RenderTargetClearColor;
 		float m_DepthBufferClearValue;
 
-		//Assuming you need to find a vertex buffer with the name "VB" using the Get Resource function 
-		//m_NamesToIndex will find the index the Vertex Buffers will be, which again can find the Resource
-		std::unordered_map<MythosID, unsigned int> m_NamesToIndex;
+		std::unordered_map<MythosID, unsigned int> m_IDsToIndex;
 		std::vector<std::unordered_map<MythosID, IMythosResource*>> m_Resources;
 		std::unordered_map<MythosID, ID3D10Blob*> m_ShaderBlobs;
-
-		//Storage for Models
-		std::unordered_map<unsigned int, MythosMesh*> m_MythosMeshes;
 	};
 }
