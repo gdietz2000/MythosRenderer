@@ -109,7 +109,8 @@ namespace Mythos
 
 		MythosModel* LoadMesh(const char* filepath);
 
-		BOOL CreateDirectionalLight(MythosLightType lightType, Math::Vector3 direction, Math::Vector3 color, float intensity, MythosID& id);
+		BOOL CreateDirectionalLight(Math::Vector3 direction, Math::Vector3 color, float intensity, MythosID& id);
+		BOOL CreatePointLight(Math::Vector3 position, Math::Vector3 color, float intensity, float radius, MythosID& id);
 
 		//PBR Specific Functions
 		BOOL CreateSkyboxFromEquirectangularTexture(unsigned int width, unsigned int height, const wchar_t* equirectangularTextureFilepath, MythosID& id);

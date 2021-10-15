@@ -60,7 +60,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	Mythos::MythosID deagleD, deagleAO, deagleN, deagleM, deagleR;
 
-	Mythos::MythosID directionalLightID;
+	Mythos::MythosID directionalLightID, pointLightID;
 
 	if (windowsWindow.GetWindow())
 	{
@@ -204,7 +204,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		success = mythos->CreateDirectionalLight(Mythos::MythosLightType::MYTHOS_DIRECTIONAL_LIGHT, Math::Vector3(0,0,1), Math::Vector3(1, 1, 1), 1, directionalLightID);
+		success = mythos->CreateDirectionalLight(Math::Vector3(1,0,0), Math::Vector3(1, 1, 1), 1, directionalLightID);
+		if (!success)
+			return -1;
+
+		success = mythos->CreatePointLight(Math::Vector3(-1, 0, 0), Math::Vector3(0, 1, 1), 1, 5, pointLightID);
 		if (!success)
 			return -1;
 	}
@@ -242,7 +246,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	MyMatrices.View = freeCamera.GetCamera();
 	MyMatrices.Projection = freeCamera.GetProjection();
 	mythos->UpdateMythosResource(constantBufferID, &MyMatrices, sizeof(WVP));
-	mythos->UpdateMythosResource(lightBufferID, mythos->GetLight(directionalLightID), sizeof(Mythos::MythosLight));
+	mythos->UpdateMythosResource(lightBufferID, mythos->GetLight(pointLightID), sizeof(Mythos::MythosLight));
 
 
 	mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());

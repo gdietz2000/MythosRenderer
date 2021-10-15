@@ -14,7 +14,13 @@ struct Light
     int lightType;
     float3 lightColor;
     float lightIntensity;
+		
+		//Directional Lights only
     float3 lightDirection;
+
+		//Point Lights only
+    float3 lightPosition;
+    float lightRadius;
 };
 
 cbuffer CameraBuffer : register(b0)
@@ -63,12 +69,8 @@ float4 main(InputVertex v) : SV_TARGET
     float3 Lo = 0.0;
     for (int i = 0; i < 1; ++i)
     {
-        float3 L;// = normalize(-l1.lightDirection - v.world);
-        float3 H;// = normalize(V + L);
-        //float atten = 1.0 / pow(length(lightPositions[i] - v.world), 2);
-        //float3 radiance = float3(23.47, 21.31, 20.79) * atten;
-        //float3 radiance = l1.lightColor * dot(L, v.normal);
-        
+        float3 L = 0.0;
+        float3 H = 0.0;
         float3 radiance = 0.0;
         //Directional Light
         if (l1.lightType == 1)
@@ -76,6 +78,15 @@ float4 main(InputVertex v) : SV_TARGET
             L = normalize(-l1.lightDirection);
             H = normalize(V + L);
             radiance = l1.lightColor * dot(L, N);
+        }
+        else if (l1.lightType == 2)
+        {
+            L = normalize(l1.lightPosition - v.world);
+            H = normalize(V + L);
+            //float atten = 1.0 / pow(length(l1.lightPosition - v.world), 2);
+            float atten = 1.0 - length(l1.lightPosition - v.world) / l1.lightRadius;
+            atten *= atten;
+            radiance = l1.lightColor * atten;
         }
         
         
