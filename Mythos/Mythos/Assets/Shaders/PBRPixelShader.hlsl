@@ -21,6 +21,12 @@ struct Light
 		//Point Lights only
     float3 lightPosition;
     float lightRadius;
+        
+        //Spot Lights only
+    float lightConeRatio;
+    float lightInnerConeRatio;
+    float lightOuterConeRatio;
+    float buffer;
 };
 
 cbuffer CameraBuffer : register(b0)
@@ -30,7 +36,7 @@ cbuffer CameraBuffer : register(b0)
 
 cbuffer LightBuffer : register(b1)
 {
-    Light l1;
+    Light lightArray[5];
 }
 
 TextureCube convolutedMap : register(t0);
@@ -58,35 +64,45 @@ float4 main(InputVertex v) : SV_TARGET
     
     float3 F0 = lerp(0.04, albedo, metallic);
     
-    float3 lightPositions[] =
-    {
-        float3(-3, 3, -1.75),
-        float3(-2, -2, -1.75),
-        float3(1.5, -1.5, -1.75),
-        float3(2, 1, -1.75)
-    };
-    
     float3 Lo = 0.0;
-    for (int i = 0; i < 1; ++i)
+    for (int i = 0; i < 5; ++i)
     {
         float3 L = 0.0;
         float3 H = 0.0;
         float3 radiance = 0.0;
+        
         //Directional Light
-        if (l1.lightType == 1)
+        if (lightArray[i].lightType == 1)
         {
-            L = normalize(-l1.lightDirection);
+            L = normalize(-lightArray[i].lightDirection);
             H = normalize(V + L);
-            radiance = l1.lightColor * dot(L, N);
+            radiance = lightArray[i].lightColor * dot(L, N) * lightArray[i].lightIntensity;
         }
-        else if (l1.lightType == 2)
+        //Point Light
+        else if (lightArray[i].lightType == 2)
         {
-            L = normalize(l1.lightPosition - v.world);
+            L = normalize(lightArray[i].lightPosition - v.world);
             H = normalize(V + L);
             //float atten = 1.0 / pow(length(l1.lightPosition - v.world), 2);
-            float atten = 1.0 - length(l1.lightPosition - v.world) / l1.lightRadius;
+            float atten = 1.0 - length(lightArray[i].lightPosition - v.world) / lightArray[i].lightRadius;
             atten *= atten;
-            radiance = l1.lightColor * atten;
+            radiance = lightArray[i].lightColor * atten * lightArray[i].lightIntensity;
+        }
+        //Spot Light
+        else if (lightArray[i].lightType == 3)
+        {
+            L = normalize(lightArray[i].lightPosition - v.world);
+            H = normalize(V + L);
+            
+            float theta = dot(L, -lightArray[i].lightDirection);
+            float epsilon = lightArray[i].lightInnerConeRatio - lightArray[i].lightOuterConeRatio;
+            float atten = clamp((theta - lightArray[i].lightOuterConeRatio) / epsilon, 0.0, 1.0);
+            atten *= atten;
+            radiance = lightArray[i].lightColor * dot(L, N) * atten * lightArray[i].lightIntensity;
+        }
+        else
+        {
+            continue;
         }
         
         

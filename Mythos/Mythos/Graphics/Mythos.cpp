@@ -1328,7 +1328,7 @@ namespace Mythos
 
 	BOOL Mythos::CreateDirectionalLight(Math::Vector3 direction, Math::Vector3 color, float intensity, MythosID& id)
 	{
-		MythosLight* light = new MythosLight(MythosLightType::MYTHOS_DIRECTIONAL_LIGHT, direction, color, intensity);
+		MythosLight* light = new MythosLight(direction, color, intensity);
 		if (!light)
 			return FALSE;
 
@@ -1339,7 +1339,18 @@ namespace Mythos
 
 	BOOL Mythos::CreatePointLight(Math::Vector3 position, Math::Vector3 color, float intensity, float radius, MythosID& id)
 	{
-		MythosLight* light = new MythosLight(MythosLightType::MYTHOS_POINT_LIGHT, position, color, intensity, radius);
+		MythosLight* light = new MythosLight(position, color, intensity, radius);
+		if (!light)
+			return FALSE;
+
+		id = MythosID();
+		m_Lights.insert(std::make_pair(id, light));
+		return TRUE;
+	}
+
+	BOOL Mythos::CreateSpotLight(Math::Vector3 position, Math::Vector3 direction, Math::Vector3 color, float intensity, float radians, float innerConeRadians, float outerConeRadians, MythosID& id)
+	{
+		MythosLight* light = new MythosLight(position, direction, color, intensity, cos(radians), cos(innerConeRadians), cos(outerConeRadians));
 		if (!light)
 			return FALSE;
 

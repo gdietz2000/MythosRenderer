@@ -60,7 +60,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	Mythos::MythosID deagleD, deagleAO, deagleN, deagleM, deagleR;
 
-	Mythos::MythosID directionalLightID, pointLightID;
+
+	Mythos::MythosLight lights[5];
+	Mythos::MythosID directionalLightID, pointLightID, spotLightID;
 
 	if (windowsWindow.GetWindow())
 	{
@@ -90,7 +92,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			return -1;
 
 		constantDesc.data = nullptr;
-		constantDesc.byteSize = sizeof(Mythos::MythosLight);
+		constantDesc.byteSize = sizeof(Mythos::MythosLight) * 5;
 		success = mythos->CreateConstantBuffer(&constantDesc, lightBufferID);
 		if (!success)
 			return -1;
@@ -204,13 +206,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		success = mythos->CreateDirectionalLight(Math::Vector3(1,0,0), Math::Vector3(1, 1, 1), 1, directionalLightID);
+		success = mythos->CreateDirectionalLight(Math::Vector3(0,0,1), Math::Vector3(1, 1, 1), 1, directionalLightID);
 		if (!success)
 			return -1;
 
-		success = mythos->CreatePointLight(Math::Vector3(-1, 0, 0), Math::Vector3(0, 1, 1), 1, 5, pointLightID);
+		success = mythos->CreatePointLight(Math::Vector3(-1, 0, 0), Math::Vector3(0, 1, 1), 5, 5, pointLightID);
 		if (!success)
 			return -1;
+
+		success = mythos->CreateSpotLight(Math::Vector3(0, 0, -5), Math::Vector3(0, -0.25f, 1), Math::Vector3(1, 0, 0), 1, Math::radians(5.0f), Math::radians(2.5f), Math::radians(7.5f), spotLightID);
+		if (!success)
+			return -1;
+
+		lights[0] = *mythos->GetLight(directionalLightID);
+		lights[1] = *mythos->GetLight(pointLightID);
+		lights[2] = *mythos->GetLight(spotLightID);
 	}
 
 
@@ -246,7 +256,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	MyMatrices.View = freeCamera.GetCamera();
 	MyMatrices.Projection = freeCamera.GetProjection();
 	mythos->UpdateMythosResource(constantBufferID, &MyMatrices, sizeof(WVP));
-	mythos->UpdateMythosResource(lightBufferID, mythos->GetLight(pointLightID), sizeof(Mythos::MythosLight));
+	mythos->UpdateMythosResource(lightBufferID, lights, sizeof(Mythos::MythosLight) * 5);
 
 
 	mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
