@@ -9,9 +9,22 @@ struct InputVertex
     float3 local : LOCALPOS;
 };
 
+struct Light
+{
+    int lightType;
+    float3 lightColor;
+    float lightIntensity;
+    float3 lightDirection;
+};
+
 cbuffer CameraBuffer : register(b0)
 {
     float4 cameraPosition;
+}
+
+cbuffer LightBuffer : register(b1)
+{
+    Light l1;
 }
 
 TextureCube convolutedMap : register(t0);
@@ -50,10 +63,22 @@ float4 main(InputVertex v) : SV_TARGET
     float3 Lo = 0.0;
     for (int i = 0; i < 1; ++i)
     {
-        float3 L = normalize(lightPositions[i] - v.world);
-        float3 H = normalize(V + L);
-        float atten = 1.0 / pow(length(lightPositions[i] - v.world), 2);
-        float3 radiance = float3(23.47, 21.31, 20.79) * atten;
+        float3 L;// = normalize(-l1.lightDirection - v.world);
+        float3 H;// = normalize(V + L);
+        //float atten = 1.0 / pow(length(lightPositions[i] - v.world), 2);
+        //float3 radiance = float3(23.47, 21.31, 20.79) * atten;
+        //float3 radiance = l1.lightColor * dot(L, v.normal);
+        
+        float3 radiance = 0.0;
+        //Directional Light
+        if (l1.lightType == 1)
+        {
+            L = normalize(-l1.lightDirection);
+            H = normalize(V + L);
+            radiance = l1.lightColor * dot(L, N);
+        }
+        
+        
         
         //Cook-Torrence BRDF
         float NdotV = max(dot(N, V), 0.0000001);
@@ -82,13 +107,15 @@ float4 main(InputVertex v) : SV_TARGET
 
     float3 irradiance = pow(convolutedMap.Sample(SimpleSampler, N).rgb, GAMMA);
     float3 diffuse = irradiance * albedo;
-   
+    diffuse = 0.0;
+    
     //Indirect specular reflections
     const float MAX_REFLECTION_LOD = 4.0;
     
     float3 prefilteredColor = environmentMap.SampleLevel(SimpleSampler, R, roughness * MAX_REFLECTION_LOD).rgb;
     float2 envBRDF = brdf.Sample(SimpleSampler, float2(max(dot(N, V), 0.0), roughness)).rg;
     float3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+    specular = 0.0;
     
     float3 ambient = (kD * diffuse + specular) * ao;
     

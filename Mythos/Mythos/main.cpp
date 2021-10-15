@@ -55,10 +55,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	unsigned int wid = 512, hei = 512;
 	unsigned int wid2 = 32, hei2 = 32;
 
-	Mythos::MythosID cubeVertexID, cubeIndexID, deagleVertexID, deagleIndexID, constantBufferID, cameraPositionID, mainRenderTargetID, vertexShaderID, pixelShaderID, skyboxShaderID,
+	Mythos::MythosID cubeVertexID, cubeIndexID, deagleVertexID, deagleIndexID, constantBufferID, cameraPositionID, lightBufferID, mainRenderTargetID, vertexShaderID, pixelShaderID, skyboxShaderID,
 		inputLayoutID, depthTextureID, depthBufferID, samplerStateID, skyboxTextureID, convolutedID, prefilteredEnvironmentID, brdfID;
 
 	Mythos::MythosID deagleD, deagleAO, deagleN, deagleM, deagleR;
+
+	Mythos::MythosID directionalLightID;
 
 	if (windowsWindow.GetWindow())
 	{
@@ -84,6 +86,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		constantDesc.data = nullptr;
 		constantDesc.byteSize = sizeof(Math::Vector4);
 		success = mythos->CreateConstantBuffer(&constantDesc, cameraPositionID);
+		if (!success)
+			return -1;
+
+		constantDesc.data = nullptr;
+		constantDesc.byteSize = sizeof(Mythos::MythosLight);
+		success = mythos->CreateConstantBuffer(&constantDesc, lightBufferID);
 		if (!success)
 			return -1;
 
@@ -195,7 +203,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		success = mythos->CreateTextureSampler(&samplerDesc, samplerStateID);
 		if (!success)
 			return -1;
+
+		success = mythos->CreateDirectionalLight(Mythos::MythosLightType::MYTHOS_DIRECTIONAL_LIGHT, Math::Vector3(0,0,1), Math::Vector3(1, 1, 1), 1, directionalLightID);
+		if (!success)
+			return -1;
 	}
+
 
 	Vector3 Eye = { 0,0,-10 };
 	Vector3 Target = { 0,0,1 };
@@ -229,6 +242,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	MyMatrices.View = freeCamera.GetCamera();
 	MyMatrices.Projection = freeCamera.GetProjection();
 	mythos->UpdateMythosResource(constantBufferID, &MyMatrices, sizeof(WVP));
+	mythos->UpdateMythosResource(lightBufferID, mythos->GetLight(directionalLightID), sizeof(Mythos::MythosLight));
 
 
 	mythos->GetContext()->RSSetViewports(1, &mythos->GetViewport());
@@ -284,7 +298,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			mythos->GetContext()->VSSetShader((ID3D11VertexShader*)mythos->GetResource(vertexShaderID)->GetData(), nullptr, NULL);
 			mythos->GetContext()->VSSetConstantBuffers(0, 1, constBuffers);
 
-			ID3D11Buffer* pixelConstantBuffers[] = { (ID3D11Buffer*)mythos->GetResource(cameraPositionID)->GetData() };
+			ID3D11Buffer* pixelConstantBuffers[] = { (ID3D11Buffer*)mythos->GetResource(cameraPositionID)->GetData()};
 			ID3D11SamplerState* samplers[] = { (ID3D11SamplerState*)mythos->GetResource(samplerStateID)->GetData() };
 			ID3D11ShaderResourceView* srvs[] =
 			{
@@ -316,7 +330,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			mythos->GetContext()->VSSetShader((ID3D11VertexShader*)mythos->GetResource(vertexShaderID)->GetData(), nullptr, NULL);
 			mythos->GetContext()->VSSetConstantBuffers(0, 1, constBuffers);
 
-			ID3D11Buffer* pixelConstantBuffers[] = { (ID3D11Buffer*)mythos->GetResource(cameraPositionID)->GetData() };
+			ID3D11Buffer* pixelConstantBuffers[] = { (ID3D11Buffer*)mythos->GetResource(cameraPositionID)->GetData(), (ID3D11Buffer*)mythos->GetResource(lightBufferID)->GetData() };
 			ID3D11SamplerState* samplers[] = { (ID3D11SamplerState*)mythos->GetResource(samplerStateID)->GetData() };
 			ID3D11ShaderResourceView* srvs[] =
 			{
@@ -332,7 +346,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource(pixelShaderID)->GetData(), nullptr, NULL);
 			mythos->GetContext()->PSSetShaderResources(0, ARRAYSIZE(srvs), srvs);
-			mythos->GetContext()->PSSetConstantBuffers(0, 1, pixelConstantBuffers);
+			mythos->GetContext()->PSSetConstantBuffers(0, ARRAYSIZE(pixelConstantBuffers), pixelConstantBuffers);
 			mythos->GetContext()->PSSetSamplers(0, 1, samplers);
 
 			mythos->GetContext()->DrawIndexed(deagle->m_TotalNumIndices, 0, 0);

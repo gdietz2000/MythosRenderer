@@ -9,6 +9,7 @@
 #include "MythosSwapChain.h"
 #include "MythosMesh.h"
 #include "MythosDescriptors.h"
+#include "MythosLight.h"
 
 #include "MythosID.h"
 
@@ -108,6 +109,8 @@ namespace Mythos
 
 		MythosModel* LoadMesh(const char* filepath);
 
+		BOOL CreateDirectionalLight(MythosLightType lightType, Math::Vector3 direction, Math::Vector3 color, float intensity, MythosID& id);
+
 		//PBR Specific Functions
 		BOOL CreateSkyboxFromEquirectangularTexture(unsigned int width, unsigned int height, const wchar_t* equirectangularTextureFilepath, MythosID& id);
 		BOOL ConvoluteSkybox(unsigned int width, unsigned int height, MythosID& textureToConvoluteID, MythosID& convolutedID);
@@ -123,6 +126,11 @@ namespace Mythos
 
 		ID3D10Blob* GetShaderBlob(MythosID&);
 		void DeleteShaderBlob(MythosID&);
+		
+		MythosLight* GetLight(MythosID&);
+		void DeleteLight(MythosID&);
+
+
 	private:
 		MythosCreator m_Creator;
 		MythosContext m_Context;
@@ -160,5 +168,6 @@ namespace Mythos
 		std::unordered_map<MythosID, unsigned int> m_IDsToIndex;
 		std::vector<std::unordered_map<MythosID, IMythosResource*>> m_Resources;
 		std::unordered_map<MythosID, ID3D10Blob*> m_ShaderBlobs;
+		std::unordered_map<MythosID, MythosLight*> m_Lights;
 	};
 }

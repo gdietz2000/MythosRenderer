@@ -162,6 +162,7 @@
     <ClInclude Include="Graphics\MythosDescriptors.h" />
     <ClInclude Include="Graphics\MythosInputLayout.h" />
     <ClInclude Include="Graphics\MythosFreeroamCamera.h" />
+    <ClInclude Include="Graphics\MythosLight.h" />
     <ClInclude Include="Graphics\MythosMesh.h" />
     <ClInclude Include="Graphics\MythosPixelShader.h" />
     <ClInclude Include="Graphics\MythosRasterizer.h" />

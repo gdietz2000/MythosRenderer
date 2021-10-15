@@ -93,10 +93,16 @@ namespace Mythos
 			blob.second->Release();
 		}
 
+		for (auto light : m_Lights) 
+		{
+			delete light.second;
+		}
+
 		//Clearing these containers
 		m_IDsToIndex.clear();
 		m_Resources.clear();
 		m_ShaderBlobs.clear();
+		m_Lights.clear();
 	}
 
 	BOOL Mythos::CreateVertexBuffer(void* data, unsigned int byteSize, MythosID& id)
@@ -1266,8 +1272,6 @@ namespace Mythos
 
 	MythosModel* Mythos::LoadMesh(const char* filepath)
 	{
-		
-
 		MythosModel* importedModel = new MythosModel();
 
 		std::fstream file{ filepath, std::ios_base::in | std::ios_base::binary };
@@ -1320,6 +1324,17 @@ namespace Mythos
 
 		importedModel->m_TotalNumIndices = totalNumIndices;
 		return importedModel;
+	}
+
+	BOOL Mythos::CreateDirectionalLight(MythosLightType lightType, Math::Vector3 direction, Math::Vector3 color, float intensity, MythosID& id)
+	{
+		MythosLight* light = new MythosLight(lightType, direction, color, intensity);
+		if (!light)
+			return FALSE;
+
+		id = MythosID();
+		m_Lights.insert(std::make_pair(id, light));
+		return TRUE;
 	}
 
 	BOOL Mythos::CreateSkyboxFromEquirectangularTexture(unsigned int width, unsigned int height, const wchar_t* equirectangularTextureFilepath, MythosID& id)
@@ -1377,7 +1392,7 @@ namespace Mythos
 		iDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 		iDesc.ByteWidth = sizeof(unsigned int) * 36;
 		iDesc.Usage = D3D11_USAGE_DEFAULT;
-		
+
 		ZeroMemory(&cDesc, sizeof(cDesc));
 		cDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		cDesc.ByteWidth = sizeof(WVP);
@@ -1680,7 +1695,7 @@ namespace Mythos
 		hr = GetCreator()->CreateBuffer(&iDesc, &subData, &indexBuffer);
 		if (FAILED(hr))
 			return FALSE;
-		
+
 		hr = GetCreator()->CreateBuffer(&cDesc, nullptr, &constantBuffer);
 		if (FAILED(hr))
 			return FALSE;
@@ -2199,7 +2214,7 @@ namespace Mythos
 		hr = GetCreator()->CreateBuffer(&iDesc, &subData, &indexBuffer);
 		if (FAILED(hr))
 			return FALSE;
-		
+
 		hr = GetCreator()->CreateBuffer(&cDesc, nullptr, &constantBuffer);
 		if (FAILED(hr))
 			return FALSE;
@@ -2412,6 +2427,25 @@ namespace Mythos
 		{
 			iter->second->Release();
 			m_ShaderBlobs.erase(id);
+		}
+	}
+
+	MythosLight* Mythos::GetLight(MythosID& id)
+	{
+		auto iter = m_Lights.find(id);
+		if (iter != m_Lights.end())
+			return iter->second;
+
+		return nullptr;
+	}
+
+	void Mythos::DeleteLight(MythosID& id)
+	{
+		auto iter = m_Lights.find(id);
+		if (iter != m_Lights.end())
+		{
+			delete iter->second;
+			m_Lights.erase(id);
 		}
 	}
 
