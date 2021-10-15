@@ -134,7 +134,7 @@ float4 main(InputVertex v) : SV_TARGET
 
     float3 irradiance = pow(convolutedMap.Sample(SimpleSampler, N).rgb, GAMMA);
     float3 diffuse = irradiance * albedo;
-    diffuse = 0.0;
+    //diffuse = 0.0;
     
     //Indirect specular reflections
     const float MAX_REFLECTION_LOD = 4.0;
@@ -142,7 +142,7 @@ float4 main(InputVertex v) : SV_TARGET
     float3 prefilteredColor = environmentMap.SampleLevel(SimpleSampler, R, roughness * MAX_REFLECTION_LOD).rgb;
     float2 envBRDF = brdf.Sample(SimpleSampler, float2(max(dot(N, V), 0.0), roughness)).rg;
     float3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
-    specular = 0.0;
+    //specular = 0.0;
     
     float3 ambient = (kD * diffuse + specular) * ao;
     
