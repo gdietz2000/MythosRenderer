@@ -4,7 +4,10 @@
 float3 getNormalFromTexture(Texture2D normalMap, SamplerState sample, float2 texCoords, float3 normal, float3 world)
 {
     float3 tangentNormal = normalMap.Sample(sample, texCoords).xyz * 2.0 - 1.0;
-
+    
+    if (tangentNormal.x == -1 && tangentNormal.y == -1 && tangentNormal.z == -1)
+        return normal;
+    
     float3 Q1 = ddx(world);
     float3 Q2 = ddy(world);
     float2 st1 = ddx(texCoords);
@@ -14,9 +17,8 @@ float3 getNormalFromTexture(Texture2D normalMap, SamplerState sample, float2 tex
     float3 T = normalize(Q1 * st2.x - Q2 * st1.x);
     float3 B = -normalize(cross(N, T));
     float3x3 TBN = float3x3(T, B, N);
-
+    
     return normalize(mul(tangentNormal, TBN));
-
 }
 
 float3 fresnelSchlick(float cosTheta, float3 F0)

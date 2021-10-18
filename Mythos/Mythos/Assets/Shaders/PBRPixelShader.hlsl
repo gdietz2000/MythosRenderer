@@ -83,8 +83,7 @@ float4 main(InputVertex v) : SV_TARGET
         {
             L = normalize(lightArray[i].lightPosition - v.world);
             H = normalize(V + L);
-            //float atten = 1.0 / pow(length(l1.lightPosition - v.world), 2);
-            float atten = 1.0 - length(lightArray[i].lightPosition - v.world) / lightArray[i].lightRadius;
+            float atten = 1.0 - clamp(length(lightArray[i].lightPosition - v.world) / lightArray[i].lightRadius, 0.0, 1.0);
             atten *= atten;
             radiance = lightArray[i].lightColor * atten * lightArray[i].lightIntensity;
         }
