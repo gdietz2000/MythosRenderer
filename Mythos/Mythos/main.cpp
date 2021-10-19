@@ -55,7 +55,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	unsigned int wid = 512, hei = 512;
 	unsigned int wid2 = 32, hei2 = 32;
-	Math::Vector4 white = Math::Vector4(1.0);
+	Math::Vector4 white = Math::Vector4(0.7);
 	Math::Vector4 black = Math::Vector4(0.0);
 
 	Mythos::MythosID cubeVertexID, cubeIndexID, deagleVertexID, deagleIndexID, planeVertexID, planeIndexID, constantBufferID, cameraPositionID, lightBufferID, mainRenderTargetID, vertexShaderID, pixelShaderID, skyboxShaderID,
@@ -254,9 +254,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		//lights[0] = *mythos->GetLight(directionalLightID);
+		lights[0] = *mythos->GetLight(directionalLightID);
 		lights[1] = *mythos->GetLight(pointLightID);
-		//lights[2] = *mythos->GetLight(spotLightID);
+		lights[2] = *mythos->GetLight(spotLightID);
 	}
 
 
@@ -281,11 +281,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mythos->SetTopology(Mythos::MYTHOS_TRIANGLE_LIST);
 	mythos->GetContext()->IASetInputLayout((ID3D11InputLayout*)mythos->GetResource(inputLayoutID)->GetData());
 
-	mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Newport_Loft.dds", skyboxTextureID);
-	//mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Arches_PineTree.dds", "skybox");
-	//mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/HDRI.dds", "skybox");
+	//mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Newport_Loft.dds", skyboxTextureID);
+	mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/Arches_PineTree.dds", skyboxTextureID);
+	//mythos->CreateSkyboxFromEquirectangularTexture(wid, hei, L"Assets/Textures/HDRI.dds", skyboxTextureID);
 	mythos->ConvoluteSkybox(wid2, hei2, skyboxTextureID, convolutedID);
-	mythos->CreatePrefilteredEnvironment(128, 128, skyboxTextureID, prefilteredEnvironmentID);
+	mythos->CreatePrefilteredEnvironment(256, 256, skyboxTextureID, prefilteredEnvironmentID);
 	mythos->CreateBRDFTexture(wid2, hei2, brdfID);
 
 	//MyMatrices.World = Matrix4::Scale(10) * Matrix4::RotateY(PI / -2);
@@ -299,6 +299,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	float rotation = 0.0;
 	float deltaTime = 0.0;
+
+	double totalTime = 0.0;
+	int frames = 0;
 
 	std::chrono::steady_clock timer;
 
@@ -387,7 +390,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				(ID3D11ShaderResourceView*)mythos->GetResource(convolutedID)->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource(prefilteredEnvironmentID)->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource(brdfID)->GetData(),
-				(ID3D11ShaderResourceView*)mythos->GetResource(whiteID)->GetData(),
+				(ID3D11ShaderResourceView*)mythos->GetResource(deagleD)->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource(deagleAO)->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource(deagleN)->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource(deagleM)->GetData(),
@@ -405,7 +408,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		{
 			mythos->GetContext()->OMSetRenderTargets(1, &targets, (ID3D11DepthStencilView*)mythos->GetResource(depthBufferID)->GetData());
 
-			MyMatrices.World = Matrix4::Translate(0, -1.0, 0);
+			MyMatrices.World = Matrix4::Translate(0, -1.5, 0);
 			mythos->UpdateMythosResource(constantBufferID, &MyMatrices, sizeof(WVP));
 
 			ID3D11Buffer* buffers[] = { (ID3D11Buffer*)mythos->GetResource(planeVertexID)->GetData() };
@@ -428,8 +431,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				(ID3D11ShaderResourceView*)mythos->GetResource(whiteID)->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource(whiteID)->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource(blackID)->GetData(),
-				(ID3D11ShaderResourceView*)mythos->GetResource(blackID)->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource(whiteID)->GetData(),
+				(ID3D11ShaderResourceView*)mythos->GetResource(blackID)->GetData(),
 			};
 
 			mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource(pixelShaderID)->GetData(), nullptr, NULL);
@@ -445,7 +448,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		auto end = timer.now();
 		deltaTime = deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
-		float fps = 1.0 / deltaTime * 1000;
+		totalTime += deltaTime / 1000;
+
+		frames++;
+
+		if (totalTime >= 1.0) {
+			totalTime -= 1.0;
+			frames = 0;
+		}
 	}
 
 	delete mythos;

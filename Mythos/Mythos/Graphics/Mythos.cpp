@@ -2503,17 +2503,29 @@ namespace Mythos
 		case MYTHOS_FORMAT_32_FLOAT4:
 			formatType = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			break;
-		case MYTHOS_FORMAT_32_INT1:
+		case MYTHOS_FORMAT_32_SINT1:
 			formatType = DXGI_FORMAT_R32_SINT;
 			break;
-		case MYTHOS_FORMAT_32_INT2:
+		case MYTHOS_FORMAT_32_SINT2:
 			formatType = DXGI_FORMAT_R32G32_SINT;
 			break;
-		case MYTHOS_FORMAT_32_INT3:
+		case MYTHOS_FORMAT_32_SINT3:
 			formatType = DXGI_FORMAT_R32G32B32_SINT;
 			break;
-		case MYTHOS_FORMAT_32_INT4:
+		case MYTHOS_FORMAT_32_SINT4:
 			formatType = DXGI_FORMAT_R32G32B32A32_SINT;
+			break;
+		case MYTHOS_FORMAT_32_UINT1:
+			formatType = DXGI_FORMAT_R32_UINT;
+			break;
+		case MYTHOS_FORMAT_32_UINT2:
+			formatType = DXGI_FORMAT_R32G32_UINT;
+			break;
+		case MYTHOS_FORMAT_32_UINT3:
+			formatType = DXGI_FORMAT_R32G32B32_UINT;
+			break;
+		case MYTHOS_FORMAT_32_UINT4:
+			formatType = DXGI_FORMAT_R32G32B32A32_UINT;
 			break;
 		case MYTHOS_FORMAT_32_UNKNOWN1:
 			formatType = DXGI_FORMAT_R32_TYPELESS;
@@ -2554,16 +2566,16 @@ namespace Mythos
 		case MYTHOS_FORMAT_32_FLOAT4:
 			formatSize = sizeof(float) * 4;
 			break;
-		case MYTHOS_FORMAT_32_INT1:
+		case MYTHOS_FORMAT_32_SINT1:
 			formatSize = sizeof(int) * 1;
 			break;
-		case MYTHOS_FORMAT_32_INT2:
+		case MYTHOS_FORMAT_32_SINT2:
 			formatSize = sizeof(int) * 2;
 			break;
-		case MYTHOS_FORMAT_32_INT3:
+		case MYTHOS_FORMAT_32_SINT3:
 			formatSize = sizeof(int) * 3;
 			break;
-		case MYTHOS_FORMAT_32_INT4:
+		case MYTHOS_FORMAT_32_SINT4:
 			formatSize = sizeof(int) * 4;
 			break;
 		case MYTHOS_FORMAT_32_UNKNOWN1:
