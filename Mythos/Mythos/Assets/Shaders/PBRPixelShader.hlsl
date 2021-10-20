@@ -48,6 +48,7 @@ Texture2D aoTexture : register(t4);
 Texture2D normalTexture : register(t5);
 Texture2D metalTexture : register(t6);
 Texture2D roughTexture : register(t7);
+Texture2D emissiveTexture : register(t8);
 
 SamplerState SimpleSampler : register(s0);
 
@@ -57,7 +58,8 @@ float4 main(InputVertex v) : SV_TARGET
     float ao = aoTexture.Sample(SimpleSampler, v.uv).r;
     float metallic = metalTexture.Sample(SimpleSampler, v.uv).r;
     float roughness = roughTexture.Sample(SimpleSampler, v.uv).r;
-    
+    float3 emissive = emissiveTexture.Sample(SimpleSampler, v.uv);
+        
     float3 N = getNormalFromTexture(normalTexture, SimpleSampler, v.uv, v.normal, v.world);
     float3 V = normalize(cameraPosition.xyz - v.world);    
     float3 R = reflect(-V, N);
@@ -122,7 +124,7 @@ float4 main(InputVertex v) : SV_TARGET
         float3 kD = 1.0 - F;
         
         kD *= 1.0 - metallic;
-        
+                
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;
     }
     
@@ -133,7 +135,7 @@ float4 main(InputVertex v) : SV_TARGET
 
     float3 irradiance = pow(convolutedMap.Sample(SimpleSampler, N).rgb, GAMMA);
     float3 diffuse = irradiance * albedo;
-    //diffuse = 0.0;
+    //diffuse = albedo;
     
     //Indirect specular reflections
     const float MAX_REFLECTION_LOD = 4.0;
@@ -146,6 +148,7 @@ float4 main(InputVertex v) : SV_TARGET
     float3 ambient = (kD * diffuse + specular) * ao;
     
     float3 color = ambient + Lo;
+    color = fresnelSchlick(dot(cameraPosition.xyz - v.world, N), 0.5);
     
     //HDR tonemapping
     color = color / (color + 1.0);
@@ -153,6 +156,8 @@ float4 main(InputVertex v) : SV_TARGET
     //Gamma Correction
     color = pow(color, 1.0 / GAMMA);
     
+    //Add Emissive
+    color = color + emissive;
     
     return float4(color, 1);
 }

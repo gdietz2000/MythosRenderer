@@ -114,6 +114,9 @@
     <ClInclude Include="Graphics\MythosLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\MythosMaterial.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -179,9 +182,9 @@
     <FxCompile Include="Assets\Shaders\TextureVertexShader.hlsl" />
     <FxCompile Include="Assets\Shaders\Color.hlsl" />
     <FxCompile Include="Assets\Shaders\TexturedObject.hlsl" />
+    <FxCompile Include="Assets\Shaders\PBRFunctions.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Mathematics\README.md" />
-    <None Include="Assets\Shaders\PBRFunctions.hlsli" />
   </ItemGroup>
 </Project>

@@ -10,6 +10,7 @@
 #include "MythosMesh.h"
 #include "MythosDescriptors.h"
 #include "MythosLight.h"
+#include "MythosMaterial.h"
 
 #include "MythosID.h"
 
@@ -113,6 +114,9 @@ namespace Mythos
 		BOOL CreatePointLight(Math::Vector3 position, Math::Vector3 color, float intensity, float radius, MythosID& id);
 		BOOL CreateSpotLight(Math::Vector3 position, Math::Vector3 direction, Math::Vector3 color, float intensity, float radians, float innerConeRadians, float outerConeRadians, MythosID& id);
 
+		//Setters
+		void SetMaterial(UINT startSlot, MythosMaterial& mat);
+
 		//PBR Specific Functions
 		BOOL CreateSkyboxFromEquirectangularTexture(unsigned int width, unsigned int height, const wchar_t* equirectangularTextureFilepath, MythosID& id);
 		BOOL ConvoluteSkybox(unsigned int width, unsigned int height, MythosID& textureToConvoluteID, MythosID& convolutedID);
@@ -131,8 +135,6 @@ namespace Mythos
 		
 		MythosLight* GetLight(MythosID&);
 		void DeleteLight(MythosID&);
-
-
 	private:
 		MythosCreator m_Creator;
 		MythosContext m_Context;

@@ -1359,6 +1359,27 @@ namespace Mythos
 		return TRUE;
 	}
 
+	void Mythos::SetMaterial(UINT startSlot, MythosMaterial& mat)
+	{
+		ID3D11ShaderResourceView* diffuse = nullptr, *ao = nullptr, *norm = nullptr, *metal = nullptr, *rough = nullptr, *emiss = nullptr;
+		if (mat.m_Diffuse != 0) 
+			diffuse = (ID3D11ShaderResourceView*)GetResource(mat.m_Diffuse)->GetData();
+		if (mat.m_AmbientOcculusion != 0)
+			ao = (ID3D11ShaderResourceView*)GetResource(mat.m_AmbientOcculusion)->GetData();
+		if (mat.m_Normal != 0)
+			norm = (ID3D11ShaderResourceView*)GetResource(mat.m_Normal)->GetData();
+		if (mat.m_Metallic != 0)
+			metal = (ID3D11ShaderResourceView*)GetResource(mat.m_Metallic)->GetData();
+		if (mat.m_Roughness != 0)
+			rough = (ID3D11ShaderResourceView*)GetResource(mat.m_Roughness)->GetData();
+		if (mat.m_Emissive != 0)
+			emiss = (ID3D11ShaderResourceView*)GetResource(mat.m_Emissive)->GetData();
+
+		ID3D11ShaderResourceView* textures[] = { diffuse, ao, norm, metal, rough, emiss };
+
+		GetContext()->PSSetShaderResources(startSlot, 6, textures);
+	}
+
 	BOOL Mythos::CreateSkyboxFromEquirectangularTexture(unsigned int width, unsigned int height, const wchar_t* equirectangularTextureFilepath, MythosID& id)
 	{
 		//=========================================================================
@@ -2401,6 +2422,8 @@ namespace Mythos
 
 	IMythosResource* Mythos::GetResource(MythosID& id)
 	{
+		if (id == NULL)
+			return nullptr;
 
 		auto num = m_IDsToIndex.find(id);
 		if (num != m_IDsToIndex.end())

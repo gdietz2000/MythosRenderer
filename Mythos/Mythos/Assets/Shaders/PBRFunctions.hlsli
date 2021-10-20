@@ -63,6 +63,7 @@ float geometrySmith(float3 n, float3 v, float3 l, float roughness)
     return ggx1 * ggx2;
 }
 
+
 float radicalInverse_vdc(uint bits)
 {
     bits = (bits << 16u) | (bits >> 16u);
@@ -77,6 +78,7 @@ float2 hammersley(uint i, uint N)
 {
     return float2(float(i) / float(N), radicalInverse_vdc(i));
 }
+
 
 float vanDerCorput(uint n, uint base)
 {

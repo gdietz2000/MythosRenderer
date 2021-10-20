@@ -55,19 +55,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	unsigned int wid = 512, hei = 512;
 	unsigned int wid2 = 32, hei2 = 32;
-	Math::Vector4 white = Math::Vector4(0.7);
-	Math::Vector4 black = Math::Vector4(0.0);
 
 	Mythos::MythosID cubeVertexID, cubeIndexID, deagleVertexID, deagleIndexID, planeVertexID, planeIndexID, constantBufferID, cameraPositionID, lightBufferID, mainRenderTargetID, vertexShaderID, pixelShaderID, skyboxShaderID,
 		inputLayoutID, depthTextureID, depthBufferID, samplerStateID, skyboxTextureID, convolutedID, prefilteredEnvironmentID, brdfID;
 
-	Mythos::MythosID deagleD, deagleAO, deagleN, deagleM, deagleR;
-
-	Mythos::MythosID tempID, whiteID, blackID;
+	Mythos::MythosID deagleD, deagleAO, deagleN, deagleM, deagleR, white, grey, black;
 
 
 	Mythos::MythosLight lights[5];
 	Mythos::MythosID directionalLightID, pointLightID, spotLightID;
+
+	Mythos::MythosMaterial deagleMaterial, standardMaterial;
 
 	if (windowsWindow.GetWindow())
 	{
@@ -184,6 +182,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
+		Math::Vector4 whiteColor = Math::Vector4(1.0);
+		Math::Vector4 greyColor = Math::Vector4(0.5);
+		Math::Vector4 blackColor = Math::Vector4(0.0);
+
 		Mythos::MythosTextureDescriptor textureDesc;
 		ZeroMemory(&textureDesc, sizeof(textureDesc));
 		textureDesc.bindFlags = Mythos::MYTHOS_BIND_SHADER_RESOURCE;
@@ -194,22 +196,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		textureDesc.mipLevels = 0;
 		textureDesc.sampleCount = 1;
 		textureDesc.sampleQuality = 0;
-		
-		success = mythos->CreateTexture2D(&textureDesc, &white, tempID);
-		if (!success)
-			return -1;
 
-		success = mythos->CreateShaderResource(mythos->GetResource(tempID), whiteID);
-		if (!success)
-			return -1;
+		Mythos::MythosID tempID;
 
-		success = mythos->CreateTexture2D(&textureDesc, &black, tempID);
-		if (!success)
-			return -1;
-
-		success = mythos->CreateShaderResource(mythos->GetResource(tempID), blackID);
-		if (!success)
-			return -1;
+		mythos->CreateTexture2D(&textureDesc, &whiteColor, tempID);
+		mythos->CreateShaderResource(mythos->GetResource(tempID), white);
+		mythos->CreateTexture2D(&textureDesc, &greyColor, tempID);
+		mythos->CreateShaderResource(mythos->GetResource(tempID), grey);
+		mythos->CreateTexture2D(&textureDesc, &blackColor, tempID);
+		mythos->CreateShaderResource(mythos->GetResource(tempID), black);
 
 		success = mythos->CreateShaderResource(L"Assets/Textures/Deagle_BaseColor.dds", deagleD);
 		if (!success)
@@ -242,7 +237,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		success = mythos->CreateDirectionalLight(Math::Vector3(0,-1,1), Math::Vector3(1, 1, 1), 1, directionalLightID);
+		success = mythos->CreateDirectionalLight(Math::Vector3(0,-1,1), Math::Vector3(1.0, 0.9568627, 0.8392157), 1, directionalLightID);
+		//success = mythos->CreateDirectionalLight(Math::Vector3(0,-1,1), Math::Vector3(0,1,1), 1, directionalLightID);
 		if (!success)
 			return -1;
 
@@ -257,6 +253,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		lights[0] = *mythos->GetLight(directionalLightID);
 		lights[1] = *mythos->GetLight(pointLightID);
 		lights[2] = *mythos->GetLight(spotLightID);
+
+		deagleMaterial = Mythos::MythosMaterial(deagleD, deagleAO, deagleN, deagleM, deagleR, NULL);
+		standardMaterial = Mythos::MythosMaterial(white, white, black, white, black, NULL);
 	}
 
 
@@ -390,15 +389,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				(ID3D11ShaderResourceView*)mythos->GetResource(convolutedID)->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource(prefilteredEnvironmentID)->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource(brdfID)->GetData(),
-				(ID3D11ShaderResourceView*)mythos->GetResource(deagleD)->GetData(),
-				(ID3D11ShaderResourceView*)mythos->GetResource(deagleAO)->GetData(),
-				(ID3D11ShaderResourceView*)mythos->GetResource(deagleN)->GetData(),
-				(ID3D11ShaderResourceView*)mythos->GetResource(deagleM)->GetData(),
-				(ID3D11ShaderResourceView*)mythos->GetResource(deagleR)->GetData(),
 			};
 
 			mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource(pixelShaderID)->GetData(), nullptr, NULL);
 			mythos->GetContext()->PSSetShaderResources(0, ARRAYSIZE(srvs), srvs);
+			mythos->SetMaterial(3, deagleMaterial);
 			mythos->GetContext()->PSSetConstantBuffers(0, ARRAYSIZE(pixelConstantBuffers), pixelConstantBuffers);
 			mythos->GetContext()->PSSetSamplers(0, 1, samplers);
 
@@ -428,16 +423,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				(ID3D11ShaderResourceView*)mythos->GetResource(convolutedID)->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource(prefilteredEnvironmentID)->GetData(),
 				(ID3D11ShaderResourceView*)mythos->GetResource(brdfID)->GetData(),
-				(ID3D11ShaderResourceView*)mythos->GetResource(whiteID)->GetData(),
-				(ID3D11ShaderResourceView*)mythos->GetResource(whiteID)->GetData(),
-				(ID3D11ShaderResourceView*)mythos->GetResource(blackID)->GetData(),
-				(ID3D11ShaderResourceView*)mythos->GetResource(whiteID)->GetData(),
-				(ID3D11ShaderResourceView*)mythos->GetResource(blackID)->GetData(),
 			};
 
 			mythos->GetContext()->PSSetShader((ID3D11PixelShader*)mythos->GetResource(pixelShaderID)->GetData(), nullptr, NULL);
 			mythos->GetContext()->PSSetShaderResources(0, ARRAYSIZE(srvs), srvs);
 			mythos->GetContext()->PSSetConstantBuffers(0, ARRAYSIZE(pixelConstantBuffers), pixelConstantBuffers);
+			mythos->SetMaterial(3, standardMaterial);
 			mythos->GetContext()->PSSetSamplers(0, 1, samplers);
 
 			mythos->GetContext()->DrawIndexed(plane->m_TotalNumIndices, 0, 0);
