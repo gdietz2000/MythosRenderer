@@ -52,6 +52,13 @@ Texture2D emissiveTexture : register(t8);
 
 SamplerState SimpleSampler : register(s0);
 
+uint queryEnvironmentMap()
+{
+    uint width, height, levels;
+    environmentMap.GetDimensions(0, width, height, levels);
+    return levels;
+}
+
 float4 main(InputVertex v) : SV_TARGET
 {    
     float3 albedo = pow(diffuseTexture.Sample(SimpleSampler, v.uv), GAMMA);
@@ -66,7 +73,7 @@ float4 main(InputVertex v) : SV_TARGET
     
     float3 F0 = lerp(0.04, albedo, metallic);
     
-    float3 Lo = 0.0;
+    float3 directLighting = 0.0;
     for (int i = 0; i < 5; ++i)
     {
         float3 L = 0.0;
@@ -109,8 +116,8 @@ float4 main(InputVertex v) : SV_TARGET
         
         
         //Cook-Torrence BRDF
-        float NdotV = max(dot(N, V), 0.0000001);
-        float NdotL = max(dot(N, L), 0.0000001);
+        float NdotV = max(dot(N, V), EPSILON);
+        float NdotL = max(dot(N, L), EPSILON);
         float HdotV = max(dot(H, V), 0.0);
         float NdotH = max(dot(N, H), 0.0);
         
@@ -118,37 +125,44 @@ float4 main(InputVertex v) : SV_TARGET
         float G = geometrySmith(N, V, L, roughness);
         float3 F = fresnelSchlick(HdotV, F0);
         
-        float3 specular = NDF * G * F;
-        specular /= max(4.0 * NdotV * NdotL, 0.0000001);
         
-        float3 kD = 1.0 - F;
+        float3 kD = lerp(1.0 - F, 0.0, metallic);
         
-        kD *= 1.0 - metallic;
+        float3 diffuseBRDF = kD * albedo;
+        float3 specularBRDF = NDF * G * F / max(4.0 * NdotV * NdotL, EPSILON);
                 
-        Lo += (kD * albedo / PI + specular) * radiance * NdotL;
+        directLighting += (diffuseBRDF / PI + specularBRDF) * radiance * NdotL;
     }
     
-    float3 F = fresnelSchlickRoughness(dot(N, V), F0, roughness);
-    float3 kS = F;
-    float3 kD = 1.0 - kS;
-    kD *= 1.0 - metallic;
+    float3 ambientLighting = 0.0;
+    {
+        //Diffuse Ambient Lighting
+        float3 F = fresnelSchlickRoughness(dot(N, V), F0, roughness);
+        float3 kD = lerp(1.0 - F, 0.0, metallic);
 
-    float3 irradiance = pow(convolutedMap.Sample(SimpleSampler, N).rgb, GAMMA);
-    float3 diffuse = irradiance * albedo;
-    //diffuse = albedo;
+        float3 irradiance = pow(convolutedMap.Sample(SimpleSampler, N).rgb, GAMMA);
+        float3 diffuseIBL = kD * irradiance * albedo * ao;
+        
+        //Specular Ambient Lighting
+        uint reflectionLOD = queryEnvironmentMap();
+        
+        float3 specularIrradiance = environmentMap.SampleLevel(SimpleSampler, R, roughness * reflectionLOD).rgb;
+        float2 specularBRDF = brdf.Sample(SimpleSampler, float2(max(dot(N, V), 0.0), roughness)).rg;
+        float3 specularIBL = (F * specularBRDF.x + specularBRDF.y) * specularIrradiance;
+        
+        ambientLighting = diffuseIBL + specularIBL;
+    }
     
     //Indirect specular reflections
-    const float MAX_REFLECTION_LOD = 4.0;
     
-    float3 prefilteredColor = environmentMap.SampleLevel(SimpleSampler, R, roughness * MAX_REFLECTION_LOD).rgb;
-    float2 envBRDF = brdf.Sample(SimpleSampler, float2(max(dot(N, V), 0.0), roughness)).rg;
-    float3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
-    //specular = 0.0;
+    //float3 prefilteredColor = environmentMap.SampleLevel(SimpleSampler, R, roughness * reflectionLOD).rgb;
+    //float2 envBRDF = brdf.Sample(SimpleSampler, float2(max(dot(N, V), 0.0), roughness)).rg;
+    //float3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+    ////specular = 0.0;
     
-    float3 ambient = (kD * diffuse + specular) * ao;
+    //float3 ambient = (kD * diffuse + specular) * ao;
     
-    float3 color = ambient + Lo;
-    color = fresnelSchlick(dot(cameraPosition.xyz - v.world, N), 0.5);
+    float3 color = directLighting + ambientLighting;
     
     //HDR tonemapping
     color = color / (color + 1.0);

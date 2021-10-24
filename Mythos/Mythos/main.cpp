@@ -237,7 +237,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (!success)
 			return -1;
 
-		success = mythos->CreateDirectionalLight(Math::Vector3(0,-1,1), Math::Vector3(1.0, 0.9568627, 0.8392157), 1, directionalLightID);
+		success = mythos->CreateDirectionalLight(Math::Vector3(0,-1,1), Math::Vector3(1.0, 0.9568627, 0.8392157), 3, directionalLightID);
 		//success = mythos->CreateDirectionalLight(Math::Vector3(0,-1,1), Math::Vector3(0,1,1), 1, directionalLightID);
 		if (!success)
 			return -1;
@@ -255,7 +255,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		lights[2] = *mythos->GetLight(spotLightID);
 
 		deagleMaterial = Mythos::MythosMaterial(deagleD, deagleAO, deagleN, deagleM, deagleR, NULL);
-		standardMaterial = Mythos::MythosMaterial(white, white, black, white, black, NULL);
+		standardMaterial = Mythos::MythosMaterial(white, white, black, white, white, NULL);
 	}
 
 

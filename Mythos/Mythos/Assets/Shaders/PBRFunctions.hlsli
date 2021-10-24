@@ -1,4 +1,5 @@
 #define PI 3.1415926535
+#define EPSILON 0.0000001
 #define GAMMA 2.2
 
 float3 getNormalFromTexture(Texture2D normalMap, SamplerState sample, float2 texCoords, float3 normal, float3 world)
