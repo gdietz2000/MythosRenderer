@@ -117,6 +117,12 @@
     <ClInclude Include="Graphics\MythosMaterial.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\MythosRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\MythosRendererSettings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -161,6 +167,9 @@
     <ClCompile Include="Graphics\MythosID.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\MythosRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico">
@@ -182,9 +191,9 @@
     <FxCompile Include="Assets\Shaders\TextureVertexShader.hlsl" />
     <FxCompile Include="Assets\Shaders\Color.hlsl" />
     <FxCompile Include="Assets\Shaders\TexturedObject.hlsl" />
-    <FxCompile Include="Assets\Shaders\PBRFunctions.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Mathematics\README.md" />
+    <None Include="Assets\Shaders\PBRFunctions.hlsli" />
   </ItemGroup>
 </Project>

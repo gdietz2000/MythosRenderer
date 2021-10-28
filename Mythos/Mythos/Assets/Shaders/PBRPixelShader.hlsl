@@ -140,7 +140,7 @@ float4 main(InputVertex v) : SV_TARGET
         float3 F = fresnelSchlickRoughness(dot(N, V), F0, roughness);
         float3 kD = lerp(1.0 - F, 0.0, metallic);
 
-        float3 irradiance = pow(convolutedMap.Sample(SimpleSampler, N).rgb, GAMMA);
+        float3 irradiance = convolutedMap.Sample(SimpleSampler, N).rgb;
         float3 diffuseIBL = kD * irradiance * albedo * ao;
         
         //Specular Ambient Lighting
@@ -153,19 +153,7 @@ float4 main(InputVertex v) : SV_TARGET
         ambientLighting = diffuseIBL + specularIBL;
     }
     
-    //Indirect specular reflections
-    
-    //float3 prefilteredColor = environmentMap.SampleLevel(SimpleSampler, R, roughness * reflectionLOD).rgb;
-    //float2 envBRDF = brdf.Sample(SimpleSampler, float2(max(dot(N, V), 0.0), roughness)).rg;
-    //float3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
-    ////specular = 0.0;
-    
-    //float3 ambient = (kD * diffuse + specular) * ao;
-    
     float3 color = directLighting + ambientLighting;
-    
-    //HDR tonemapping
-    color = color / (color + 1.0);
     
     //Gamma Correction
     color = pow(color, 1.0 / GAMMA);

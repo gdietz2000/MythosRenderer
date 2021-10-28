@@ -22,6 +22,8 @@
 #include "MythosInputLayout.h"
 #include "DDSTextureLoader.h"
 
+#include "MythosRenderer.h"
+
 #define _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable:4996)
 
@@ -58,18 +60,12 @@ namespace Mythos
 			throw;
 		}
 
+		m_Renderer = MythosRenderer(&m_Context);
+
 		m_Viewport.Width = (FLOAT)scDesc.BufferDesc.Width;
 		m_Viewport.Height = (FLOAT)scDesc.BufferDesc.Height;
 		m_Viewport.TopLeftX = m_Viewport.TopLeftY = 0;
 		m_Viewport.MinDepth = 0; m_Viewport.MaxDepth = 1;
-
-		for (int i = 0; i < MYTHOS_RESOURCE_COUNT; ++i)
-		{
-			m_Resources.push_back(std::unordered_map<MythosID, IMythosResource*>());
-		}
-
-		m_RenderTargetClearColor = Math::Vector4(0);
-		m_DepthBufferClearValue = 1.0f;
 	}
 
 	Mythos::~Mythos()
@@ -78,31 +74,7 @@ namespace Mythos
 		m_Context.SafeRelease();
 		m_SwapChain.SafeRelease();
 
-		for (int i = 0; i < MYTHOS_RESOURCE_COUNT; ++i)
-		{
-			for (auto iter : m_Resources[i])
-			{
-				//Ensuring Memory is Deallocated Properly
-				iter.second->SafeRelease();
-				delete iter.second;
-			}
-		}
-
-		for (auto blob : m_ShaderBlobs)
-		{
-			blob.second->Release();
-		}
-
-		for (auto light : m_Lights) 
-		{
-			delete light.second;
-		}
-
-		//Clearing these containers
-		m_IDsToIndex.clear();
-		m_Resources.clear();
-		m_ShaderBlobs.clear();
-		m_Lights.clear();
+		m_Renderer.CleanUp();
 	}
 
 	BOOL Mythos::CreateVertexBuffer(void* data, unsigned int byteSize, MythosID& id)
@@ -131,8 +103,7 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_VERTEX_BUFFER));
-		m_Resources[MYTHOS_RESOURCE_VERTEX_BUFFER].insert(std::make_pair(id, vertexBuffer));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_VERTEX_BUFFER, vertexBuffer);
 
 		return TRUE;
 	}
@@ -183,8 +154,8 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_VERTEX_BUFFER));
-		m_Resources[MYTHOS_RESOURCE_VERTEX_BUFFER].insert(std::make_pair(id, vertexBuffer));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_VERTEX_BUFFER, vertexBuffer);
+
 
 		return TRUE;
 	}
@@ -218,8 +189,8 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_INDEX_BUFFER));
-		m_Resources[MYTHOS_RESOURCE_INDEX_BUFFER].insert(std::make_pair(id, indexBuffer));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_INDEX_BUFFER, indexBuffer);
+
 
 		return TRUE;
 	}
@@ -270,8 +241,8 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_INDEX_BUFFER));
-		m_Resources[MYTHOS_RESOURCE_INDEX_BUFFER].insert(std::make_pair(id, indexBuffer));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_INDEX_BUFFER, indexBuffer);
+
 
 		return TRUE;
 	}
@@ -340,8 +311,8 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_CONSTANT_BUFFER));
-		m_Resources[MYTHOS_RESOURCE_CONSTANT_BUFFER].insert(std::make_pair(id, constantBuffer));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_CONSTANT_BUFFER, constantBuffer);
+
 
 		return TRUE;
 	}
@@ -392,8 +363,8 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_CONSTANT_BUFFER));
-		m_Resources[MYTHOS_RESOURCE_CONSTANT_BUFFER].insert(std::make_pair(id, constantBuffer));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_CONSTANT_BUFFER, constantBuffer);
+
 
 		return TRUE;
 	}
@@ -433,25 +404,22 @@ namespace Mythos
 		textureID = MythosID();
 		bufferID = MythosID();
 
-		m_IDsToIndex.insert(std::make_pair(textureID, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureID, depthTexture));
-
-		m_IDsToIndex.insert(std::make_pair(bufferID, MYTHOS_RESOURCE_DEPTH_BUFFER));
-		m_Resources[MYTHOS_RESOURCE_DEPTH_BUFFER].insert(std::make_pair(bufferID, depthBuffer));
+		m_Renderer.AddMythosResource(textureID, MYTHOS_RESOURCE_TEXTURE_2D, depthTexture);
+		m_Renderer.AddMythosResource(bufferID, MYTHOS_RESOURCE_DEPTH_BUFFER, depthBuffer);
 
 		return TRUE;
 	}
 
 	void Mythos::SetClearDepthBufferValue(float value)
 	{
-		m_DepthBufferClearValue = value;
+		m_Renderer.SetDepthBufferClearValue(value);
 	}
 
 	void Mythos::ClearDepthBuffer(MythosID& bufferID)
 	{
 		IMythosResource* depthBuffer = GetResource(bufferID);
 		if (depthBuffer)
-			m_Context.GetContext()->ClearDepthStencilView((ID3D11DepthStencilView*)depthBuffer->GetData(), D3D11_CLEAR_DEPTH, m_DepthBufferClearValue, NULL);
+			m_Context.GetContext()->ClearDepthStencilView((ID3D11DepthStencilView*)depthBuffer->GetData(), D3D11_CLEAR_DEPTH, m_Renderer.GetDepthBufferClearValue(), NULL);
 	}
 
 	BOOL Mythos::CreateVertexShader(const wchar_t* filePath, const char* entryPoint, const char* modelType, MythosID& id)
@@ -471,9 +439,8 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_VERTEX_SHADER));
-		m_Resources[MYTHOS_RESOURCE_VERTEX_SHADER].insert(std::make_pair(id, vertexShader));
-		m_ShaderBlobs.insert(std::make_pair(id, vertexBlob));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_VERTEX_SHADER, vertexShader);
+		m_Renderer.AddShaderBlob(id, vertexBlob);
 
 		return TRUE;
 	}
@@ -494,14 +461,13 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_PIXEL_SHADER));
-		m_Resources[MYTHOS_RESOURCE_PIXEL_SHADER].insert(std::make_pair(id, pixelShader));
-		m_ShaderBlobs.insert(std::make_pair(id, pixelBlob));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_PIXEL_SHADER, pixelShader);
+		m_Renderer.AddShaderBlob(id, pixelBlob);
 
 		return TRUE;
 	}
 
-	BOOL Mythos::CreateInputLayout(const MythosInputElement* elements, unsigned int numElements, MythosID& vertexShaderID, MythosID& inputLayoutID)
+	BOOL Mythos::CreateInputLayout(const MythosInputElement* elements, unsigned int numElements, MythosID& vertexShaderID, MythosID& id)
 	{
 		std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
 		int totalBytes = 0;
@@ -530,9 +496,8 @@ namespace Mythos
 			return FALSE;
 		}
 
-		inputLayoutID = MythosID();
-		m_IDsToIndex.insert(std::make_pair(inputLayoutID, MYTHOS_RESOURCE_INPUT_LAYOUT));
-		m_Resources[MYTHOS_RESOURCE_INPUT_LAYOUT].insert(std::make_pair(inputLayoutID, inputLayout));
+		id = MythosID();		
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_INPUT_LAYOUT, inputLayout);
 
 		return TRUE;
 	}
@@ -557,19 +522,9 @@ namespace Mythos
 		backbuffer->Release();
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_RENDER_TARGET));
-		m_Resources[MYTHOS_RESOURCE_RENDER_TARGET].insert(std::make_pair(id, renderTarget));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_RENDER_TARGET, renderTarget);
 
 		return TRUE;
-	}
-
-	void Mythos::SetTopology(MythosTopology topology)
-	{
-		if (topology == MYTHOS_LINE_LIST)
-			m_Context.GetContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-
-		if (topology == MYTHOS_TRIANGLE_LIST)
-			m_Context.GetContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	}
 
 	BOOL Mythos::CreateRenderTarget(unsigned int width, unsigned int height, MythosID& textureID, MythosID& renderTargetID)
@@ -615,11 +570,10 @@ namespace Mythos
 
 		textureID = MythosID();
 		renderTargetID = MythosID();
-		m_IDsToIndex.insert(std::make_pair(textureID, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureID, texture));
 
-		m_IDsToIndex.insert(std::make_pair(renderTargetID, MYTHOS_RESOURCE_RENDER_TARGET));
-		m_Resources[MYTHOS_RESOURCE_RENDER_TARGET].insert(std::make_pair(renderTargetID, renderTarget));
+		m_Renderer.AddMythosResource(textureID, MYTHOS_RESOURCE_TEXTURE_2D, texture);
+		m_Renderer.AddMythosResource(renderTargetID, MYTHOS_RESOURCE_RENDER_TARGET, renderTarget);
+
 
 		return TRUE;
 	}
@@ -695,25 +649,23 @@ namespace Mythos
 		textureID = MythosID();
 		renderTargetID = MythosID();
 
-		m_IDsToIndex.insert(std::make_pair(textureID, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureID, texture));
+		m_Renderer.AddMythosResource(textureID, MYTHOS_RESOURCE_TEXTURE_2D, texture);
+		m_Renderer.AddMythosResource(renderTargetID, MYTHOS_RESOURCE_RENDER_TARGET, renderTarget);
 
-		m_IDsToIndex.insert(std::make_pair(renderTargetID, MYTHOS_RESOURCE_RENDER_TARGET));
-		m_Resources[MYTHOS_RESOURCE_RENDER_TARGET].insert(std::make_pair(renderTargetID, renderTarget));
 
 		return TRUE;
 	}
 
 	void Mythos::SetClearRenderTargetColor(Math::Vector4 clearColor)
 	{
-		m_RenderTargetClearColor = clearColor;
+		m_Renderer.SetRenderTargetClearColor(clearColor);
 	}
 
 	void Mythos::ClearRenderTarget(MythosID& id)
 	{
 		IMythosResource* renderTarget = GetResource(id);
 		if (renderTarget != nullptr)
-			m_Context.GetContext()->ClearRenderTargetView((ID3D11RenderTargetView*)renderTarget->GetData(), m_RenderTargetClearColor.comp);
+			m_Context.GetContext()->ClearRenderTargetView((ID3D11RenderTargetView*)renderTarget->GetData(), m_Renderer.GetRenderTargetClearColor().comp);
 	}
 
 	BOOL Mythos::CreateTexture2D(const wchar_t* filepath, MythosID& id)
@@ -727,8 +679,8 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(id, texture2D));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_TEXTURE_2D, texture2D);
+
 
 		return TRUE;
 	}
@@ -736,8 +688,7 @@ namespace Mythos
 	BOOL Mythos::CreateTexture2D(MythosTextureDescriptor* descriptor, IMythosResource* texture, MythosID& id)
 	{
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(id, texture));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_TEXTURE_2D, texture);
 
 		return TRUE;
 	}
@@ -786,8 +737,7 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(id, texture2D));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_TEXTURE_2D, texture2D);
 
 		return TRUE;
 	}
@@ -876,8 +826,7 @@ namespace Mythos
 		};
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_CUBE));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_CUBE].insert(std::make_pair(id, textureCube));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_TEXTURE_CUBE, textureCube);
 
 		for (int i = 0; i < 6; i++) {
 			copies[i]->Release();
@@ -972,15 +921,13 @@ namespace Mythos
 		};
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_CUBE));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_CUBE].insert(std::make_pair(id, textureCube));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_TEXTURE_CUBE, textureCube);
 
 		for (int i = 0; i < 6; i++) {
 			copies[i]->Release();
 		}
 
 		return TRUE;
-
 	}
 
 	BOOL Mythos::CreateShaderResource(const wchar_t* filepath, MythosID& id)
@@ -995,8 +942,7 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_SHADER_RESOURCE));
-		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(id, resource));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_SHADER_RESOURCE, resource);
 
 		return TRUE;
 	}
@@ -1024,8 +970,7 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_SHADER_RESOURCE));
-		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(id, shaderResource));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_SHADER_RESOURCE, shaderResource);
 
 		return TRUE;
 	}
@@ -1053,8 +998,8 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_SHADER_RESOURCE));
-		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(id, shaderResource));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_SHADER_RESOURCE, shaderResource);
+
 
 		return TRUE;
 	}
@@ -1082,8 +1027,8 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_SHADER_RESOURCE));
-		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(id, shaderResource));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_SHADER_RESOURCE, shaderResource);
+
 
 		return TRUE;
 	}
@@ -1102,12 +1047,8 @@ namespace Mythos
 		textureID = MythosID();
 		resourceID = MythosID();
 
-		m_IDsToIndex.insert(std::make_pair(textureID, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(textureID, texture));
-
-		m_IDsToIndex.insert(std::make_pair(resourceID, MYTHOS_RESOURCE_SHADER_RESOURCE));
-		m_Resources[MYTHOS_RESOURCE_SHADER_RESOURCE].insert(std::make_pair(resourceID, resource));
-
+		m_Renderer.AddMythosResource(textureID, MYTHOS_RESOURCE_TEXTURE_2D, texture);
+		m_Renderer.AddMythosResource(resourceID, MYTHOS_RESOURCE_INPUT_LAYOUT, resource);
 
 		return TRUE;
 	}
@@ -1138,8 +1079,7 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_SAMPLER));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_SAMPLER].insert(std::make_pair(id, samplerState));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_TEXTURE_SAMPLER, samplerState);
 
 		return TRUE;
 	}
@@ -1182,8 +1122,7 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_SAMPLER));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_SAMPLER].insert(std::make_pair(id, samplerState));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_TEXTURE_SAMPLER, samplerState);
 
 		return TRUE;
 	}
@@ -1204,10 +1143,8 @@ namespace Mythos
 			return FALSE;
 		}
 
-
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_RASTERIZER));
-		m_Resources[MYTHOS_RESOURCE_RASTERIZER].insert(std::make_pair(id, rasterState));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_RASTERIZER, rasterState);
 
 		return TRUE;
 	}
@@ -1249,15 +1186,14 @@ namespace Mythos
 		}
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_RASTERIZER));
-		m_Resources[MYTHOS_RESOURCE_RASTERIZER].insert(std::make_pair(id, rasterState));
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_RASTERIZER, rasterState);
 
 		return TRUE;
 	}
 
 	BOOL Mythos::UpdateMythosResource(MythosID& id, void* data, unsigned int byteSize)
 	{
-		IMythosResource* resource = m_Resources[m_IDsToIndex.find(id)->second].find(id)->second;
+		IMythosResource* resource = m_Renderer.GetResource(id);
 
 		if (!resource)
 			return FALSE;
@@ -1333,7 +1269,8 @@ namespace Mythos
 			return FALSE;
 
 		id = MythosID();
-		m_Lights.insert(std::make_pair(id, light));
+		m_Renderer.AddLight(id, light);
+
 		return TRUE;
 	}
 
@@ -1344,7 +1281,8 @@ namespace Mythos
 			return FALSE;
 
 		id = MythosID();
-		m_Lights.insert(std::make_pair(id, light));
+		m_Renderer.AddLight(id, light);
+
 		return TRUE;
 	}
 
@@ -1355,7 +1293,8 @@ namespace Mythos
 			return FALSE;
 
 		id = MythosID();
-		m_Lights.insert(std::make_pair(id, light));
+		m_Renderer.AddLight(id, light);
+
 		return TRUE;
 	}
 
@@ -1378,6 +1317,12 @@ namespace Mythos
 		ID3D11ShaderResourceView* textures[] = { diffuse, ao, norm, metal, rough, emiss };
 
 		GetContext()->PSSetShaderResources(startSlot, 6, textures);
+	}
+
+	void Mythos::SetRendererSettings(MythosRendererSettings settings)
+	{
+		m_Renderer.SetRendererSettings(settings);
+		m_Renderer.ApplySettings();
 	}
 
 	BOOL Mythos::CreateSkyboxFromEquirectangularTexture(unsigned int width, unsigned int height, const wchar_t* equirectangularTextureFilepath, MythosID& id)
@@ -2401,8 +2346,11 @@ namespace Mythos
 			return FALSE;
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_2D));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(id, combinedTexture));
+		//m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_2D));
+		//m_Resources[MYTHOS_RESOURCE_TEXTURE_2D].insert(std::make_pair(id, combinedTexture));
+
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_TEXTURE_2D, combinedTexture);
+
 
 		return TRUE;
 	}
@@ -2414,85 +2362,45 @@ namespace Mythos
 			return FALSE;
 
 		id = MythosID();
-		m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_CUBE));
-		m_Resources[MYTHOS_RESOURCE_TEXTURE_CUBE].insert(std::make_pair(id, combinedTexture));
+		//m_IDsToIndex.insert(std::make_pair(id, MYTHOS_RESOURCE_TEXTURE_CUBE));
+		//m_Resources[MYTHOS_RESOURCE_TEXTURE_CUBE].insert(std::make_pair(id, combinedTexture));
+
+		m_Renderer.AddMythosResource(id, MYTHOS_RESOURCE_TEXTURE_CUBE, combinedTexture);
+
 
 		return TRUE;
 	}
 
 	IMythosResource* Mythos::GetResource(MythosID& id)
 	{
-		if (id == NULL)
-			return nullptr;
-
-		auto num = m_IDsToIndex.find(id);
-		if (num != m_IDsToIndex.end())
-		{
-			unsigned int arrayIndex = num->second;
-			auto iter = m_Resources[arrayIndex].find(id);
-			if (iter != m_Resources[arrayIndex].end())
-			{
-				return iter->second;
-			}
-		}
-
-		return nullptr;
+		return m_Renderer.GetResource(id);
 	}
 
 	void Mythos::DeleteResource(MythosID& id)
 	{
-		auto num = m_IDsToIndex.find(id);
-		if (num != m_IDsToIndex.end())
-		{
-			unsigned int arrayIndex = num->second;
-			auto iter = m_Resources[arrayIndex].find(id);
-			if (iter != m_Resources[arrayIndex].end())
-			{
-				iter->second->SafeRelease();
-				delete iter->second;
-				m_Resources[arrayIndex].erase(id);
-				m_IDsToIndex.erase(id);
-			}
-		}
+		m_Renderer.DeleteResource(id);
 	}
 
 	ID3D10Blob* Mythos::GetShaderBlob(MythosID& id)
 	{
-		auto iter = m_ShaderBlobs.find(id);
-		if (iter != m_ShaderBlobs.end())
-			return iter->second;
-
-		return nullptr;
+		return m_Renderer.GetShaderBlob(id);
 	}
 
 	void Mythos::DeleteShaderBlob(MythosID& id)
 	{
-		auto iter = m_ShaderBlobs.find(id);
-		if (iter != m_ShaderBlobs.end())
-		{
-			iter->second->Release();
-			m_ShaderBlobs.erase(id);
-		}
+		m_Renderer.DeleteShaderBlob(id);
 	}
 
 	MythosLight* Mythos::GetLight(MythosID& id)
 	{
-		auto iter = m_Lights.find(id);
-		if (iter != m_Lights.end())
-			return iter->second;
-
-		return nullptr;
+		return m_Renderer.GetLight(id);
 	}
 
 	void Mythos::DeleteLight(MythosID& id)
 	{
-		auto iter = m_Lights.find(id);
-		if (iter != m_Lights.end())
-		{
-			delete iter->second;
-			m_Lights.erase(id);
-		}
+		m_Renderer.DeleteLight(id);
 	}
+
 
 	UINT Mythos::GetBindFlags(MythosBindFlags flags)
 	{

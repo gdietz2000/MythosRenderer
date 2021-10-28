@@ -173,6 +173,8 @@
     <ClInclude Include="Graphics\MythosMesh.h" />
     <ClInclude Include="Graphics\MythosPixelShader.h" />
     <ClInclude Include="Graphics\MythosRasterizer.h" />
+    <ClInclude Include="Graphics\MythosRenderer.h" />
+    <ClInclude Include="Graphics\MythosRendererSettings.h" />
     <ClInclude Include="Graphics\MythosRenderTarget.h" />
     <ClInclude Include="Graphics\MythosShaderResource.h" />
     <ClInclude Include="Graphics\MythosSwapChain.h" />
@@ -197,6 +199,7 @@
     <ClCompile Include="Graphics\Mythos.cpp" />
     <ClCompile Include="Graphics\MythosFreeroamCamera.cpp" />
     <ClCompile Include="Graphics\MythosID.cpp" />
+    <ClCompile Include="Graphics\MythosRenderer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mathematics\src\Matrix2.cpp" />
     <ClCompile Include="Mathematics\src\Matrix3.cpp" />

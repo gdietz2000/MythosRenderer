@@ -19,7 +19,7 @@ float4 main(InputVertex v) : SV_TARGET
     float3 right = cross(float3(0.0, 1.0, 0.0), normal);
     float3 up = cross(normal, right);
     
-    float sampleDelta = 0.025;
+    float sampleDelta = PI / 25.0f;
     float nrSamples = 0.0;
     for (float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
     {

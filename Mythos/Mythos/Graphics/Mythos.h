@@ -12,35 +12,13 @@
 #include "MythosLight.h"
 #include "MythosMaterial.h"
 
+#include "MythosRenderer.h"
+
 #include "MythosID.h"
 
 namespace Mythos
 {
 	//Resource Types for hashing
-	enum MythosResourceTypes
-	{
-		MYTHOS_RESOURCE_VERTEX_BUFFER = 0,
-		MYTHOS_RESOURCE_BATCH_VERTEX_BUFFER,
-		MYTHOS_RESOURCE_INDEX_BUFFER,
-		MYTHOS_RESOURCE_BATCH_INDEX_BUFFER,
-		MYTHOS_RESOURCE_CONSTANT_BUFFER,
-		MYTHOS_RESOURCE_DEPTH_BUFFER,
-		MYTHOS_RESOURCE_VERTEX_SHADER,
-		MYTHOS_RESOURCE_HULL_SHADER,
-		MYTHOS_RESOURCE_TESSELLATION_SHADER,
-		MYTHOS_RESOURCE_DOMAIN_SHADER,
-		MYTHOS_RESOURCE_GEOMETRY_SHADER,
-		MYTHOS_RESOURCE_COMPUTE_SHADER,
-		MYTHOS_RESOURCE_PIXEL_SHADER,
-		MYTHOS_RESOURCE_INPUT_LAYOUT,
-		MYTHOS_RESOURCE_RENDER_TARGET,
-		MYTHOS_RESOURCE_TEXTURE_2D,
-		MYTHOS_RESOURCE_TEXTURE_CUBE,
-		MYTHOS_RESOURCE_SHADER_RESOURCE,
-		MYTHOS_RESOURCE_TEXTURE_SAMPLER,
-		MYTHOS_RESOURCE_RASTERIZER,
-		MYTHOS_RESOURCE_COUNT
-	};
 
 	//This class will be the main accessor when it comes to rendering
 	class Mythos 
@@ -78,8 +56,6 @@ namespace Mythos
 
 		BOOL CreateMainRenderTarget(MythosID& mainRenderTargetID);
 
-		void SetTopology(MythosTopology topology);
-
 		BOOL CreateRenderTarget(unsigned int width, unsigned int height, MythosID& textureID, MythosID& renderTargetID);
 		BOOL CreateRenderTarget(MythosTextureDescriptor* descriptor, MythosID& textureID, MythosID& renderTargetID);
 
@@ -116,6 +92,7 @@ namespace Mythos
 
 		//Setters
 		void SetMaterial(UINT startSlot, MythosMaterial& mat);
+		void SetRendererSettings(MythosRendererSettings settings);
 
 		//PBR Specific Functions
 		BOOL CreateSkyboxFromEquirectangularTexture(unsigned int width, unsigned int height, const wchar_t* equirectangularTextureFilepath, MythosID& id);
@@ -165,13 +142,6 @@ namespace Mythos
 		Rasterizer States
 		Input Layouts
 		*/
-
-		Math::Vector4 m_RenderTargetClearColor;
-		float m_DepthBufferClearValue;
-
-		std::unordered_map<MythosID, unsigned int> m_IDsToIndex;
-		std::vector<std::unordered_map<MythosID, IMythosResource*>> m_Resources;
-		std::unordered_map<MythosID, ID3D10Blob*> m_ShaderBlobs;
-		std::unordered_map<MythosID, MythosLight*> m_Lights;
+		MythosRenderer m_Renderer;
 	};
 }
